@@ -1,5 +1,4 @@
 # Setup Commands
-
 apt update && apt upgrade -y
 apt-get install python3-pip
 apt-get install sqlite3
@@ -9,11 +8,9 @@ apt-get install python3-flask-sqlalchemy
 apt-get install python3-flask-login
 
 # Run Dev App
-
 flask --app app run
 
 # Flask Manual Data Entry
-
 flask shell
 from app import db, Users
 from werkzeug.security import generate_password_hash, check_password_hash
