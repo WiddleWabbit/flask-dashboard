@@ -47,13 +47,13 @@ def load_user(user_id):
 # Homepage Test Route
 @app.route("/")
 def home():
-    return render_template('page.html')
+    return render_template('dashboard.html')
 
 # Dashboard Route
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=current_user.username)
+    return render_template('dashboard.html')
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])
@@ -72,6 +72,11 @@ def login():
             return render_template("login.html", error="Invalid username or password")
 
     return render_template("login.html")
+
+# Account Route
+@app.route("/account", methods=["GET", "POST"])
+def account():
+    return render_template("account.html")
 
 # Logout Route
 @app.route("/logout")

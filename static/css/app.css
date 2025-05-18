@@ -3,3 +3,9 @@
         max-height:75px;
     }
 }
+
+[data-bs-theme="dark"] {
+    #sidebar {
+        background-color:#1f2428 !important;
+    }
+}
