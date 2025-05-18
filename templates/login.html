@@ -1,0 +1,48 @@
+{% extends "page.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+    <div class="d-flex p-2 align-items-center justify-content-center" style="min-height:90%;">
+
+        <div class="my-2 col-lg-6 col-md-8 col-sm-10 col-xs-12">
+
+            {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show m-4 mb-5" role="alert">
+                    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                    {{ error }}. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+
+            <div class="my-3 col-xs-12 text-center"><h2>{{ self.title() }}</h2></div>
+            <p class="text-center text-secondary"><small>Please login to edit watering schedules.</small></p>
+            
+            <div class="my-4 col-xs-12 d-flex">
+                <form class="mx-auto" action="/login" method="post">
+                    <div class="input-group my-2">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                            </svg>
+                        </span>
+                        <input class="form-control" type="text" name="username" placeholder="Username" required />
+                    </div>
+                    <div class="input-group my-2 pb-2">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3"/>
+                            </svg>
+                        </span>
+                        <input class="form-control" type="password" name="password" placeholder="Password" required />
+                    </div>
+                    <button class="row my-4 btn btn-outline-secondary d-block mx-auto" type="submit">Login</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

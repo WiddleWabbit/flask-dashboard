@@ -1,0 +1,33 @@
+# Setup Commands
+
+apt update && apt upgrade -y
+apt-get install python3-pip
+apt-get install sqlite3
+apt-get install git
+apt-get install python3-flask
+apt-get install python3-flask-sqlalchemy
+apt-get install python3-flask-login
+
+# Run Dev App
+
+flask --app app run
+
+# Flask Manual Data Entry
+
+flask shell
+from app import db, Users
+from werkzeug.security import generate_password_hash, check_password_hash
+password='password'
+hashed_password=generate_password_hash(password,method="pbkdf2:sha256")
+admin_user = Users(username="admin",password=hashed_password,firstname="Nathan",lastname="Wheat",email="thewheathousehold@gmail.com")
+db.session.add(admin_user)
+db.session.commit()
+# Check
+print(admin_user.id)
+# Update 
+admin_user.email = 'john_doe@example.com'
+db.session.add(admin_user)
+db.session.commit()
+# Drop all
+db.drop_all()
+db.create_all()

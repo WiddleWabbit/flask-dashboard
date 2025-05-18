@@ -1,0 +1,9 @@
+{% extends "page.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    {% if current_user.is_authenticated %}
+    <h1>You are logged in as {{ username }}!</h1>
+    {% endif %}
+{% endblock %}
