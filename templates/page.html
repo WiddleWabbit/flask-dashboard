@@ -96,7 +96,7 @@
                         </div>
                         <!-- Darkmode Switcher-->
                         <div class="form-check form-switch small mt-4">
-                            <input class="form-check-input" type="checkbox" id="darkModeSwitch" checked>
+                            <input class="form-check-input darkModeSwitch" type="checkbox" id="darkModeSwitch" checked>
                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-moon-fill text-body-tertiary" viewBox="0 0 16 16">
                                 <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
                             </svg>
@@ -148,12 +148,29 @@
         // Listen for user switches, if they switch it then save a cookie and maintain that value
         document.addEventListener('DOMContentLoaded', (event) => {
             const htmlElement = document.documentElement;
-            const switchElement = document.getElementById('darkModeSwitch');
+            const switchElements = document.querySelectorAll('.darkModeSwitch');
 
-            // Set the default theme to dark if no setting is found in local storage
+            // Check for stored cookie with setting
             const currentTheme = localStorage.getItem('dashTheme') || preferredColourScheme;
             htmlElement.setAttribute('data-bs-theme', currentTheme);
-            switchElement.checked = currentTheme === 'dark';
+
+            switchElements.forEach(switchElement => {
+                switchElement.checked = currentTheme === 'dark';
+            })
+
+            switchElements.forEach(switchElement => {
+                switchElement.addEventListener('change', function() {
+                    const newTheme = this.checked ? 'dark' : 'light';
+                    htmlElement.setAttribute('data-bs-theme', newTheme);
+                    localStorage.setItem('dashTheme', newTheme);
+
+                    switchElements.forEach(otherSwitch => {
+                        otherSwitch.checked = this.checked;
+                    });
+                });
+            });
+            /*
+            
 
             switchElement.addEventListener('change', function () {
                 if (this.checked) {
@@ -163,7 +180,7 @@
                     htmlElement.setAttribute('data-bs-theme', 'light');
                     localStorage.setItem('dashTheme', 'light');
                 }
-            });
+            });*/
         });
     </script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
