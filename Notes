@@ -19,6 +19,7 @@ hashed_password=generate_password_hash(password,method="pbkdf2:sha256")
 admin_user = Users(username="admin",password=hashed_password,firstname="Nathan",lastname="Wheat",email="thewheathousehold@gmail.com")
 db.session.add(admin_user)
 db.session.commit()
+quit()
 # Check
 print(admin_user.id)
 # Update 
@@ -28,3 +29,10 @@ db.session.commit()
 # Drop all
 db.drop_all()
 db.create_all()
+
+# Flask Manually Read Database
+flask shell
+from app import db, Users
+user = Users.query.all()
+user[0].email
+quit()

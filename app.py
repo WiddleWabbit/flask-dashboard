@@ -1,6 +1,6 @@
 # Import the required libraries
 import os
-from flask import Flask, request, render_template, url_for, redirect
+from flask import Flask, request, render_template, url_for, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -75,8 +75,31 @@ def login():
 
 # Account Route
 @app.route("/account", methods=["GET", "POST"])
+@login_required
 def account():
-    return render_template("account.html")
+    if request.method == "POST":
+        # Change password form
+        if request.args.get("form") == "change_password":
+            current_password = request.form.get("current_password")
+            new_password = request.form.get("new_password")
+            new_password_conf = request.form.get("new_password_conf")
+            # Check new passwords match
+            if new_password != new_password_conf:
+                flash('Provided new passwords do not match!', 'danger')
+                return redirect(url_for("account"))
+            user = Users.query.filter_by(username=current_user.username).first()
+            # Confirm password is correct
+            if check_password_hash(user.password, current_password):
+                hashed_password = generate_password_hash(new_password, method="pbkdf2:sha256")
+                user.password = hashed_password
+                db.session.commit()
+                flash("You've successfully updated your password.", 'success')
+                return redirect(url_for("account"))
+            else:
+                flash('Provided new passwords do not match!', 'danger')
+                return redirect(url_for("account"))
+        # elif request.args.get("form") == "nothing":
+    return render_template("account.html", username = current_user.username)
 
 # Logout Route
 @app.route("/logout")

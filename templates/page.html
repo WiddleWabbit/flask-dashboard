@@ -125,6 +125,21 @@
 
             <!--Main Content-->
             <div id="content" class="col-xl-9 col-md-8 col-xs-12 p-5">
+                <div class="">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show m-4 mb-5 mx-0" role="alert">
+                                {% if category == "danger" %}
+                                    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                </div>
                 {% block content %}
                 {% endblock %}
             </div>
@@ -154,33 +169,24 @@
             const currentTheme = localStorage.getItem('dashTheme') || preferredColourScheme;
             htmlElement.setAttribute('data-bs-theme', currentTheme);
 
+            // Update all switches to current theme
             switchElements.forEach(switchElement => {
                 switchElement.checked = currentTheme === 'dark';
             })
 
+            // Add event listener to all darkmode toggles
             switchElements.forEach(switchElement => {
                 switchElement.addEventListener('change', function() {
                     const newTheme = this.checked ? 'dark' : 'light';
                     htmlElement.setAttribute('data-bs-theme', newTheme);
                     localStorage.setItem('dashTheme', newTheme);
 
+                    // Sync all darkmode toggles
                     switchElements.forEach(otherSwitch => {
                         otherSwitch.checked = this.checked;
                     });
                 });
             });
-            /*
-            
-
-            switchElement.addEventListener('change', function () {
-                if (this.checked) {
-                    htmlElement.setAttribute('data-bs-theme', 'dark');
-                    localStorage.setItem('dashTheme', 'dark');
-                } else {
-                    htmlElement.setAttribute('data-bs-theme', 'light');
-                    localStorage.setItem('dashTheme', 'light');
-                }
-            });*/
         });
     </script>
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
