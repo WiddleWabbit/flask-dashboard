@@ -77,6 +77,8 @@ def login():
 @app.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
+    user = Users.query.filter_by(username=current_user.username).first()
+    user_details = {'username':user.username, 'firstname': user.firstname, 'lastname': user.lastname, 'email':user.email}
     if request.method == "POST":
         # Change password form
         if request.args.get("form") == "change_password":
@@ -87,7 +89,6 @@ def account():
             if new_password != new_password_conf:
                 flash('Provided new passwords do not match!', 'danger')
                 return redirect(url_for("account"))
-            user = Users.query.filter_by(username=current_user.username).first()
             # Confirm password is correct
             if check_password_hash(user.password, current_password):
                 hashed_password = generate_password_hash(new_password, method="pbkdf2:sha256")
@@ -98,8 +99,37 @@ def account():
             else:
                 flash('Provided new passwords do not match!', 'danger')
                 return redirect(url_for("account"))
-        # elif request.args.get("form") == "nothing":
-    return render_template("account.html", username = current_user.username)
+        # Update user details form
+        elif request.args.get("form") == "update_details":
+            current_password = request.form.get("current_password_details")
+            username = request.form.get("username")
+            firstname = request.form.get("firstname")
+            lastname = request.form.get("lastname")
+            email = request.form.get("email")
+            # Confirm password correct
+            if check_password_hash(user.password, current_password):
+                if not username and not firstname and not lastname and not email:
+                    flash("No fields submitted to change.", 'danger')
+                    return redirect(url_for("account"))
+                if username:
+                    new_username = Users.query.filter_by(username=username).first()
+                    if new_username:
+                        flash('Unable to update. Username already exists.', 'danger')
+                        return redirect(url_for("account"))
+                    user.username = username
+                if firstname:
+                    user.firstname = firstname
+                if lastname:
+                    user.lastname = lastname
+                if email:
+                    user.email = email
+                db.session.commit()
+                flash("You've successfully updated your details.", 'success')
+                return redirect(url_for("account"))
+            else:
+                flash('Password entered is incorrect!', 'danger')
+                return redirect(url_for("account"))
+    return render_template("account.html", user = user_details)
 
 # Logout Route
 @app.route("/logout")
