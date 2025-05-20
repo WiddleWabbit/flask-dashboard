@@ -4,16 +4,16 @@
 
 {% block content %}
 
-    <div class="d-flex p-2 align-items-center justify-content-center" style="min-height:90%;">
+    <div class="d-flex p-2 align-items-center justify-content-center" style="min-height:80%;">
 
         <div class="my-2 col-lg-6 col-md-8 col-sm-10 col-xs-12">
 
             {% if error %}
-                <div class="alert alert-danger alert-dismissible fade show m-4 mb-5" role="alert">
+                <!--<div class="alert alert-danger alert-dismissible fade show m-4 mb-5" role="alert">
                     <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
                     {{ error }}. Please try again.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+                </div>-->
             {% endif %}
 
             <div class="my-3 col-xs-12 text-center"><h2>{{ self.title() }}</h2></div>
