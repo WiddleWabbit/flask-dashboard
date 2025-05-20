@@ -36,3 +36,9 @@ from app import db, Users
 user = Users.query.all()
 user[0].email
 quit()
+
+# Handling Date/Time
+from datetime import datetime
+import pytz
+current_time_utc = datetime.now(pytz.utc)
+current_time_utc.isoformat()

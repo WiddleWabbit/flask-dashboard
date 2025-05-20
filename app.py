@@ -1,5 +1,7 @@
 # Import the required libraries
 import os
+from datetime import datetime
+import pytz
 from flask import Flask, request, render_template, url_for, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
@@ -28,13 +30,14 @@ class Users(UserMixin, db.Model):
     firstname = db.Column(db.String(250), nullable=False)
     lastname = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(250), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True),server_default=func.now())
+    created_at = db.Column(db.String(60), nullable=False, default=datetime.now(pytz.utc))
+    #created_at = db.Column(db.DateTime(timezone=True),server_default=func.now())
 
     def __repr__(self):
         return f'<User {self.firstname}>'
 
 # Create database
-# create all does not overwrite or recreate existing
+# Create all does not overwrite or recreate existing
 with app.app_context():
     db.create_all()
 
@@ -78,7 +81,10 @@ def login():
 @login_required
 def account():
     user = Users.query.filter_by(username=current_user.username).first()
-    user_details = {'username':user.username, 'firstname': user.firstname, 'lastname': user.lastname, 'email':user.email}
+    created_at = datetime.fromisoformat(user.created_at)
+    created_tzc = created_at.astimezone(pytz.timezone('Australia/Perth'))
+    formatted_created = created_tzc.strftime('%B %d, %Y, %I:%M %p')
+    user_details = {'username':user.username, 'firstname': user.firstname, 'lastname': user.lastname, 'email':user.email, 'created':formatted_created}
     if request.method == "POST":
         # Change password form
         if request.args.get("form") == "change_password":
