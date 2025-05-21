@@ -1,6 +1,6 @@
 # Import the required libraries
 import os
-from datetime import datetime
+from datetime import datetime, time
 import pytz
 from flask import Flask, request, render_template, url_for, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -22,7 +22,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# User model
+# User Database Model
 class Users(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(250), unique=True, nullable=False)
@@ -34,12 +34,47 @@ class Users(UserMixin, db.Model):
     #created_at = db.Column(db.DateTime(timezone=True),server_default=func.now())
 
     def __repr__(self):
-        return f'<User {self.firstname}>'
+        return f'<User {self.username}>'
 
-# Create database
-# Create all does not overwrite or recreate existing
+# Settings Database Model
+class Settings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    setting = db.Column(db.String(250), unique=True, nullable=False)
+    value = db.Column(db.String(250), unique=False, nullable=False)
+
+    def __repr__(self):
+        return f'<Setting {self.setting}'
+
+# Prepare the application
 with app.app_context():
+
+    # Create the database, does not create or override already existing
     db.create_all()
+
+    timezone = Settings.query.filter_by(setting="timezone").first()
+    sunrise_exists = Settings.query.filter_by(setting="sunrise_iso").first()
+    sunset_exists = Settings.query.filter_by(setting="sunset_iso").first()
+    # Create the timezone setting if it doesn't exist
+    if not timezone:
+        timezone = 'Australia/Perth'
+        db.session.add(Settings(setting="timezone",value=timezone))
+    # Create the sunrise and sunset settings if they don't exist
+    if not sunrise_exists:
+        now = datetime.now(pytz.timezone(timezone))
+        sixam_naive = datetime.combine(now.date(), time(6, 0, 0))
+        sixam_perth = pytz.timezone(timezone).localize(sixam_naive)
+        sixam_utc = sixam_perth.astimezone(pytz.utc)
+        sunrise_iso = sixam_utc.isoformat()
+        db.session.add(Settings(setting="sunrise_iso", value=sunrise_iso))
+        db.session.commit()
+    if not sunset_exists:
+        now = datetime.now(pytz.timezone(timezone))
+        sixpm_naive = datetime.combine(now.date(), time(18, 0, 0))
+        sixpm_perth = pytz.timezone(timezone).localize(sixpm_naive)
+        sixpm_utc = sixpm_perth.astimezone(pytz.utc)
+        sunset_iso = sixpm_utc.isoformat()
+        db.session.add(Settings(setting="sunset_iso", value=sunset_iso))
+        db.session.commit()
 
 # Define the user loader for Flask-Login
 @login_manager.user_loader
@@ -57,6 +92,22 @@ def home():
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+# Schedules Route
+@app.route("/schedules", methods=["GET", "POST"])
+def schedules():
+
+    timezone = Settings.query.filter_by(setting="timezone").first()
+
+    sunrise = Settings.query.filter_by(setting="sunrise_iso").first()
+    sunrise_iso = datetime.fromisoformat(sunrise.value)
+    sunrise_time = sunrise_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M%p")
+
+    sunset = Settings.query.filter_by(setting="sunset_iso").first()
+    sunset_iso = datetime.fromisoformat(sunset.value)
+    sunset_time = sunset_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M%p")
+
+    return render_template('schedules.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time)
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])

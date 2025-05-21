@@ -42,3 +42,24 @@ from datetime import datetime
 import pytz
 current_time_utc = datetime.now(pytz.utc)
 current_time_utc.isoformat()
+
+
+
+
+Settings.__table__.drop(db.engine)
+
+
+class Parent(db.Model):
+    __tablename__= "parents"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    childrens = db.relationship("Child", backref="parents")
+
+    # Use cascade as below to ensure the child is deleted if the parent is deleted
+    childrens = db.relationship("Child", backref="parents", cascade="all, delete")
+
+class Child(db.Model):
+    __tablename__= "children"    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    parent_id = db.Column(db.Integer, db.ForeignKey("parents.id"), nullable=True)

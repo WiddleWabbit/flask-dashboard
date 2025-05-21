@@ -1,0 +1,85 @@
+{% extends "page.html" %}
+
+{% block title %}Schedules{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column">
+
+    <!-- Heading-->
+    <div class="col-sm-12 col-xs-12 col-xl-6 col-lg-8 col-md-10 mb-4">
+        <h2>Schedules</h2>
+        <p class="text-secondary mb-0"><small>Create update or remove currently configured schedules on this page.</small></p>
+    </div>
+
+    <!-- Time Settings Section-->
+    <div class="col-sm-12 col-xs-12 col-xl-6 col-lg-8 col-md-10 mb-4">
+        <h4>Time Settings</h4>
+        <p class="text-secondary"><small>Settings related to schedule times & timezones.</small></p>
+        <form action="/schedules?form=time_settings" method="post">
+
+            <!-- Disabled pending adding a feature -->
+            <div class="input-group pb-3" style="max-width:450px;">
+                <select class="form-select" aria-label="Timezone" disabled>
+                    <option selected>Australia\Perth</option>
+                    <option value="1">Australia\Sydney</option>
+                    <option value="2">Australia\Brisbane</option>
+                    <option value="3">UTC</option>
+                </select>
+            </div>
+            <!-- Set these fields to disabled, probably add checkbox later to allow manual editing-->
+            <div class="input-group pb-2" style="max-width:350px;">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sunrise" viewBox="0 0 16 16">
+                        <path d="M7.646 1.146a.5.5 0 0 1 .708 0l1.5 1.5a.5.5 0 0 1-.708.708L8.5 2.707V4.5a.5.5 0 0 1-1 0V2.707l-.646.647a.5.5 0 1 1-.708-.708zM2.343 4.343a.5.5 0 0 1 .707 0l1.414 1.414a.5.5 0 0 1-.707.707L2.343 5.05a.5.5 0 0 1 0-.707m11.314 0a.5.5 0 0 1 0 .707l-1.414 1.414a.5.5 0 1 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0M8 7a3 3 0 0 1 2.599 4.5H5.4A3 3 0 0 1 8 7m3.71 4.5a4 4 0 1 0-7.418 0H.499a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1h-3.79zM0 10a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2A.5.5 0 0 1 0 10m13 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="text" name="sunset" placeholder="Sunrise: {{ sunrise }}" required disabled/>
+            </div>
+            <div class="input-group pb-2" style="max-width:350px;">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sunset" viewBox="0 0 16 16">
+                        <path d="M7.646 4.854a.5.5 0 0 0 .708 0l1.5-1.5a.5.5 0 0 0-.708-.708l-.646.647V1.5a.5.5 0 0 0-1 0v1.793l-.646-.647a.5.5 0 1 0-.708.708zm-5.303-.51a.5.5 0 0 1 .707 0l1.414 1.413a.5.5 0 0 1-.707.707L2.343 5.05a.5.5 0 0 1 0-.707zm11.314 0a.5.5 0 0 1 0 .706l-1.414 1.414a.5.5 0 1 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zM8 7a3 3 0 0 1 2.599 4.5H5.4A3 3 0 0 1 8 7m3.71 4.5a4 4 0 1 0-7.418 0H.499a.5.5 0 0 0 0 1h15a.5.5 0 0 0 0-1h-3.79zM0 10a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2A.5.5 0 0 1 0 10m13 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
+                    </svg>
+                </span>
+                <!-- Hidden Currently -->
+                <input class="form-control" type="text" name="sunrise" placeholder="Sunset: {{ sunset }}" required disabled/>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Section
+    <div class="col-sm-12 col-xs-12 col-xl-6 col-lg-8 col-md-10 mb-4">
+        <h4>Security Settings</h4>
+        <p class="text-secondary"><small>Use this form to change your password.</small></p>
+        <form action="/account?form=change_password" method="post">
+            <div class="input-group pb-3" style="max-width:400px">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-unlock2" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 0c1.07 0 2.041.42 2.759 1.104l.14.14.062.08a.5.5 0 0 1-.71.675l-.076-.066-.216-.205A3 3 0 0 0 5 4v2h6.5A2.5 2.5 0 0 1 14 8.5v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7z"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="password" name="current_password" placeholder="Current Password" required />
+            </div>
+            <div class="input-group pb-2" style="max-width:400px">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="password" name="new_password" placeholder="New Password" required />
+            </div>
+            <div class="input-group pb-2" style="max-width:400px">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="password" name="new_password_conf" placeholder="Confirm New Password" required />
+            </div>
+            <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
+        </form>
+    </div>-->
+
+</div>
+{% endblock %}
