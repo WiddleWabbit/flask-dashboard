@@ -51,8 +51,12 @@ class Settings(db.Model):
 # Function to query API and update sunrise & sunset settings
 def update_sun_times():
     with app.app_context():
-        lat, lng = -31.889105, 116.04647
-        url = f"https://api.sunrisesunset.io/json?lat={lat}&lng={lng}&time_format=unix&timezone=Etc/UTC"
+        # Get latitude and longitude from db
+        lat_obj = Settings.query.filter_by(setting="latitude").first()
+        lat = lat_obj.value
+        long_obj = Settings.query.filter_by(setting="longitude").first()
+        long = long_obj.value
+        url = f"https://api.sunrisesunset.io/json?lat={lat}&lng={long}&time_format=unix&timezone=Etc/UTC"
         try:
             # Handle the JSON Response
             response = requests.get(url)
@@ -98,11 +102,24 @@ with app.app_context():
         db.session.add(admin_user)
         db.session.commit()
 
+    # Create default latitude and longitude if none exist
+    lat_exists = Settings.query.filter_by(setting="latitude").first()
+    long_exists = Settings.query.filter_by(setting="longitude").first()
+    if not lat_exists:
+        lat = "-31.889105"
+        db.session.add(Settings(setting="latitude", value=lat))
+        db.session.commit()
+
+    if not long_exists:
+        long = "116.04647"
+        db.session.add(Settings(setting="longitude", value=long))
+        db.session.commit()
+
     # Create the timezone setting if it doesn't exist
     timezone = Settings.query.filter_by(setting="timezone").first()
     if not timezone:
         timezone = 'Australia/Perth'
-        db.session.add(Settings(setting="timezone",value=timezone))
+        db.session.add(Settings(setting="timezone", value=timezone))
     
     # Create the sunrise and sunset settings if they don't exist
     sunrise_exists = Settings.query.filter_by(setting="sunrise_iso").first()
@@ -124,12 +141,16 @@ with app.app_context():
         db.session.add(Settings(setting="sunset_iso", value=sunset_iso))
         db.session.commit()
     
-    # Update the sunrise & sunset times immediately as a test
-    update_sun_times()
+    # Uncomment to update sunrise/sunset on app startup
+    #update_sun_times()
 
 # Start the scheduler
 #scheduler = BackgroundScheduler()
-#scheduler.add_job(func=update_sun_times, trigger="interval", hours=24)  # Runs once every 24 hours
+#scheduler.add_job(
+#    func=update_sun_times,
+#    trigger=CronTrigger(hour=1, minute=0),
+#    id='update_sun_times_daily'
+#)
 #scheduler.start()
 
 # Define the user loader for Flask-Login
@@ -163,7 +184,12 @@ def schedules():
     sunset_iso = datetime.fromisoformat(sunset.value)
     sunset_time = sunset_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M %p")
 
-    return render_template('schedules.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time)
+    latitude_obj = Settings.query.filter_by(setting="latitude").first()
+    latitude = latitude_obj.value
+    longitude_obj = Settings.query.filter_by(setting="longitude").first()
+    longitude = longitude_obj.value
+
+    return render_template('schedules.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time, lat = latitude, long = longitude)
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])
