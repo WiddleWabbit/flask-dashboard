@@ -50,15 +50,25 @@ with app.app_context():
 
     # Create the database, does not create or override already existing
     db.create_all()
+    
+    # Create a default user if none exist
+    user_exists = Users.query.first()
+    if not user_exists:
+        password = "admin"
+        hashed_password=generate_password_hash(password,method="pbkdf2:sha256")
+        admin_user = Users(username="admin",password=hashed_password,firstname="Admin",lastname="User",email="test@test.com")
+        db.session.add(admin_user)
+        db.session.commit()
 
-    timezone = Settings.query.filter_by(setting="timezone").first()
-    sunrise_exists = Settings.query.filter_by(setting="sunrise_iso").first()
-    sunset_exists = Settings.query.filter_by(setting="sunset_iso").first()
     # Create the timezone setting if it doesn't exist
+    timezone = Settings.query.filter_by(setting="timezone").first()
     if not timezone:
         timezone = 'Australia/Perth'
         db.session.add(Settings(setting="timezone",value=timezone))
+    
     # Create the sunrise and sunset settings if they don't exist
+    sunrise_exists = Settings.query.filter_by(setting="sunrise_iso").first()
+    sunset_exists = Settings.query.filter_by(setting="sunset_iso").first()
     if not sunrise_exists:
         now = datetime.now(pytz.timezone(timezone))
         sixam_naive = datetime.combine(now.date(), time(6, 0, 0))
