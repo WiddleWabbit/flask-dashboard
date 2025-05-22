@@ -6,6 +6,7 @@ apt-get install git
 apt-get install python3-flask
 apt-get install python3-flask-sqlalchemy
 apt-get install python3-flask-login
+apt-get install python3-apscheduler
 
 # Run Dev App
 flask --app app run

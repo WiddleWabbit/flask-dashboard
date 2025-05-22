@@ -7,6 +7,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import requests
 
 # Create the application
 app = Flask(__name__)
@@ -44,6 +47,41 @@ class Settings(db.Model):
 
     def __repr__(self):
         return f'<Setting {self.setting}'
+
+# Function to query API and update sunrise & sunset settings
+def update_sun_times():
+    with app.app_context():
+        lat, lng = -31.889105, 116.04647
+        url = f"https://api.sunrisesunset.io/json?lat={lat}&lng={lng}&time_format=unix&timezone=Etc/UTC"
+        try:
+            # Handle the JSON Response
+            response = requests.get(url)
+            data = response.json()
+            # Convert from unix timestamp to ISO
+            sunrise_raw = data["results"]["sunrise"]
+            sunrise_time = datetime.fromtimestamp(int(sunrise_raw), tz=pytz.utc)
+            sunrise_utc = sunrise_time.isoformat()
+            # Convert from unix timestamp to ISO
+            sunset_raw = data["results"]["sunset"]
+            sunset_time = datetime.fromtimestamp(int(sunset_raw), tz=pytz.utc)
+            sunset_utc = sunset_time.isoformat()
+            # Update sunrise
+            sunrise_setting = Settings.query.filter_by(setting="sunrise_iso").first()
+            if sunrise_setting:
+                sunrise_setting.value = sunrise_utc
+            else:
+                db.session.add(Settings(setting="sunrise_iso", value=sunrise_utc))
+            # Update sunset
+            sunset_setting = Settings.query.filter_by(setting="sunset_iso").first()
+            if sunset_setting:
+                sunset_setting.value = sunset_utc
+            else:
+                db.session.add(Settings(setting="sunset_iso", value=sunset_utc))
+            # Save database data
+            db.session.commit()
+            print("Sunrise and sunset times updated.")
+        except Exception as e:
+            print(f"Failed to update sun times: {e}")   
 
 # Prepare the application
 with app.app_context():
@@ -85,6 +123,14 @@ with app.app_context():
         sunset_iso = sixpm_utc.isoformat()
         db.session.add(Settings(setting="sunset_iso", value=sunset_iso))
         db.session.commit()
+    
+    # Update the sunrise & sunset times immediately as a test
+    update_sun_times()
+
+# Start the scheduler
+#scheduler = BackgroundScheduler()
+#scheduler.add_job(func=update_sun_times, trigger="interval", hours=24)  # Runs once every 24 hours
+#scheduler.start()
 
 # Define the user loader for Flask-Login
 @login_manager.user_loader
@@ -111,11 +157,11 @@ def schedules():
 
     sunrise = Settings.query.filter_by(setting="sunrise_iso").first()
     sunrise_iso = datetime.fromisoformat(sunrise.value)
-    sunrise_time = sunrise_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M%p")
+    sunrise_time = sunrise_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M %p")
 
     sunset = Settings.query.filter_by(setting="sunset_iso").first()
     sunset_iso = datetime.fromisoformat(sunset.value)
-    sunset_time = sunset_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M%p")
+    sunset_time = sunset_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M %p")
 
     return render_template('schedules.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time)
 
