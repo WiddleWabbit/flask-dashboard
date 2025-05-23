@@ -174,6 +174,22 @@ def dashboard():
 @app.route("/schedules", methods=["GET", "POST"])
 def schedules():
 
+    if request.method == "POST":
+        lat = request.form.get("latitude")
+        long = request.form.get("longitude")
+        if not lat and not long:
+            flash('Nothing input for latitude or longitude.', 'danger')
+            return redirect(url_for("schedules"))
+        if lat:
+            lat_setting = Settings.query.filter_by(setting="latitude").first() 
+            lat_setting.value = lat
+        if long:
+            long_setting = Settings.query.filter_by(setting="longitude").first()
+            long_setting.value = long
+        db.session.commit()
+        flash("You've successfully updated the coordinates", 'success')
+        return redirect(url_for("schedules"))
+
     timezone = Settings.query.filter_by(setting="timezone").first()
 
     sunrise = Settings.query.filter_by(setting="sunrise_iso").first()
@@ -195,7 +211,7 @@ def schedules():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        # Read Form
+
         username = request.form.get("username")
         password = request.form.get("password")
         # Get the relevant user
