@@ -175,6 +175,9 @@ def dashboard():
 def schedules():
 
     if request.method == "POST":
+        if not current_user.is_authenticated:
+            flash('You need to login to make modifications.', 'danger')
+            return redirect(url_for("schedules"))
         lat = request.form.get("latitude")
         long = request.form.get("longitude")
         if not lat and not long:
