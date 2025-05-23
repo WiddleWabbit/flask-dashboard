@@ -48,14 +48,67 @@ class Settings(db.Model):
     def __repr__(self):
         return f'<Setting {self.setting}'
 
+def get_setting(setting_name):
+    """
+    Return the value of a setting from the database by name.
+    :param setting_name: Name of the setting.
+    :return: The value of the specified setting.
+    """
+    setting = Settings.query.filter_by(setting=setting_name).first()
+    return setting.value if setting else None
+
+def set_setting(setting_name, value):
+    """
+    Set a value for a setting the database, will be created if it doesn't exist or updated if it does.
+    param: setting_name: The name of the setting to set as a string.
+    param: The value to set for the setting.
+    """
+    setting = Settings.query.filter_by(setting=setting_name).first()
+    if setting:
+        setting.value = value
+    else:
+        setting = Settings(setting=setting_name, value=value)
+        db.session.add(setting)
+    db.session.commit()
+
+def format_isotime(time, format="%I:%M %p"):
+    """
+    Reformat time from ISO format to a time object
+    :param time: Time string in ISO format.
+    :param format: Format to output in, default is %I:%M %p
+    :return String in specified output format
+    """
+    time_obj = datetime.fromisoformat(time)
+    local_time = time_obj.astimezone(pytz.timezone(get_setting('timezone')))
+    return local_time.strftime(format)
+
+def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
+    """
+    Convert local time string to ISO format in UTC time
+    :param local_time: Time string in local timezone.
+    :param input_format: Format of the input string, default is "%Y-%m-%d %H:%M:%S"
+    :return: ISO 8601 string in UTC.
+    """
+    try:
+        # Parse the local time string to a naive datetime object
+        naive_dt = datetime.strptime(local_time, input_format)
+        # Localize to the app's timezone
+        local_tz = pytz.timezone(get_setting('timezone'))
+        local_dt = local_tz.localize(naive_dt)
+        # Convert to UTC
+        utc_dt = local_dt.astimezone(pytz.utc)
+        return utc_dt.isoformat()
+    except Exception as e:
+        print(f"Error converting to ISO UTC: {e}")
+    return None
+
+
 # Function to query API and update sunrise & sunset settings
 def update_sun_times():
     with app.app_context():
         # Get latitude and longitude from db
-        lat_obj = Settings.query.filter_by(setting="latitude").first()
-        lat = lat_obj.value
-        long_obj = Settings.query.filter_by(setting="longitude").first()
-        long = long_obj.value
+        lat = get_setting("latitude")
+        long = get_setting("longitude")
         url = f"https://api.sunrisesunset.io/json?lat={lat}&lng={long}&time_format=unix&timezone=Etc/UTC"
         try:
             # Handle the JSON Response
@@ -69,20 +122,10 @@ def update_sun_times():
             sunset_raw = data["results"]["sunset"]
             sunset_time = datetime.fromtimestamp(int(sunset_raw), tz=pytz.utc)
             sunset_utc = sunset_time.isoformat()
-            # Update sunrise
-            sunrise_setting = Settings.query.filter_by(setting="sunrise_iso").first()
-            if sunrise_setting:
-                sunrise_setting.value = sunrise_utc
-            else:
-                db.session.add(Settings(setting="sunrise_iso", value=sunrise_utc))
-            # Update sunset
-            sunset_setting = Settings.query.filter_by(setting="sunset_iso").first()
-            if sunset_setting:
-                sunset_setting.value = sunset_utc
-            else:
-                db.session.add(Settings(setting="sunset_iso", value=sunset_utc))
-            # Save database data
-            db.session.commit()
+
+            set_setting("sunrise_iso", sunrise_utc)
+            set_setting("sunset_iso", sunset_utc)
+
             print("Sunrise and sunset times updated.")
         except Exception as e:
             print(f"Failed to update sun times: {e}")   
@@ -142,7 +185,7 @@ with app.app_context():
         db.session.commit()
     
     # Uncomment to update sunrise/sunset on app startup
-    #update_sun_times()
+    update_sun_times()
 
 # Start the scheduler
 #scheduler = BackgroundScheduler()
@@ -175,38 +218,31 @@ def dashboard():
 def schedules():
 
     if request.method == "POST":
+
         if not current_user.is_authenticated:
             flash('You need to login to make modifications.', 'danger')
             return redirect(url_for("schedules"))
+        
         lat = request.form.get("latitude")
         long = request.form.get("longitude")
         if not lat and not long:
             flash('Nothing input for latitude or longitude.', 'danger')
             return redirect(url_for("schedules"))
         if lat:
-            lat_setting = Settings.query.filter_by(setting="latitude").first() 
-            lat_setting.value = lat
+            set_setting("latitude", lat)
         if long:
-            long_setting = Settings.query.filter_by(setting="longitude").first()
-            long_setting.value = long
-        db.session.commit()
+            set_setting("longitude", long)
+
         flash("You've successfully updated the coordinates", 'success')
         return redirect(url_for("schedules"))
 
-    timezone = Settings.query.filter_by(setting="timezone").first()
+    timezone = get_setting("timezone")
 
-    sunrise = Settings.query.filter_by(setting="sunrise_iso").first()
-    sunrise_iso = datetime.fromisoformat(sunrise.value)
-    sunrise_time = sunrise_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M %p")
+    sunrise_time = format_isotime(get_setting("sunrise_iso"))
+    sunset_time = format_isotime(get_setting("sunset_iso"))
 
-    sunset = Settings.query.filter_by(setting="sunset_iso").first()
-    sunset_iso = datetime.fromisoformat(sunset.value)
-    sunset_time = sunset_iso.astimezone(pytz.timezone('Australia/Perth')).strftime("%I:%M %p")
-
-    latitude_obj = Settings.query.filter_by(setting="latitude").first()
-    latitude = latitude_obj.value
-    longitude_obj = Settings.query.filter_by(setting="longitude").first()
-    longitude = longitude_obj.value
+    latitude = get_setting("latitude")
+    longitude = get_setting("longitude")
 
     return render_template('schedules.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time, lat = latitude, long = longitude)
 
