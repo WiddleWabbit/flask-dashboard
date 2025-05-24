@@ -212,16 +212,36 @@ def update_sun_times():
             response = requests.get(url)
             data = response.json()
             # Convert from unix timestamp to ISO
-            sunrise_raw = data["results"]["sunrise"]
+            sunrise_raw = sanitise(data["results"]["sunrise"])
             sunrise_time = datetime.fromtimestamp(int(sunrise_raw), tz=pytz.utc)
             sunrise_utc = sunrise_time.isoformat()
             # Convert from unix timestamp to ISO
-            sunset_raw = data["results"]["sunset"]
+            sunset_raw = sanitise(data["results"]["sunset"])
             sunset_time = datetime.fromtimestamp(int(sunset_raw), tz=pytz.utc)
             sunset_utc = sunset_time.isoformat()
 
+            dawn_raw = sanitise(data["results"]["dawn"])
+            dawn_time = datetime.fromtimestamp(int(dawn_raw), tz=pytz.utc)
+            dawn_utc = sunset_time.isoformat()
+
+            dusk_raw = sanitise(data["results"]["dusk"])
+            dusk_time = datetime.fromtimestamp(int(dusk_raw), tz=pytz.utc)
+            dusk_utc = dusk_time.isoformat()
+
+            first_light_raw = sanitise(data["results"]["first_light"])
+            first_light_time = datetime.fromtimestamp(int(first_light_raw), tz=pytz.utc)
+            first_light_utc = first_light_time.isoformat()
+
+            last_light_raw = sanitise(data["results"]["last_light"])
+            last_light_time = datetime.fromtimestamp(int(last_light_raw), tz=pytz.utc)
+            last_light_utc = last_light_time.isoformat()
+
             set_setting("sunrise_iso", sunrise_utc)
             set_setting("sunset_iso", sunset_utc)
+            set_setting("dawn_iso", dawn_utc)
+            set_setting("dusk_iso", dusk_utc)
+            set_setting("first_light_iso", first_light_utc)
+            set_setting("last_light_iso", last_light_utc)
 
             print("Sunrise and sunset times updated.")
             return True
@@ -285,7 +305,7 @@ with app.app_context():
         db.session.commit()
     
     # Uncomment to update sunrise/sunset on app startup
-    #update_sun_times()
+    update_sun_times()
 
 # Start the scheduler
 #scheduler = BackgroundScheduler()
@@ -338,13 +358,19 @@ def configuration():
 
     timezone = get_setting("timezone")
 
-    sunrise_time = format_isotime(get_setting("sunrise_iso"))
-    sunset_time = format_isotime(get_setting("sunset_iso"))
-
     latitude = get_setting("latitude")
     longitude = get_setting("longitude")
 
-    return render_template('configuration.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time, lat = latitude, long = longitude)
+    times = {
+        "sunrise": format_isotime(get_setting("sunrise_iso")),
+        "sunset": format_isotime(get_setting("sunset_iso")),
+        "dawn": format_isotime(get_setting("dawn_iso")),
+        "dusk": format_isotime(get_setting("dusk_iso")),
+        "first_light": format_isotime(get_setting("first_light_iso")),
+        "last_light": format_isotime(get_setting("last_light_iso"))
+    }
+
+    return render_template('configuration.html', timezone = timezone, times = times, lat = latitude, long = longitude)
 
 # Schedules Route
 @app.route("/schedules", methods=["GET", "POST"])
