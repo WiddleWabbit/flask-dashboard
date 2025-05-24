@@ -6,7 +6,6 @@ Refactor Todo:
 
 Next Up:
 
-- Move time settings to configuration page.
 - Make update_sun_times run regularly via cron.
 - Setup schedules form.
 
@@ -54,7 +53,7 @@ class Users(UserMixin, db.Model):
     #created_at = db.Column(db.DateTime(timezone=True),server_default=func.now())
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<{self.username}>'
 
 # Settings Database Model
 class Settings(db.Model):
@@ -63,7 +62,19 @@ class Settings(db.Model):
     value = db.Column(db.String(250), unique=False, nullable=False)
 
     def __repr__(self):
-        return f'<Setting {self.setting}'
+        return f'<{self.setting}>'
+
+# Schedules Database Model
+class Schedules(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    day = db.Column(db.Integer, nullable=False)
+    start = db.Column(db.String(50), nullable=False)
+    end = db.Column(db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f'<{self.id}>'
+
+    
 
 def get_user(username):
     """
@@ -305,7 +316,7 @@ with app.app_context():
         db.session.commit()
     
     # Uncomment to update sunrise/sunset on app startup
-    update_sun_times()
+    #update_sun_times()
 
 # Start the scheduler
 #scheduler = BackgroundScheduler()
