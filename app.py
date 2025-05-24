@@ -2,11 +2,11 @@
 Refactor Todo: 
 
 - Function to format date data from API.
-- Sanitize form input function
 - Functions to create non existing on startup.
 
 Next Up:
 
+- Sanitize form input function
 - Move time settings to configuration page.
 - Make update_sun_times run regularly via cron.
 - Setup schedules form.
@@ -17,6 +17,7 @@ Next Up:
 
 # Import the required libraries
 import os
+import html
 from datetime import datetime, time
 import pytz
 from flask import Flask, request, render_template, url_for, redirect, flash
@@ -68,6 +69,7 @@ class Settings(db.Model):
 def get_user(username):
     """
     Return the user object from the database by name.
+
     :param username: The username of the user to fetch.
     :return: The user object.
     """
@@ -81,6 +83,7 @@ def get_user(username):
 def update_user(username, setting, data):
     """
     Update the specified user in the database with the provided data.
+
     :param username: The username to update.
     :param setting: The setting for the user to update.
     :param data: The value to update the setting to.
@@ -101,6 +104,7 @@ def update_user(username, setting, data):
 def get_setting(setting_name):
     """
     Return the value of a setting from the database by name.
+
     :param setting_name: Name of the setting.
     :return: The value of the setting.
     """
@@ -114,6 +118,7 @@ def get_setting(setting_name):
 def set_setting(setting_name, value):
     """
     Set a value for a setting the database, will be created if it doesn't exist or updated if it does.
+
     param: setting_name: The name of the setting to set as a string.
     param: The value to set for the setting.
     :return: True for success, False for failure.
@@ -134,6 +139,7 @@ def set_setting(setting_name, value):
 def format_isotime(time, format="%I:%M %p"):
     """
     Reformat time from ISO format to a time object
+
     :param time: Time string in ISO format.
     :param format: Format to output in, default is %I:%M %p
     :return String in specified output format
@@ -148,6 +154,7 @@ def format_isotime(time, format="%I:%M %p"):
 def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
     """
     Convert local time string to ISO format in UTC time
+
     :param local_time: Time string in local timezone.
     :param input_format: Format of the input string, default is "%Y-%m-%d %H:%M:%S"
     :return: ISO 8601 string in UTC.
@@ -164,9 +171,36 @@ def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
         print(f"Error converting to ISO UTC: {e}")
     return None
 
+def sanitise(value, expected_type=str):
+    """
+    Sanitise form input based on expected type.
+    - For strings: strip whitespace and escape HTML.
+    - For numbers: convert to int or float, or return None if invalid.
+    
+    :param value: The value to sanitise.
+    :param expected_type: The expected variable type. Default is string.
+    :return: The escaped value expected type.
+    """
+    if expected_type == str:
+        if not isinstance(value, str):
+            return value
+        return html.escape(value.strip())
+    elif expected_type == int:
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return None
+    elif expected_type == float:
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return None
+    return value
+
 def update_sun_times():
     """
     Update the sunrise & sunset times in the database using apisunset.io.
+
     :return: True for success, False for failure.
     """
     with app.app_context():
@@ -290,8 +324,8 @@ def schedules():
             flash('You need to login to make modifications.', 'danger')
             return redirect(url_for("schedules"))
         
-        lat = request.form.get("latitude")
-        long = request.form.get("longitude")
+        lat = sanitise(request.form.get("latitude"), float)
+        long = sanitise(request.form.get("longitude"),float)
         if not lat and not long:
             flash('Nothing input for latitude or longitude.', 'danger')
             return redirect(url_for("schedules"))
@@ -318,8 +352,8 @@ def schedules():
 def login():
     if request.method == "POST":
 
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = sanitise(request.form.get("username"))
+        password = sanitise(request.form.get("password"))
 
         user = get_user(username)
 
@@ -343,9 +377,9 @@ def account():
     if request.method == "POST":
 
         if request.args.get("form") == "change_password":
-            current_password = request.form.get("current_password")
-            new_password = request.form.get("new_password")
-            new_password_conf = request.form.get("new_password_conf")
+            current_password = sanitise(request.form.get("current_password"))
+            new_password = sanitise(request.form.get("new_password"))
+            new_password_conf = sanitise(request.form.get("new_password_conf"))
 
             if new_password != new_password_conf:
                 flash('Provided new passwords do not match!', 'danger')
@@ -361,11 +395,11 @@ def account():
                 return redirect(url_for("account"))
 
         elif request.args.get("form") == "update_details":
-            current_password = request.form.get("current_password_details")
-            username = request.form.get("username")
-            firstname = request.form.get("firstname")
-            lastname = request.form.get("lastname")
-            email = request.form.get("email")
+            current_password = sanitise(request.form.get("current_password_details"))
+            username = sanitise(request.form.get("username"))
+            firstname = sanitise(request.form.get("firstname"))
+            lastname = sanitise(request.form.get("lastname"))
+            email = sanitise(request.form.get("email"))
 
             if check_password_hash(user.password, current_password):
                 if not username and not firstname and not lastname and not email:
