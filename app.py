@@ -43,6 +43,7 @@ login_manager.login_view = "login"
 
 # User Database Model
 class Users(UserMixin, db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(250), unique=True, nullable=False)
     password = db.Column(db.String(250), nullable=False)
@@ -50,31 +51,80 @@ class Users(UserMixin, db.Model):
     lastname = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(250), unique=True, nullable=False)
     created_at = db.Column(db.String(60), nullable=False, default=datetime.now(pytz.utc))
-    #created_at = db.Column(db.DateTime(timezone=True),server_default=func.now())
 
     def __repr__(self):
         return f'<{self.username}>'
 
 # Settings Database Model
 class Settings(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = "settings"
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     setting = db.Column(db.String(250), unique=True, nullable=False)
     value = db.Column(db.String(250), unique=False, nullable=False)
 
     def __repr__(self):
         return f'<{self.setting}>'
 
-# Schedules Database Model
+
+# Association table for many-to-many relationship between Zones and Schedules
+zone_schedules = db.Table(
+    'zone_schedules',
+    db.Column('zone_id', db.Integer, db.ForeignKey('zones.id'), primary_key=True),
+    db.Column('schedule_id', db.Integer, db.ForeignKey('schedules.id'), primary_key=True)
+)
+
+# Association table for many-to-many relationship between Schedules and DaysOfWeek
+schedule_days = db.Table(
+    'schedule_days',
+    db.Column('schedule_id', db.Integer, db.ForeignKey('schedules.id'), primary_key=True),
+    db.Column('day_id', db.Integer, db.ForeignKey('days_of_week.id'), primary_key=True)
+)
+
+
+# DaysOfWeek Database Model
+class DaysOfWeek(db.Model):
+    __tablename__ = "days_of_week"
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    name = db.Column(db.String(20), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+# Zones Database Model
+class Zones(db.Model):
+    __tablename__ = "zones"
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    name = db.Column(db.String(250), nullable=False)
+    description = db.Column(db.String(250), nullable=True)
+    solenoid = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.String(60), nullable=False, default=datetime.now(pytz.utc))
+    schedules = db.relationship(
+        'Schedules',
+        secondary=zone_schedules,
+        lazy='subquery',
+        backref=db.backref('zones', lazy=True),
+        cascade="all, delete"
+    )
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+# Schedules Database Model (update)
 class Schedules(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    day = db.Column(db.Integer, nullable=False)
+    __tablename__ = "schedules"
+    id = db.Column(db.Integer, primary_key=True, unique=True)
     start = db.Column(db.String(50), nullable=False)
     end = db.Column(db.String(50), nullable=False)
+    active = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.String(60), nullable=False, default=datetime.now(pytz.utc))
+    days = db.relationship(
+        'DaysOfWeek', 
+        secondary=schedule_days,
+        lazy='subquery',
+        backref=db.backref('schedules', lazy=True))
 
     def __repr__(self):
         return f'<{self.id}>'
-
-    
 
 def get_user(username):
     """
@@ -276,6 +326,16 @@ with app.app_context():
         db.session.add(admin_user)
         db.session.commit()
 
+    # Create all the days of the week if they don't exist
+    # Create in this order to match datetime index list
+    days = [
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    ]
+    for day in days:
+        if not DaysOfWeek.query.filter_by(name=day).first():
+            db.session.add(DaysOfWeek(name=day))
+    db.session.commit()
+
     # Create default latitude and longitude if none exist
     lat_exists = Settings.query.filter_by(setting="latitude").first()
     long_exists = Settings.query.filter_by(setting="longitude").first()
@@ -382,6 +442,12 @@ def configuration():
     }
 
     return render_template('configuration.html', timezone = timezone, times = times, lat = latitude, long = longitude)
+
+# Zones Route
+@app.route("/zones", methods=["GET", "POST"])
+def zones():
+
+    return render_template('zones.html')
 
 # Schedules Route
 @app.route("/schedules", methods=["GET", "POST"])

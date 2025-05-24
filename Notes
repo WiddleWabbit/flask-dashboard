@@ -46,6 +46,9 @@ current_time_utc.isoformat()
 
 
 
+from app import db, Users, Settings, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+
+
 
 Settings.__table__.drop(db.engine)
 
