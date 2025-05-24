@@ -6,7 +6,6 @@ Refactor Todo:
 
 Next Up:
 
-- Sanitize form input function
 - Move time settings to configuration page.
 - Make update_sun_times run regularly via cron.
 - Setup schedules form.
@@ -314,9 +313,9 @@ def home():
 def dashboard():
     return render_template('dashboard.html')
 
-# Schedules Route
-@app.route("/schedules", methods=["GET", "POST"])
-def schedules():
+# Configuration Route
+@app.route("/configuration", methods=["GET", "POST"])
+def configuration():
 
     if request.method == "POST":
 
@@ -335,7 +334,7 @@ def schedules():
             set_setting("longitude", long)
 
         flash("You've successfully updated the coordinates", 'success')
-        return redirect(url_for("schedules"))
+        return redirect(url_for("configuration"))
 
     timezone = get_setting("timezone")
 
@@ -345,7 +344,13 @@ def schedules():
     latitude = get_setting("latitude")
     longitude = get_setting("longitude")
 
-    return render_template('schedules.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time, lat = latitude, long = longitude)
+    return render_template('configuration.html', timezone = timezone, sunrise = sunrise_time, sunset = sunset_time, lat = latitude, long = longitude)
+
+# Schedules Route
+@app.route("/schedules", methods=["GET", "POST"])
+def schedules():
+
+    return render_template('schedules.html')
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])
