@@ -1,3 +1,20 @@
+"""
+Refactor Todo: 
+
+- Function to format date data from API.
+- Sanitize form input function
+- Functions to create non existing on startup.
+
+Next Up:
+
+- Move time settings to configuration page.
+- Make update_sun_times run regularly via cron.
+- Setup schedules form.
+
+"""
+
+
+
 # Import the required libraries
 import os
 from datetime import datetime, time
@@ -48,28 +65,71 @@ class Settings(db.Model):
     def __repr__(self):
         return f'<Setting {self.setting}'
 
+def get_user(username):
+    """
+    Return the user object from the database by name.
+    :param username: The username of the user to fetch.
+    :return: The user object.
+    """
+    try:
+        user = Users.query.filter_by(username=username).first()
+        return user if user else None
+    except Exception as e:
+        print(f"Unable to get user from database: {e}")
+    return None
+
+def update_user(username, setting, data):
+    """
+    Update the specified user in the database with the provided data.
+    :param username: The username to update.
+    :param setting: The setting for the user to update.
+    :param data: The value to update the setting to.
+    :return: True for success, False for failure.
+    """
+    try:
+        user = get_user(username)
+        if user and hasattr(user, setting):
+            setattr(user, setting, data)
+            db.session.commit()
+            return True
+        else:
+            print(f"User not found or invalid setting: {setting}")
+    except Exception as e:
+        print(f"Unable to update user: {e}")
+    return False
+
 def get_setting(setting_name):
     """
     Return the value of a setting from the database by name.
     :param setting_name: Name of the setting.
-    :return: The value of the specified setting.
+    :return: The value of the setting.
     """
-    setting = Settings.query.filter_by(setting=setting_name).first()
-    return setting.value if setting else None
+    try:
+        setting = Settings.query.filter_by(setting=setting_name).first()
+        return setting.value if setting else None
+    except Exception as e:
+        print(f"Unable to get setting from database: {e}")
+    return None
 
 def set_setting(setting_name, value):
     """
     Set a value for a setting the database, will be created if it doesn't exist or updated if it does.
     param: setting_name: The name of the setting to set as a string.
     param: The value to set for the setting.
+    :return: True for success, False for failure.
     """
-    setting = Settings.query.filter_by(setting=setting_name).first()
-    if setting:
-        setting.value = value
-    else:
-        setting = Settings(setting=setting_name, value=value)
-        db.session.add(setting)
-    db.session.commit()
+    try:
+        setting = Settings.query.filter_by(setting=setting_name).first()
+        if setting:
+            setting.value = value
+        else:
+            setting = Settings(setting=setting_name, value=value)
+            db.session.add(setting)
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(f"Unable to set setting: {e}")
+    return False
 
 def format_isotime(time, format="%I:%M %p"):
     """
@@ -78,9 +138,12 @@ def format_isotime(time, format="%I:%M %p"):
     :param format: Format to output in, default is %I:%M %p
     :return String in specified output format
     """
-    time_obj = datetime.fromisoformat(time)
-    local_time = time_obj.astimezone(pytz.timezone(get_setting('timezone')))
-    return local_time.strftime(format)
+    try:
+        time_obj = datetime.fromisoformat(time)
+        local_time = time_obj.astimezone(pytz.timezone(get_setting('timezone')))
+        return local_time.strftime(format)
+    except Exception as e:
+        print(f"Error reformatting isotime: {e}")
 
 def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
     """
@@ -92,7 +155,6 @@ def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
     try:
         # Parse the local time string to a naive datetime object
         naive_dt = datetime.strptime(local_time, input_format)
-        # Localize to the app's timezone
         local_tz = pytz.timezone(get_setting('timezone'))
         local_dt = local_tz.localize(naive_dt)
         # Convert to UTC
@@ -102,9 +164,11 @@ def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
         print(f"Error converting to ISO UTC: {e}")
     return None
 
-
-# Function to query API and update sunrise & sunset settings
 def update_sun_times():
+    """
+    Update the sunrise & sunset times in the database using apisunset.io.
+    :return: True for success, False for failure.
+    """
     with app.app_context():
         # Get latitude and longitude from db
         lat = get_setting("latitude")
@@ -127,8 +191,11 @@ def update_sun_times():
             set_setting("sunset_iso", sunset_utc)
 
             print("Sunrise and sunset times updated.")
+            return True
+
         except Exception as e:
-            print(f"Failed to update sun times: {e}")   
+            print(f"Failed to update sun times: {e}")
+            return False
 
 # Prepare the application
 with app.app_context():
@@ -185,7 +252,7 @@ with app.app_context():
         db.session.commit()
     
     # Uncomment to update sunrise/sunset on app startup
-    update_sun_times()
+    #update_sun_times()
 
 # Start the scheduler
 #scheduler = BackgroundScheduler()
@@ -253,9 +320,9 @@ def login():
 
         username = request.form.get("username")
         password = request.form.get("password")
-        # Get the relevant user
-        user = Users.query.filter_by(username=username).first()
-        # See if the password matches
+
+        user = get_user(username)
+
         if user and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for("dashboard"))
@@ -269,62 +336,59 @@ def login():
 @app.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
-    user = Users.query.filter_by(username=current_user.username).first()
-    created_at = datetime.fromisoformat(user.created_at)
-    created_tzc = created_at.astimezone(pytz.timezone('Australia/Perth'))
-    formatted_created = created_tzc.strftime('%B %d, %Y, %I:%M %p')
-    user_details = {'username':user.username, 'firstname': user.firstname, 'lastname': user.lastname, 'email':user.email, 'created':formatted_created}
+
+    user = get_user(username=current_user.username)
+    formatted_created = format_isotime(user.created_at, "%B %d, %Y, %I:%M %p")
+
     if request.method == "POST":
-        # Change password form
+
         if request.args.get("form") == "change_password":
             current_password = request.form.get("current_password")
             new_password = request.form.get("new_password")
             new_password_conf = request.form.get("new_password_conf")
-            # Check new passwords match
+
             if new_password != new_password_conf:
                 flash('Provided new passwords do not match!', 'danger')
                 return redirect(url_for("account"))
-            # Confirm password is correct
+
             if check_password_hash(user.password, current_password):
                 hashed_password = generate_password_hash(new_password, method="pbkdf2:sha256")
-                user.password = hashed_password
-                db.session.commit()
+                update_user(user.username, "password", hashed_password)
                 flash("You've successfully updated your password.", 'success')
                 return redirect(url_for("account"))
             else:
                 flash('Provided new passwords do not match!', 'danger')
                 return redirect(url_for("account"))
-        # Update user details form
+
         elif request.args.get("form") == "update_details":
             current_password = request.form.get("current_password_details")
             username = request.form.get("username")
             firstname = request.form.get("firstname")
             lastname = request.form.get("lastname")
             email = request.form.get("email")
-            # Confirm password correct
+
             if check_password_hash(user.password, current_password):
                 if not username and not firstname and not lastname and not email:
                     flash("No fields submitted to change.", 'danger')
                     return redirect(url_for("account"))
                 if username:
-                    new_username = Users.query.filter_by(username=username).first()
-                    if new_username:
+                    if get_user(username):
                         flash('Unable to update. Username already exists.', 'danger')
                         return redirect(url_for("account"))
-                    user.username = username
+                    update_user(user.username, "username", username)
                 if firstname:
-                    user.firstname = firstname
+                    update_user(user.username, "firstname", firstname)
                 if lastname:
-                    user.lastname = lastname
+                    update_user(user.username, "lastname", lastname)
                 if email:
-                    user.email = email
-                db.session.commit()
+                    update_user(user.username, "email", email)
+
                 flash("You've successfully updated your details.", 'success')
                 return redirect(url_for("account"))
             else:
                 flash('Password entered is incorrect!', 'danger')
                 return redirect(url_for("account"))
-    return render_template("account.html", user = user_details)
+    return render_template("account.html", user = user, created = formatted_created)
 
 # Logout Route
 @app.route("/logout")
