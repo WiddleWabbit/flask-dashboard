@@ -1,8 +1,9 @@
 # Setup Commands
 apt update && apt upgrade -y
 apt-get install python3-pip
-apt-get install sqlite3
 apt-get install git
+
+apt-get install sqlite3
 apt-get install python3-flask
 apt-get install python3-flask-sqlalchemy
 apt-get install python3-flask-login
@@ -44,9 +45,11 @@ import pytz
 current_time_utc = datetime.now(pytz.utc)
 current_time_utc.isoformat()
 
-
-
+# Clear Tables
 from app import db, Users, Settings, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+db.drop_all()
+db.session.commit()
+
 
 
 

@@ -3,11 +3,16 @@ Refactor Todo:
 
 - Function to format date data from API.
 - Functions to create non existing on startup.
+- Split into multiple files.
 
 Next Up:
 
+- Weather column in schedules
+- Many to many groups / one to many groups
 - Make update_sun_times run regularly via cron.
 - Setup schedules form.
+- Defaults for other sun times
+- Add Max characters to inputs to match db
 
 """
 
@@ -90,6 +95,21 @@ class DaysOfWeek(db.Model):
     def __repr__(self):
         return f'<{self.name}>'
 
+# Schedule Groups Database Model
+class Groups(db.Model):
+    __tablename__ = "groups"
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    name = db.Column(db.String(100), unique=False)
+    db.relationship(
+        'Schedules',
+        backref="groups",
+        cascade="all, delete"
+    )
+
+    def __repr__(self):
+        return f'<{self.name}>'
+
+
 # Zones Database Model
 class Zones(db.Model):
     __tablename__ = "zones"
@@ -113,9 +133,11 @@ class Zones(db.Model):
 class Schedules(db.Model):
     __tablename__ = "schedules"
     id = db.Column(db.Integer, primary_key=True, unique=True)
+    group = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
     start = db.Column(db.String(50), nullable=False)
     end = db.Column(db.String(50), nullable=False)
     active = db.Column(db.Integer, nullable=False)
+    weather_dependent = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.String(60), nullable=False, default=datetime.now(pytz.utc))
     days = db.relationship(
         'DaysOfWeek', 
@@ -125,6 +147,7 @@ class Schedules(db.Model):
 
     def __repr__(self):
         return f'<{self.id}>'
+
 
 def get_user(username):
     """
@@ -336,6 +359,12 @@ with app.app_context():
             db.session.add(DaysOfWeek(name=day))
     db.session.commit()
 
+    # Create a single default group if none exist
+    groups = Groups.query.all()
+    if not groups:
+        db.session.add(Groups(name="Group 1"))
+        db.session.commit()
+
     # Create default latitude and longitude if none exist
     lat_exists = Settings.query.filter_by(setting="latitude").first()
     long_exists = Settings.query.filter_by(setting="longitude").first()
@@ -453,7 +482,9 @@ def zones():
 @app.route("/schedules", methods=["GET", "POST"])
 def schedules():
 
-    return render_template('schedules.html')
+    groups = Groups.query.all()
+
+    return render_template('schedules.html', groups=groups)
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])
