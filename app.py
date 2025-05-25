@@ -8,11 +8,14 @@ Refactor Todo:
 Next Up:
 
 - Weather column in schedules
-- Many to many groups / one to many groups
 - Make update_sun_times run regularly via cron.
 - Setup schedules form.
 - Defaults for other sun times
 - Add Max characters to inputs to match db
+
+Other:
+- Build/Publish automatically when pushed to branch
+- Auto pull regularly on pi.
 
 """
 
@@ -102,6 +105,7 @@ class Groups(db.Model):
     name = db.Column(db.String(100), unique=False)
     db.relationship(
         'Schedules',
+        lazy='subquery',
         backref="groups",
         cascade="all, delete"
     )
@@ -483,8 +487,9 @@ def zones():
 def schedules():
 
     groups = Groups.query.all()
+    days_of_week = DaysOfWeek.query.all()
 
-    return render_template('schedules.html', groups=groups)
+    return render_template('schedules.html', groups=groups, days = days_of_week)
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])

@@ -21,12 +21,12 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            <input class="form-control" type="text" name="{{ group.name }}" placeholder="{{ group.name }}" required></input>
+                            <input class="form-control w-50" type="text" name="{{ group.name }}" placeholder="{{ group.name }}" required></input>
                         </button>
                     </h2>
                     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
-                        <div class="accordion-body d-flex gap-3 align-middle">
-                            <div class="w-100">
+                        <div class="accordion-body row">
+                            <div class="col-md-6">
                                 <p class="text-secondary mb-1"><small>Start Time:</small></p>
                                 <div class="input-group pb-3" style="max-width:400px">
                                     <span class="input-group-text">
@@ -38,7 +38,7 @@
                                     <input class="form-control" type="time" name="" placeholder="" required />
                                 </div>
                             </div>
-                            <div class="w-100">
+                            <div class="col-md-6">
                                 <p class="text-secondary mb-1"><small>Duration (minutes):</small></p>
                                 <div class="input-group pb-3" style="max-width:400px">
                                     <span class="input-group-text">
@@ -49,6 +49,17 @@
                                         </svg>
                                     </span>
                                     <input class="form-control" type="number" name="" placeholder="" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-secondary mb-1"><small>Operating Days:</small></p>
+                                <div class="d-flex justify-content-between">
+                                    {% for day in days %}
+                                        <div class="">
+                                            <input type="checkbox" class="btn-check" id="day-{{ day.id }}" autocomplete="off">
+                                            <label class="btn px-1" for="day-{{ day.id }}">{{ day.name|truncate(1, True, '', 0) }}</label>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <button class="btn h-50 my-auto text-secondary mt-4">
@@ -103,4 +114,5 @@
     </div>-->
 
 </div>
+
 {% endblock %}
