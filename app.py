@@ -4,11 +4,13 @@ Refactor Todo:
 - Function to format date data from API.
 - Functions to create non existing on startup.
 - Split into multiple files.
+- Make all functions explicitly require certain variable types
 
 Next Up:
 
-- Weather column in schedules
-- Make update_sun_times run regularly via cron.
+- Ensure that zones repopulate with data via js if they were existing before
+- Make update_sun_times run regularly via cron. -tested not implemented
+- Warning for deletion of zones
 - Setup schedules form.
 - Defaults for other sun times
 - Add Max characters to inputs to match db
@@ -120,7 +122,7 @@ class Zones(db.Model):
     id = db.Column(db.Integer, primary_key=True, unique=True)
     name = db.Column(db.String(250), nullable=False)
     description = db.Column(db.String(250), nullable=True)
-    solenoid = db.Column(db.Integer, nullable=False)
+    solenoid = db.Column(db.Integer, nullable=False, unique=True)
     created_at = db.Column(db.String(60), nullable=False, default=datetime.now(pytz.utc))
     schedules = db.relationship(
         'Schedules',
@@ -221,6 +223,80 @@ def set_setting(setting_name, value):
         return True
     except Exception as e:
         print(f"Unable to set setting: {e}")
+    return False
+
+def get_zone(id):
+    """
+    Retrieve a zone from the database by its ID.
+
+    :param id: The ID of the zone to retrieve.
+    :return: The zone object if found, otherwise None.
+    """
+    try:
+        zone = Zones.query.filter_by(id=id).first()
+        return zone if zone else None
+    except Exception as e:
+        print(f"Unable to get zone from database: {e}")
+    return None
+
+def get_all_zones():
+    """
+    Retrieve all zones from the database.
+
+    :return: A list of all zone objects if any exist, otherwise None.
+    """
+    try:
+        zones = Zones.query.all()
+        return zones if zones else None
+    except Exception as e:
+        print(f"Unable to get all zones from database: {e}")
+    return None
+
+def update_zone(id, name, desc, solenoid):
+    """
+    Create or update a zone in the database.
+
+    If a zone with the given ID exists, its name, description, and solenoid are updated.
+    If it does not exist, a new zone is created with the provided values.
+
+    :param id: The ID of the zone.
+    :param name: The name of the zone.
+    :param desc: The description of the zone.
+    :param solenoid: The solenoid number for the zone.
+    :return: True for success, False for failure.
+    """
+    try:
+        zone = Zones.query.filter_by(id=id).first()
+        if zone:
+            zone.name = name
+            zone.description = desc
+            zone.solenoid = solenoid
+        else:
+            zone = Zones(id=id, name=name, description=desc, solenoid=solenoid)
+            db.session.add(zone)
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(f"Unable to update zone: {e}")
+    return False
+
+def delete_zone(id):
+    """
+    Delete a zone from the database by its ID.
+
+    :param id: The ID of the zone to delete.
+    :return: True if the zone was deleted successfully, False otherwise.
+    """
+    try:
+        zone = Zones.query.filter_by(id=id).first()
+        if zone:
+            db.session.delete(zone)
+            db.session.commit()
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Unable to delete zone: {id}, error: {e}")
     return False
 
 def format_isotime(time, format="%I:%M %p"):
@@ -480,7 +556,65 @@ def configuration():
 @app.route("/zones", methods=["GET", "POST"])
 def zones():
 
-    return render_template('zones.html')
+    if request.method == "POST":
+
+        if request.args.get("form") == "update_zones":
+            
+            submission = {}
+            fields = request.form.items()
+
+            if fields:
+
+                fields = request.form.items()
+
+                # Should be a function
+                numbers = set()
+                for key, value in fields:
+                    if "-" in key:
+                        suffix = key.rsplit("-", 1)[-1]
+                        if suffix.isdigit():
+                            numbers.add(suffix)
+                zones = len(numbers)
+
+                # Update submitted zones
+                for i in range(1, zones + 1):
+
+                    id = sanitise(request.form.get(f"id-{i}"))
+                    name = sanitise(request.form.get(f"name-{i}"))
+                    desc = sanitise(request.form.get(f"description-{i}"))
+                    solenoid = sanitise(request.form.get(f"solenoid-{i}"))
+
+                    update_zone(id, name, desc, solenoid)
+
+                # Check for unsubmitted zones and delete
+                all_zones = get_all_zones()
+                if all_zones:
+                    flash(len(all_zones), 'danger')
+                    if len(all_zones) > zones:
+
+                        # Starting from zone following last zone submitted
+                        next_zone_id = zones + 1
+                        while next_zone_id <= len(all_zones):
+
+                            flash(f"Deleting zone {next_zone_id}", 'danger')
+                            delete_zone(next_zone_id)
+                            next_zone_id = next_zone_id + 1
+
+                flash("Successfully updated zones.", 'success')
+                return redirect(url_for("zones"))
+
+            else:
+                
+                flash('Empty form submitted', 'danger')
+                return redirect(url_for("zones"))
+
+    
+
+    zones = get_all_zones()
+    if not zones:
+        zones = [{"id":1, "name":"", "description":"", "solenoid":""}]
+    
+    return render_template('zones.html', zones=zones)
 
 # Schedules Route
 @app.route("/schedules", methods=["GET", "POST"])
