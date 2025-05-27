@@ -129,7 +129,7 @@ class Zones(db.Model):
         secondary=zone_schedules,
         lazy='subquery',
         backref=db.backref('zones', lazy=True),
-        cascade="all, delete"
+        cascade="all, delete-orphan"
     )
 
     def __repr__(self):
@@ -589,14 +589,12 @@ def zones():
                 # Check for unsubmitted zones and delete
                 all_zones = get_all_zones()
                 if all_zones:
-                    flash(len(all_zones), 'danger')
                     if len(all_zones) > zones:
 
                         # Starting from zone following last zone submitted
                         next_zone_id = zones + 1
                         while next_zone_id <= len(all_zones):
 
-                            flash(f"Deleting zone {next_zone_id}", 'danger')
                             delete_zone(next_zone_id)
                             next_zone_id = next_zone_id + 1
 
