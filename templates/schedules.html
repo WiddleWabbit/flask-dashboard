@@ -21,11 +21,18 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            <input class="form-control w-50" type="text" name="{{ group.name }}" placeholder="{{ group.name }}" value="{{ group.name }}" required></input>
+                            <div class="d-flex col-xl-10 gap-2">
+                                <input class="form-control control" type="text" name="{{ group.name }}" placeholder="{{ group.name }}" value="{{ group.name }}" required style="max-width:400px;"></input>
+                                <div class="d-flex gap-2">
+                                    <span type="button" class="btn btn-outline-secondary add-schedule control" tabindex="0">Add</span>
+                                    <span type="button" class="btn btn-outline-danger remove-schedule control" tabindex="0">Remove</span>
+                                </div>
+                            </div>
                         </button>
                     </h2>
                     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
                         <!-- Schedule-->
+                        {% for schedule in group.schedules %}
                         <div class="accordion-body row">
                             <div class="col-xl-3">
                                 <p class="text-secondary mb-1"><small>Start Time:</small></p>
@@ -36,7 +43,7 @@
                                             <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
                                         </svg>
                                     </span>
-                                    <input class="form-control" type="time" name="" placeholder="" required />
+                                    <input class="form-control" type="time" name="" placeholder="" value="{{ schedule.start }}" required />
                                 </div>
                             </div>
                             <div class="col-xl-3">
@@ -49,7 +56,7 @@
                                             <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/>
                                         </svg>
                                     </span>
-                                    <input class="form-control" type="number" name="" placeholder="" required />
+                                    <input class="form-control" type="number" name="" placeholder="" value="{{ schedule_durations[schedule.id] }}" required />
                                 </div>
                             </div>
                             <div class="col-xl-4">
@@ -57,7 +64,7 @@
                                 <div class="d-flex justify-content-between">
                                     {% for day in days %}
                                         <div class="">
-                                            <input type="checkbox" class="btn-check" id="day-{{ day.id }}" autocomplete="off">
+                                            <input type="checkbox" class="btn-check" id="day-{{ day.id }}" autocomplete="off" {% if day in schedule.days %}checked{% endif %}>
                                             <label class="btn px-1" for="day-{{ day.id }}">{{ day.name|truncate(3, True, '', 0) }}</label>
                                         </div>
                                     {% endfor %}
@@ -68,7 +75,7 @@
                                 <div class="d-flex justify-content-between">
                                     {% for zone in zones %}
                                         <div class="">
-                                            <input type="checkbox" class="btn-check" id="zone-{{ zone.id }}" autocomplete="off">
+                                            <input type="checkbox" class="btn-check" id="zone-{{ zone.id }}" autocomplete="off" {% if zone in schedule.zones %}checked{% endif %}>
                                             <label class="btn px-1" for="zone-{{ zone.id }}">{{ zone.name }}</label>
                                         </div>
                                     {% endfor %}
@@ -82,6 +89,7 @@
                             </button> -->
                         </div>
                         <!-- End Schedule-->
+                        {% endfor %}
                     </div>
                 </div>
             {% endfor %}
@@ -96,12 +104,14 @@
 </div>
 
 <script>
-document.querySelectorAll('.accordion .accordion-header input').forEach(function(input) {
+document.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
   input.addEventListener('focus', function(event) {
-    input.parentElement.setAttribute('data-bs-toggle', 'disabled');
+    const btn = input.closest('.accordion-header').querySelector('.accordion-button');
+    if (btn) btn.setAttribute('data-bs-toggle', 'disabled');
   });
   input.addEventListener('blur', function(event) {
-    input.parentElement.setAttribute('data-bs-toggle', 'collapse');
+    const btn = input.closest('.accordion-header').querySelector('.accordion-button');
+    if (btn) btn.setAttribute('data-bs-toggle', 'collapse');
   });
 });
 </script>

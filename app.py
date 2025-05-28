@@ -18,6 +18,18 @@ Other:
 - Build/Publish automatically when pushed to branch
 - Auto pull regularly on pi.
 
+
+
+
+SCHEDULES NEED A NAME
+FORM NEEDS TO INCLUDE ACTIVE AND WEATHER DEPENDENT
+
+
+
+Notes:
+DB stores all datetime's as ISO UTC.
+DB stores all time's as strings
+
 """
 
 
@@ -104,10 +116,10 @@ class Groups(db.Model):
     __tablename__ = "groups"
     id = db.Column(db.Integer, primary_key=True, unique=True)
     name = db.Column(db.String(100), unique=False)
-    db.relationship(
+    schedules = db.relationship(
         'Schedules',
-        lazy='subquery',
-        backref="groups",
+        lazy=True,
+        backref=db.backref('groups', lazy=True),
         cascade="all, delete"
     )
 
@@ -126,7 +138,7 @@ class Zones(db.Model):
     schedules = db.relationship(
         'Schedules',
         secondary=zone_schedules,
-        lazy='subquery',
+        lazy=True,
         backref=db.backref('zones', lazy=True),
         cascade="all, delete"
     )
@@ -134,7 +146,7 @@ class Zones(db.Model):
     def __repr__(self):
         return f'<{self.name}>'
 
-# Schedules Database Model (update)
+# Schedules Database Model
 class Schedules(db.Model):
     __tablename__ = "schedules"
     id = db.Column(db.Integer, primary_key=True, unique=True)
@@ -147,7 +159,7 @@ class Schedules(db.Model):
     days = db.relationship(
         'DaysOfWeek', 
         secondary=schedule_days,
-        lazy='subquery',
+        lazy=True,
         backref=db.backref('schedules', lazy=True))
 
     def __repr__(self):
@@ -438,10 +450,26 @@ with app.app_context():
             db.session.add(DaysOfWeek(name=day))
     db.session.commit()
 
-    # Create a single default group if none exist
+    zones = get_all_zones()
+    if not zones:
+        db.session.add(Zones(name="Zone 1", solenoid=1))
+        db.session.commit()
+
     groups = Groups.query.all()
     if not groups:
         db.session.add(Groups(name="Group 1"))
+        db.session.commit()
+
+    schedules = Schedules.query.all()
+    if not schedules:
+        group = Groups.query.first()
+        zone = Zones.query.first()
+        days = DaysOfWeek.query.all()
+        day = days[2]
+        new_sch = Schedules(group=group.id, start="23:59", end="00:05", active=0, weather_dependent=0)
+        new_sch.days.append(day)
+        new_sch.zones.append(zone)
+        db.session.add(new_sch)
         db.session.commit()
 
     # Create default latitude and longitude if none exist
@@ -618,10 +646,25 @@ def zones():
 def schedules():
 
     groups = Groups.query.all()
-    zones = Zones.query.all()
+    zones = get_all_zones()
     days_of_week = DaysOfWeek.query.all()
 
-    return render_template('schedules.html', groups=groups, days = days_of_week, zones = zones)
+    # Create a dict of schedule durations by schedule id
+    schedule_durations = {}
+    all_schedules = Schedules.query.all()
+    for sched in all_schedules:
+        try:
+            start_dt = datetime.strptime(sched.start, "%H:%M")
+            end_dt = datetime.strptime(sched.end, "%H:%M")
+            # Handle overnight schedules
+            if end_dt < start_dt:
+                end_dt = end_dt.replace(day=start_dt.day + 1)
+            duration = (end_dt - start_dt).seconds // 60
+            schedule_durations[sched.id] = duration
+        except Exception as e:
+            schedule_durations[sched.id] = None
+
+    return render_template('schedules.html', groups=groups, days=days_of_week, zones=zones, schedule_durations=schedule_durations)
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])

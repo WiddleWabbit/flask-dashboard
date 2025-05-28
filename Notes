@@ -70,3 +70,13 @@ class Child(db.Model):
     __tablename__= "children"    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     parent_id = db.Column(db.Integer, db.ForeignKey("parents.id"), nullable=True)
+
+
+
+
+
+
+    sch = Schedules.query.first()
+    day = DaysOfWeek.query.all()    
+    d = day[2]
+    sch.days.append(d)
