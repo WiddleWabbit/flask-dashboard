@@ -12,7 +12,7 @@
     </div>
 
     <!-- Time Settings Section-->
-    <div class="col-sm-12 col-xs-12 col-xl-8 col-lg-10 col-md-12 mb-4">
+    <div class="col-sm-12 col-xs-12 col-xl-12 col-lg-12 col-md-12 mb-4">
         
         <form action="/schedules?form=update_schedules" method="post">
         <div class="accordion" id="accordionExample">
@@ -25,8 +25,9 @@
                         </button>
                     </h2>
                     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                        <!-- Schedule-->
                         <div class="accordion-body row">
-                            <div class="col-md-6">
+                            <div class="col-xl-3">
                                 <p class="text-secondary mb-1"><small>Start Time:</small></p>
                                 <div class="input-group pb-3" style="max-width:400px">
                                     <span class="input-group-text">
@@ -38,7 +39,7 @@
                                     <input class="form-control" type="time" name="" placeholder="" required />
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-xl-3">
                                 <p class="text-secondary mb-1"><small>Duration (minutes):</small></p>
                                 <div class="input-group pb-3" style="max-width:400px">
                                     <span class="input-group-text">
@@ -51,24 +52,36 @@
                                     <input class="form-control" type="number" name="" placeholder="" required />
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-xl-4">
                                 <p class="text-secondary mb-1"><small>Operating Days:</small></p>
                                 <div class="d-flex justify-content-between">
                                     {% for day in days %}
                                         <div class="">
                                             <input type="checkbox" class="btn-check" id="day-{{ day.id }}" autocomplete="off">
-                                            <label class="btn px-1" for="day-{{ day.id }}">{{ day.name|truncate(1, True, '', 0) }}</label>
+                                            <label class="btn px-1" for="day-{{ day.id }}">{{ day.name|truncate(3, True, '', 0) }}</label>
                                         </div>
                                     {% endfor %}
                                 </div>
                             </div>
-                            <button class="btn h-50 my-auto text-secondary mt-4">
+                            <div class="col-xl-12">
+                                <p class="text-secondary mb-1"><small>Operating Zones:</small></p>
+                                <div class="d-flex justify-content-between">
+                                    {% for zone in zones %}
+                                        <div class="">
+                                            <input type="checkbox" class="btn-check" id="zone-{{ zone.id }}" autocomplete="off">
+                                            <label class="btn px-1" for="zone-{{ zone.id }}">{{ zone.name }}</label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <!-- <button class="btn h-50 my-auto text-secondary mt-4">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square" viewBox="0 0 16 16">
                                     <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
                                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                                 </svg>
-                            </button>
+                            </button> -->
                         </div>
+                        <!-- End Schedule-->
                     </div>
                 </div>
             {% endfor %}
@@ -79,39 +92,6 @@
 
 
     </div>
-
-    <!-- Section
-    <div class="col-sm-12 col-xs-12 col-xl-6 col-lg-8 col-md-10 mb-4">
-        <h4>Security Settings</h4>
-        <p class="text-secondary"><small>Use this form to change your password.</small></p>
-        <form action="/account?form=change_password" method="post">
-            <div class="input-group pb-3" style="max-width:400px">
-                <span class="input-group-text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-unlock2" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8 0c1.07 0 2.041.42 2.759 1.104l.14.14.062.08a.5.5 0 0 1-.71.675l-.076-.066-.216-.205A3 3 0 0 0 5 4v2h6.5A2.5 2.5 0 0 1 14 8.5v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7z"/>
-                    </svg>
-                </span>
-                <input class="form-control" type="password" name="current_password" placeholder="Current Password" required />
-            </div>
-            <div class="input-group pb-2" style="max-width:400px">
-                <span class="input-group-text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3"/>
-                    </svg>
-                </span>
-                <input class="form-control" type="password" name="new_password" placeholder="New Password" required />
-            </div>
-            <div class="input-group pb-2" style="max-width:400px">
-                <span class="input-group-text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 0a4 4 0 0 1 4 4v2.05a2.5 2.5 0 0 1 2 2.45v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7zM8 1a3 3 0 0 0-3 3v2h6V4a3 3 0 0 0-3-3"/>
-                    </svg>
-                </span>
-                <input class="form-control" type="password" name="new_password_conf" placeholder="Confirm New Password" required />
-            </div>
-            <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
-        </form>
-    </div>-->
 
 </div>
 

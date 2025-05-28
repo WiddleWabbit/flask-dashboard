@@ -619,9 +619,10 @@ def zones():
 def schedules():
 
     groups = Groups.query.all()
+    zones = Zones.query.all()
     days_of_week = DaysOfWeek.query.all()
 
-    return render_template('schedules.html', groups=groups, days = days_of_week)
+    return render_template('schedules.html', groups=groups, days = days_of_week, zones = zones)
 
 # Login Route
 @app.route("/login", methods=["GET", "POST"])
