@@ -9,8 +9,7 @@ Refactor Todo:
 Next Up:
 
 - Ensure that zones repopulate with data via js if they were existing before
-- Make update_sun_times run regularly via cron. -tested not implemented
-- Warning for deletion of zones
+- Make update_sun_times run regularly via cron. - tested not implemented
 - Setup schedules form.
 - Defaults for other sun times
 - Add Max characters to inputs to match db

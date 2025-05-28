@@ -21,7 +21,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            <input class="form-control w-50" type="text" name="{{ group.name }}" placeholder="{{ group.name }}" required></input>
+                            <input class="form-control w-50" type="text" name="{{ group.name }}" placeholder="{{ group.name }}" value="{{ group.name }}" required></input>
                         </button>
                     </h2>
                     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
@@ -94,5 +94,16 @@
     </div>
 
 </div>
+
+<script>
+document.querySelectorAll('.accordion .accordion-header input').forEach(function(input) {
+  input.addEventListener('focus', function(event) {
+    input.parentElement.setAttribute('data-bs-toggle', 'disabled');
+  });
+  input.addEventListener('blur', function(event) {
+    input.parentElement.setAttribute('data-bs-toggle', 'collapse');
+  });
+});
+</script>
 
 {% endblock %}
