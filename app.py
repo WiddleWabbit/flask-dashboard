@@ -129,7 +129,7 @@ class Zones(db.Model):
         secondary=zone_schedules,
         lazy='subquery',
         backref=db.backref('zones', lazy=True),
-        cascade="all, delete-orphan"
+        cascade="all, delete"
     )
 
     def __repr__(self):
