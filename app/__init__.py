@@ -26,6 +26,7 @@ def create_app():
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = "routes.login"
+    login_manager.login_message_category = "warning"
 
     from .models import Users
     @login_manager.user_loader
@@ -34,5 +35,8 @@ def create_app():
 
     from .routes import bp as routes_bp
     app.register_blueprint(routes_bp)
+
+    from .first_run import firstrun
+    firstrun(app)
 
     return app
