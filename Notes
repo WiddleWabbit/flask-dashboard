@@ -46,7 +46,7 @@ current_time_utc = datetime.now(pytz.utc)
 current_time_utc.isoformat()
 
 # Clear Tables
-from app import db, Users, Settings, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+from app import db, Users, Settings, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 db.drop_all()
 db.session.commit()
 
