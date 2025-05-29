@@ -51,7 +51,7 @@ def zones():
                     if len(all_zones) > num_zones:
 
                         # Starting from zone following last zone submitted
-                        next_zone_id = zones + 1
+                        next_zone_id = num_zones + 1
                         while next_zone_id <= len(all_zones):
 
                             delete_zone(next_zone_id)
