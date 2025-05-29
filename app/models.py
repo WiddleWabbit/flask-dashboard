@@ -3,6 +3,13 @@ from flask_login import UserMixin
 from datetime import datetime, time
 import pytz
 
+
+# DB Notes
+# All date time objects should be stored as ISO 8601 in UTC time.
+# All time's should be stored as Strings in HH:MM format.
+# Booleans as int's of 0 or 1
+
+
 # User Database Model
 class Users(UserMixin, db.Model):
     __tablename__ = "users"

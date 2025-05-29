@@ -1,5 +1,4 @@
 from app import create_app, db
-from app.models import Users, Settings, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 
 app = create_app()
 

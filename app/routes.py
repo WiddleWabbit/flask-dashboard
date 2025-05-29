@@ -1,16 +1,10 @@
 # Import the required libraries
-import os
-import html
 from datetime import datetime, time
-import pytz
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-import requests
 from .models import db, Users, Settings, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from . import db
 from .func import *
@@ -89,28 +83,28 @@ def zones():
                         suffix = key.rsplit("-", 1)[-1]
                         if suffix.isdigit():
                             numbers.add(suffix)
-                zones = len(numbers)
+                num_zones = len(numbers)
 
                 # Update submitted zones
-                for i in range(1, zones + 1):
+                for i in range(1, num_zones + 1):
 
-                    id = sanitise(request.form.get(f"id-{i}"))
-                    name = sanitise(request.form.get(f"name-{i}"))
-                    desc = sanitise(request.form.get(f"description-{i}"))
-                    solenoid = sanitise(request.form.get(f"solenoid-{i}"))
+                    id = format.sanitise(request.form.get(f"id-{i}"))
+                    name = format.sanitise(request.form.get(f"name-{i}"))
+                    desc = format.sanitise(request.form.get(f"description-{i}"))
+                    solenoid = format.sanitise(request.form.get(f"solenoid-{i}"))
 
-                    update_zone(id, name, desc, solenoid)
+                    zones.update_zone(id, name, desc, solenoid)
 
                 # Check for unsubmitted zones and delete
-                all_zones = get_all_zones()
+                all_zones = zones.get_all_zones()
                 if all_zones:
-                    if len(all_zones) > zones:
+                    if len(all_zones) > num_zones:
 
                         # Starting from zone following last zone submitted
                         next_zone_id = zones + 1
                         while next_zone_id <= len(all_zones):
 
-                            delete_zone(next_zone_id)
+                            zones.delete_zone(next_zone_id)
                             next_zone_id = next_zone_id + 1
 
                 flash("Successfully updated zones.", 'success')
@@ -123,11 +117,11 @@ def zones():
 
     
 
-    zones = get_all_zones()
-    if not zones:
+    all_zones = get_all_zones()
+    if not all_zones:
         zones = [{"id":1, "name":"", "description":"", "solenoid":""}]
     
-    return render_template('zones.html', zones=zones)
+    return render_template('zones.html', zones=all_zones)
 
 # Schedules Route
 @bp.route("/schedules", methods=["GET", "POST"])
