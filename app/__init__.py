@@ -30,6 +30,9 @@ def create_app():
     from .routes import bp as routes_bp
     app.register_blueprint(routes_bp)
 
+    from .scheduling.routes import bp as scheduling_routes
+    app.register_blueprint(scheduling_routes)
+
     from .first_run import firstrun
     firstrun(app)
 

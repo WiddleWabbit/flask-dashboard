@@ -5,8 +5,10 @@ from werkzeug.security import generate_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from . import db
-from .models import db, Users, Settings, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+from .models import db, Users, Settings
+from .scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from .func import *
+from .scheduling.func import get_all_zones
 
 def firstrun(app):
 
