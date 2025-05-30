@@ -1,12 +1,9 @@
 # Import the required libraries
 from datetime import datetime, time
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
-#from flask_login import login_user, logout_user, login_required, current_user
-#from apscheduler.schedulers.background import BackgroundScheduler
-#from apscheduler.triggers.cron import CronTrigger
-from .models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from .. import db
+from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from ..func import sanitise
+#from .. import db
 from .func import *
 
 bp = Blueprint('scheduling_routes', __name__)
@@ -43,7 +40,9 @@ def zones():
                     desc = sanitise(request.form.get(f"description-{i}"))
                     solenoid = sanitise(request.form.get(f"solenoid-{i}"))
 
-                    update_zone(id, name, desc, solenoid)
+                    if not update_zone(id, name, desc, solenoid):
+                        flash(f"Error updating zone {i}", "danger")
+                        return redirect(url_for("scheduling_routes.zones"))
 
                 # Check for unsubmitted zones and delete
                 all_zones = get_all_zones()

@@ -80,3 +80,8 @@ class Child(db.Model):
     day = DaysOfWeek.query.all()    
     d = day[2]
     sch.days.append(d)
+
+
+
+
+    flask --app "app:create_app('app.config.Config')" shell

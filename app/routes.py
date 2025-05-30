@@ -1,12 +1,9 @@
 # Import the required libraries
-from datetime import datetime, time
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from .models import db, Users, Settings
-from . import db
 from .func import *
 
 bp = Blueprint('routes', __name__)
@@ -30,13 +27,13 @@ def configuration():
 
         if not current_user.is_authenticated:
             flash('You need to login to make modifications.', 'danger')
-            return redirect(url_for("routes.schedules"))
+            return redirect(url_for("routes.configuration"))
         
         lat = sanitise(request.form.get("latitude"), float)
         long = sanitise(request.form.get("longitude"),float)
         if not lat and not long:
             flash('Nothing input for latitude or longitude.', 'danger')
-            return redirect(url_for("routes.schedules"))
+            return redirect(url_for("routes.configuration"))
         if lat:
             set_setting("latitude", lat)
         if long:

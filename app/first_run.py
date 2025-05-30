@@ -4,7 +4,6 @@ import pytz
 from werkzeug.security import generate_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from . import db
 from .models import db, Users, Settings
 from .scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from .func import *
@@ -15,9 +14,6 @@ def firstrun(app):
     # Prepare the application
     with app.app_context():
 
-        # Create the database, does not create or override already existing
-        db.create_all()
-        
         # Create a default user if none exist
         user_exists = Users.query.first()
         if not user_exists:

@@ -5,8 +5,8 @@ import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import requests
-from .models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from .. import db
+from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+#from .. import db
 
 def get_zone(id):
     """

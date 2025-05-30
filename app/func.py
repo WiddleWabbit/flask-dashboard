@@ -2,11 +2,9 @@
 import html
 from datetime import datetime, time
 import pytz
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 import requests
 from .models import db, Users, Settings
-from . import db
+#from . import db
 
 def get_user(username):
     """

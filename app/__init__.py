@@ -1,21 +1,18 @@
-# Import the required libraries
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func
 from flask_login import LoginManager
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
 
-db = SQLAlchemy()
+#db = SQLAlchemy()
 login_manager = LoginManager()
 
-def create_app():
+def create_app(config_file):
     
     app = Flask(__name__, instance_relative_config=True)
 
-    app.config.from_object('app.config.Config')
+    #app.config.from_object('app.config.Config')
+    app.config.from_object(config_file)
 
     #db = SQLAlchemy(app)
+    from .models import db
     db.init_app(app)
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -25,7 +22,7 @@ def create_app():
     from .models import Users
     @login_manager.user_loader
     def load_user(user_id):
-        return Users.query.get(int(user_id))
+        return db.session.get(Users, int(user_id))
 
     from .routes import bp as routes_bp
     app.register_blueprint(routes_bp)
@@ -33,7 +30,7 @@ def create_app():
     from .scheduling.routes import bp as scheduling_routes
     app.register_blueprint(scheduling_routes)
 
-    from .first_run import firstrun
-    firstrun(app)
+  #  from .first_run import firstrun
+  #  firstrun(app)
 
     return app
