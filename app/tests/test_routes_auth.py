@@ -9,6 +9,10 @@ def test_login_success(client):
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/dashboard")
 
+# Test login with incorrect details
+
+# Test login with non-existent user
+
 # Test opening the account settings as a logged in user
 def test_authed_account_get(client):
     with client.session_transaction() as session:
@@ -17,7 +21,6 @@ def test_authed_account_get(client):
     resp = client.get("/account")
     assert resp.status_code == 200
     assert b"account" in resp.data.lower()
-    print("Tested opening account page as a user.")
 
 # Test logging out
 @patch('app.routes.logout_user')

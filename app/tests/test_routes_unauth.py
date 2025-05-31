@@ -20,11 +20,29 @@ def test_configuration_get(client):
     assert resp.status_code == 200
     assert b"configuration" in resp.data.lower()
 
+# Test form time settings submission on configuration page
+def test_unauth_config_time_post(client):
+    resp = client.post("/configuration?form=time_settings", data={"latitude": -30})
+    assert resp.status_code == 302
+    assert "/configuration" in resp.headers["location"]
+
 # Test fetching the account page
 def test_account_get(client):
     resp = client.get("/account")
     assert resp.status_code == 302
     assert "/login" in resp.headers["Location"]
+
+# Test form update details submission on account page
+def test_unauth_account_update_post(client):
+    resp = client.post("/account?form=update_details", data={"username": "test", "current_password_details": "admin"})
+    assert resp.status_code == 302
+    assert "/login" in resp.headers["location"]
+
+# Test form change password submission on account page
+def test_unauth_account_changepass_post(client):
+    resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "admin1"})
+    assert resp.status_code == 302
+    assert "/login" in resp.headers["location"]
 
 # Test fetching main css file
 def test_appcss_get(client):
