@@ -3,7 +3,7 @@ import unittest
 from flask_login import logout_user, login_user
 from app import login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
-from ..models import Users, db
+from ..models import db, Users, Settings
 
 # Test an actual login
 @patch('app.routes.login_user')
@@ -159,4 +159,30 @@ def test_account_changepass_wrong_password(client):
     updated_password = updated_user.password
     assert check_password_hash(updated_password, "incorrectpassword") == False
 
-# Test configuration form
+# Test opening the account settings as a logged in user
+def test_configuration_get(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.get("/configuration")
+    assert resp.status_code == 200
+    assert b"configuration" in resp.data.lower()
+
+# Test form submission on configuration page
+def test_configuration_latitude_success(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/configuration?form=time_settings", data={"latitude": "-50.0", "longitude": "125"})
+    assert resp.status_code == 302
+    assert "/configuration" in resp.headers["location"]
+
+    assert Settings.query.filter_by(setting="latitude").first().value == "-50.0"
+
+# Test form submission on configuration page
+def test_configuration_latitude_invalid(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/configuration?form=time_settings", data={"latitude": "invalid", "longitude": "invalid"})
+    assert resp.status_code == 302
+    assert "/configuration" in resp.headers["location"]
+
+    assert Settings.query.filter_by(setting="latitude").first().value == "-30"

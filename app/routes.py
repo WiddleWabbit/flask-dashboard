@@ -24,22 +24,24 @@ def configuration():
 
     if request.method == "POST":
 
-        if not current_user.is_authenticated:
-            flash('You need to login to make modifications.', 'danger')
-            return redirect(url_for("routes.configuration"))
-        
-        lat = sanitise(request.form.get("latitude"), float)
-        long = sanitise(request.form.get("longitude"),float)
-        if not lat and not long:
-            flash('Nothing input for latitude or longitude.', 'danger')
-            return redirect(url_for("routes.configuration"))
-        if lat:
-            set_setting("latitude", lat)
-        if long:
-            set_setting("longitude", long)
+        if request.args.get("form") == "time_settings":
+            
+            if not current_user.is_authenticated:
+                flash('You need to login to make modifications.', 'danger')
+                return redirect(url_for("routes.configuration"))
+            
+            lat = sanitise(request.form.get("latitude"), float)
+            long = sanitise(request.form.get("longitude"),float)
+            if not lat and not long:
+                flash('Nothing input for latitude or longitude.', 'danger')
+                return redirect(url_for("routes.configuration"))
+            if lat:
+                set_setting("latitude", lat)
+            if long:
+                set_setting("longitude", long)
 
-        flash("You've successfully updated the coordinates", 'success')
-        return redirect(url_for("routes.configuration"))
+            flash("You've successfully updated the coordinates", 'success')
+            return redirect(url_for("routes.configuration"))
 
     timezone = get_setting("timezone")
 
