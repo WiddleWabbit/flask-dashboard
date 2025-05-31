@@ -10,8 +10,22 @@ def test_login_success(client):
     assert resp.headers["Location"].endswith("/dashboard")
 
 # Test login with incorrect details
+def test_login_incorrect_details(client):
+    resp = client.post("/login", data={"username": "admin", "password": "wrongpassword"}, follow_redirects=False)
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/login")
+
+# Test the login redirect after entering incorrect details
+def test_login_incorrect_details_redirect(client):
+    resp = client.post("/login", data={"username": "admin", "password": "wrongpassword"}, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b"invalid" in resp.data.lower()
 
 # Test login with non-existent user
+def test_login_nonexistent_user(client):
+    resp = client.post("/login", data={"username": "nonexistent", "password": "irrelevant"}, follow_redirects=False)
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/login")
 
 # Test opening the account settings as a logged in user
 def test_authed_account_get(client):

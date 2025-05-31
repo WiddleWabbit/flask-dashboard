@@ -72,7 +72,7 @@ def login():
             return redirect(url_for("routes.dashboard"))
         else:
             flash('Invalid username or password', 'danger')
-            return render_template("login.html", error="Invalid username or password")
+            return redirect(url_for("routes.login"))
 
     return render_template("login.html")
 

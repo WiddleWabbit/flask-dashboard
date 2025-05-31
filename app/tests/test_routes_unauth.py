@@ -14,6 +14,12 @@ def test_login_get(client):
     assert resp.status_code == 200
     assert b"login" in resp.data.lower()
 
+# Test going to the logout page while not logged in.
+def test_logout_get(client):
+    resp = client.get("/logout")
+    assert resp.status_code == 302
+    assert "/login" in resp.headers["location"]
+
 # Test fetching the configuration page
 def test_configuration_get(client):
     resp = client.get("/configuration")
