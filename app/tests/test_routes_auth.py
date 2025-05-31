@@ -2,12 +2,16 @@ from unittest.mock import MagicMock, patch
 import unittest
 from flask_login import logout_user, login_user
 from app import login_manager
+from werkzeug.security import generate_password_hash, check_password_hash
+from ..models import Users, db
 
 # Test an actual login
-def test_login_success(client):
+@patch('app.routes.login_user')
+def test_login_success(login_user, client):
     resp = client.post("/login", data={"username": "admin", "password": "admin"}, follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/dashboard")
+    login_user.assert_called_once()
 
 # Test login with incorrect details
 def test_login_incorrect_details(client):
@@ -27,15 +31,6 @@ def test_login_nonexistent_user(client):
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/login")
 
-# Test opening the account settings as a logged in user
-def test_authed_account_get(client):
-    with client.session_transaction() as session:
-        # Set a _user_id into the session so we are logged in
-        session["_user_id"] = 1
-    resp = client.get("/account")
-    assert resp.status_code == 200
-    assert b"account" in resp.data.lower()
-
 # Test logging out
 @patch('app.routes.logout_user')
 def test_logout_success(logout_user, client):
@@ -44,3 +39,72 @@ def test_logout_success(logout_user, client):
     resp = client.get("/logout", follow_redirects=True)
     assert resp.status_code in (302, 200)
     logout_user.assert_called_once()
+
+# Test opening the account settings as a logged in user
+def test_authed_account_get(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.get("/account")
+    assert resp.status_code == 200
+    assert b"account" in resp.data.lower()
+
+# Test form update details submission on account page
+def test_authed_account_update_post(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/account?form=update_details", data={
+        "username": "new_username", 
+        "current_password_details": "admin", 
+        "firstname": "new_firstname",
+        "lastname" : "new_lastname",
+        "email" : "new_test@test.com"
+        })
+    # Confirm the response
+    assert resp.status_code == 302
+    updated_user = Users.query.filter_by(username="new_username").all()
+    assert len(updated_user) == 1
+    # Confirm the user's details were updated
+    updated_user = updated_user[0]
+    assert updated_user.firstname == "new_firstname"
+    assert updated_user.lastname == "new_lastname"
+    assert updated_user.email == "new_test@test.com"
+
+# Test form update details submission on account page
+def test_authed_account_dup_user_update_post(client):
+
+    hashed_password=generate_password_hash("dup_admin",method="pbkdf2:sha256")
+    user = Users(username="admin1",password=hashed_password,firstname="Firstname1",lastname="Lastname1",email="dup_test@test.com")
+    db.session.add(user)
+    db.session.commit()
+
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+
+    resp = client.post("/account?form=update_details", data={
+        "username": "admin1", 
+        "current_password_details": "admin", 
+        }, follow_redirects=True)
+    # Confirm the response
+    assert resp.status_code == 200
+    failed_update_user = Users.query.filter_by(username="admin").all()
+    assert len(failed_update_user) == 1
+
+#
+# Dup email test
+#
+
+# Config form tests
+
+# Test form change password submission on account page
+def test_authed_account_changepass_post(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "admin1"})
+    assert resp.status_code == 302
+    assert "/account" in resp.headers["location"]
+
+    updated_user = Users.query.filter_by(username="admin").first()
+    updated_password = updated_user.password
+    assert check_password_hash(updated_password, "admin1") == True
+
+# Test configuration form
