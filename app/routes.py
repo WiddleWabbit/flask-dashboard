@@ -115,10 +115,14 @@ def account():
                 if not username and not firstname and not lastname and not email:
                     flash("No fields submitted to change.", 'danger')
                     return redirect(url_for("routes.account"))
-                if username:
+                if username or email:
                     if get_user(username):
                         flash('Unable to update. Username already exists.', 'danger')
                         return redirect(url_for("routes.account"))
+                    if len(Users.query.filter_by(email=email).all()) > 0:
+                        flash('Unable to update. Email already exists.', 'danger')
+                        return redirect(url_for("routes.account"))
+                if username:
                     update_user(user.username, "username", username)
                 if firstname:
                     update_user(user.username, "firstname", firstname)

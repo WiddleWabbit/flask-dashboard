@@ -41,7 +41,7 @@ def test_logout_success(logout_user, client):
     logout_user.assert_called_once()
 
 # Test opening the account settings as a logged in user
-def test_authed_account_get(client):
+def test_account_get(client):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.get("/account")
@@ -49,7 +49,7 @@ def test_authed_account_get(client):
     assert b"account" in resp.data.lower()
 
 # Test form update details submission on account page
-def test_authed_account_update_post(client):
+def test_account_update(client):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=update_details", data={
@@ -69,8 +69,8 @@ def test_authed_account_update_post(client):
     assert updated_user.lastname == "new_lastname"
     assert updated_user.email == "new_test@test.com"
 
-# Test form update details submission on account page
-def test_authed_account_dup_user_update_post(client):
+# Test form update details submission on account page with duplicate username
+def test_account_dup_user_update(client):
 
     hashed_password=generate_password_hash("dup_admin",method="pbkdf2:sha256")
     user = Users(username="admin1",password=hashed_password,firstname="Firstname1",lastname="Lastname1",email="dup_test@test.com")
@@ -89,14 +89,42 @@ def test_authed_account_dup_user_update_post(client):
     failed_update_user = Users.query.filter_by(username="admin").all()
     assert len(failed_update_user) == 1
 
-#
-# Dup email test
-#
+# Test form update details submission on account page with duplicate email
+def test_account_dup_email_update(client):
 
-# Config form tests
+    hashed_password=generate_password_hash("dup_admin",method="pbkdf2:sha256")
+    user = Users(username="admin1",password=hashed_password,firstname="Firstname1",lastname="Lastname1",email="dup_test@test.com")
+    db.session.add(user)
+    db.session.commit()
+
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+
+    resp = client.post("/account?form=update_details", data={
+        "email": "dup_test@test.com", 
+        "current_password_details": "admin", 
+        }, follow_redirects=True)
+    # Confirm the response
+    assert resp.status_code == 200
+    failed_update_user = Users.query.filter_by(email="dup_test@test.com").all()
+    assert len(failed_update_user) == 1
+
+# Test form update details submission on account page with wrong password
+def test_account_wrongpass_update(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+
+    resp = client.post("/account?form=update_details", data={
+        "email": "new_email@test.com", 
+        "current_password_details": "wrongpassword", 
+        }, follow_redirects=True)
+    # Confirm the response
+    assert resp.status_code == 200
+    failed_update_user = Users.query.filter_by(email="new_email@test.com").all()
+    assert len(failed_update_user) == 0
 
 # Test form change password submission on account page
-def test_authed_account_changepass_post(client):
+def test_account_changepass_success(client):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "admin1"})
@@ -106,5 +134,29 @@ def test_authed_account_changepass_post(client):
     updated_user = Users.query.filter_by(username="admin").first()
     updated_password = updated_user.password
     assert check_password_hash(updated_password, "admin1") == True
+
+# Test form change password submission on account page
+def test_account_changepass_failed_confirmation(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "different"})
+    assert resp.status_code == 302
+    assert "/account" in resp.headers["location"]
+
+    updated_user = Users.query.filter_by(username="admin").first()
+    updated_password = updated_user.password
+    assert check_password_hash(updated_password, "admin1") == False
+
+# Test form change password submission on account page
+def test_account_changepass_wrong_password(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/account?form=change_password", data={"current_password": "incorrectpassword", "new_password": "admin1", "new_password_conf": "admin1"})
+    assert resp.status_code == 302
+    assert "/account" in resp.headers["location"]
+
+    updated_user = Users.query.filter_by(username="admin").first()
+    updated_password = updated_user.password
+    assert check_password_hash(updated_password, "incorrectpassword") == False
 
 # Test configuration form
