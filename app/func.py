@@ -59,17 +59,23 @@ def set_setting(setting_name, value):
     """
     Set a value for a setting the database, will be created if it doesn't exist or updated if it does.
 
-    param: setting_name: The name of the setting to set as a string.
-    param: The value to set for the setting.
+    param: setting_name: The name of the setting to be set as a string.
+    param: The value to set for the setting as a string.
     :return: True for success, False for failure.
     """
     try:
+        if type(setting_name) != str or type(value) != str:
+            print("not string")
+            return False
+        if len(setting_name) == 0 or len(value) == 0:
+            print("not long enough")
+            return False
         setting = Settings.query.filter_by(setting=setting_name).first()
         if setting:
             setting.value = value
         else:
-            setting = Settings(setting=setting_name, value=value)
-            db.session.add(setting)
+            new_setting = Settings(setting=setting_name, value=value)
+            db.session.add(new_setting)
         db.session.commit()
         return True
     except Exception as e:
@@ -123,7 +129,7 @@ def sanitise(value, expected_type=str):
     """
     if expected_type == str:
         if not isinstance(value, str):
-            return value
+            return None
         return html.escape(value.strip())
     elif expected_type == int:
         try:

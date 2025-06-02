@@ -49,7 +49,7 @@ def test_account_get(client):
     assert b"account" in resp.data.lower()
 
 # Test form update details submission on account page
-def test_account_update(client):
+def test_account_update(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=update_details", data={
@@ -70,7 +70,7 @@ def test_account_update(client):
     assert updated_user.email == "new_test@test.com"
 
 # Test form update details submission on account page with duplicate username
-def test_account_dup_user_update(client):
+def test_account_dup_user_update(client, database):
 
     hashed_password=generate_password_hash("dup_admin",method="pbkdf2:sha256")
     user = Users(username="admin1",password=hashed_password,firstname="Firstname1",lastname="Lastname1",email="dup_test@test.com")
@@ -90,7 +90,7 @@ def test_account_dup_user_update(client):
     assert len(failed_update_user) == 1
 
 # Test form update details submission on account page with duplicate email
-def test_account_dup_email_update(client):
+def test_account_dup_email_update(client, database):
 
     hashed_password=generate_password_hash("dup_admin",method="pbkdf2:sha256")
     user = Users(username="admin1",password=hashed_password,firstname="Firstname1",lastname="Lastname1",email="dup_test@test.com")
@@ -110,7 +110,7 @@ def test_account_dup_email_update(client):
     assert len(failed_update_user) == 1
 
 # Test form update details submission on account page with wrong password
-def test_account_wrongpass_update(client):
+def test_account_wrongpass_update(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
 
@@ -124,7 +124,7 @@ def test_account_wrongpass_update(client):
     assert len(failed_update_user) == 0
 
 # Test form change password submission on account page
-def test_account_changepass_success(client):
+def test_account_changepass_success(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "admin1"})
@@ -136,7 +136,7 @@ def test_account_changepass_success(client):
     assert check_password_hash(updated_password, "admin1") == True
 
 # Test form change password submission on account page
-def test_account_changepass_failed_confirmation(client):
+def test_account_changepass_failed_confirmation(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "different"})
@@ -148,7 +148,7 @@ def test_account_changepass_failed_confirmation(client):
     assert check_password_hash(updated_password, "admin1") == False
 
 # Test form change password submission on account page
-def test_account_changepass_wrong_password(client):
+def test_account_changepass_wrong_password(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=change_password", data={"current_password": "incorrectpassword", "new_password": "admin1", "new_password_conf": "admin1"})
@@ -168,7 +168,7 @@ def test_configuration_get(client):
     assert b"configuration" in resp.data.lower()
 
 # Test form submission on configuration page
-def test_configuration_latitude_success(client):
+def test_configuration_latitude_success(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/configuration?form=time_settings", data={"latitude": "-50.0", "longitude": "125"})
@@ -178,11 +178,10 @@ def test_configuration_latitude_success(client):
     assert Settings.query.filter_by(setting="latitude").first().value == "-50.0"
 
 # Test form submission on configuration page
-def test_configuration_latitude_invalid(client):
+def test_configuration_latitude_invalid(client, database):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/configuration?form=time_settings", data={"latitude": "invalid", "longitude": "invalid"})
     assert resp.status_code == 302
     assert "/configuration" in resp.headers["location"]
-
     assert Settings.query.filter_by(setting="latitude").first().value == "-30"

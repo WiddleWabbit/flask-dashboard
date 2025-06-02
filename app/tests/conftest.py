@@ -10,10 +10,15 @@ def app():
 
     with app.app_context():
 
-        # Do testing
+        #db.create_all()
+        #populate_test_database()
+
         yield app
 
-@pytest.fixture(scope="function", autouse=True)
+        db.session.remove()
+        db.drop_all()
+
+@pytest.fixture(scope="function", autoUse=True)
 def database(app):
      with app.app_context():
         db.create_all()
