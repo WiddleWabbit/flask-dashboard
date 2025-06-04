@@ -18,7 +18,7 @@ def mock_setting():
     setting.value = "UTC"
     return setting
 
-def test_get_user_found(monkeypatch, mock_user, database):
+def test_get_user_found(monkeypatch, mock_user, resetdb):
     query = MagicMock()
     query.filter_by.return_value.first.return_value = mock_user
     monkeypatch.setattr(func.Users, "query", query)
@@ -79,9 +79,9 @@ def test_set_setting_update(monkeypatch, mock_setting):
     ("test", "", False),
     ("3.14", 22.1, False),
     ("", "test_value", False),
-    (123, 123, False ),
+    (123, 123, False),
 ])
-def test_set_setting_create(setting, value, result):
+def test_set_setting_create(setting, value, result, resetdb):
     function_result = func.set_setting(setting, value)
     if result == True:
         assert function_result is True
@@ -106,17 +106,19 @@ def test_to_isotime(monkeypatch):
 @pytest.mark.parametrize("value,expected_type,expected", [
     ("  hello <b>world</b>  ", str, "hello &lt;b&gt;world&lt;/b&gt;"),
     ("42", int, 42),
-    ("notanint", int, None),
+    (22.5, float, 22.5),
+    ("", str, False),
+    ("   ", str, False),
+    ("&nbsp;", str, "&amp;nbsp;"),
+    ("   ", int, False),
+    ("notanint", int, False),
     ("3.14", float, 3.14),
-    ("notafloat", float, None),
-    (123, str, None),
+    ("notafloat", float, False),
+    (123, str, False),
 ])
 def test_sanitise(value, expected_type, expected):
     assert func.sanitise(value, expected_type) == expected
 
-#
-#
-#
 def test_update_sun_times_success(monkeypatch):
     monkeypatch.setattr(func, "get_setting", lambda name: "1" if name in ("latitude", "longitude") else "UTC")
     monkeypatch.setattr(func, "set_setting", lambda name, value: True)
@@ -134,9 +136,6 @@ def test_update_sun_times_success(monkeypatch):
     monkeypatch.setattr(func.requests, "get", lambda url: mock_response)
     assert func.update_sun_times() is True
 
-#
-#
-#
 def test_update_sun_times_fail(monkeypatch):
     monkeypatch.setattr(func, "get_setting", lambda name: None)
     monkeypatch.setattr(func.requests, "get", lambda url: (_ for _ in ()).throw(Exception("fail")))

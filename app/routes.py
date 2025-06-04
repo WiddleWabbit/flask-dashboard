@@ -25,26 +25,46 @@ def configuration():
     if request.method == "POST":
 
         if request.args.get("form") == "time_settings":
-            
+            # Swap redirects to use html codes and render templates
+
+            # Check Authenticated
             if not current_user.is_authenticated:
                 flash('You need to login to make modifications.', 'danger')
-                return redirect(url_for("routes.configuration"))
+                return redirect(url_for("routes.login"))
             
-            lat = sanitise(request.form.get("latitude"), float)
-            long = sanitise(request.form.get("longitude"),float)
+            # Check that the input is valid
+            if not sanitise(request.form.get("latitude"), float) and not sanitise(request.form.get("longitude"), float):
+                flash('Error: Invalid input received.', 'danger')
+                return redirect(url_for("routes.configuration"))
+
+            # Process the fields
+            lat = str(sanitise(request.form.get("latitude"), float))
+            long = str(sanitise(request.form.get("longitude"), float))
             if not lat and not long:
                 flash('Nothing input for latitude or longitude.', 'danger')
                 return redirect(url_for("routes.configuration"))
+            
+            # Update the settings
+            success_msg = ""
+            failure_msg = ""
             if lat:
-                set_setting("latitude", lat)
+                if set_setting("latitude", lat):
+                    success_msg = "Succesfully updated latitude setting. "
+                else:
+                    failure_msg = "Failed to update latitude setting. "
             if long:
-                set_setting("longitude", long)
+                if set_setting("longitude", long):
+                    success_msg = success_msg + "Succesfully updated longitude setting. "
+                else:
+                    failure_msg = failure_msg + "Failed to update longitude setting. "
 
-            flash("You've successfully updated the coordinates", 'success')
+            if len(success_msg) > 0:
+                flash(success_msg, 'success')
+            if len(failure_msg) > 0:
+                flash(failure_msg, 'danger')
             return redirect(url_for("routes.configuration"))
 
     timezone = get_setting("timezone")
-
     latitude = get_setting("latitude")
     longitude = get_setting("longitude")
 

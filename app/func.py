@@ -65,10 +65,13 @@ def set_setting(setting_name, value):
     """
     try:
         if type(setting_name) != str or type(value) != str:
-            print("not string")
+            print("Setting or value not string")
             return False
         if len(setting_name) == 0 or len(value) == 0:
-            print("not long enough")
+            print("Setting or value too short")
+            return False
+        if setting_name == None or value == None:
+            print("Empty setting or value")
             return False
         setting = Settings.query.filter_by(setting=setting_name).first()
         if setting:
@@ -121,27 +124,32 @@ def sanitise(value, expected_type=str):
     """
     Sanitise form input based on expected type.
     - For strings: strip whitespace and escape HTML.
-    - For numbers: convert to int or float, or return None if invalid.
+    - For numbers: convert to int or float, or return False if invalid.
     
     :param value: The value to sanitise.
     :param expected_type: The expected variable type. Default is string.
-    :return: The escaped value expected type.
+    :return: The escaped value expected type. False on error or invalid.
     """
     if expected_type == str:
-        if not isinstance(value, str):
-            return None
-        return html.escape(value.strip())
+        try:
+            if not isinstance(value, str):
+                return False
+            if not len(value.strip()) > 0:
+                return False
+            return html.escape(value.strip())
+        except (ValueError, TypeError):
+            return False
     elif expected_type == int:
         try:
             return int(value)
         except (ValueError, TypeError):
-            return None
+            return False
     elif expected_type == float:
         try:
             return float(value)
         except (ValueError, TypeError):
-            return None
-    return value
+            return False
+    return False
 
 def update_sun_times():
     """

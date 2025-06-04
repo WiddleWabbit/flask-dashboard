@@ -18,14 +18,15 @@ def app():
         db.session.remove()
         db.drop_all()
 
-@pytest.fixture(scope="function", autoUse=True)
-def database(app):
+@pytest.fixture(scope="function", autouse=True)
+def resetdb(app):
      with app.app_context():
+
         db.create_all()
         populate_test_database()
 
         yield app
-        
+
         db.session.remove()
         db.drop_all()
 

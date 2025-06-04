@@ -6,7 +6,6 @@ from app.models import db
 
 # Notes
 # - Finish Unit Test
-# - Proper unit test setup db function
 # - New Setup DB Function for app
 # - More Orthogonal & More Functions
 # - Better error handling in zones
