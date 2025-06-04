@@ -53,8 +53,8 @@ def populate_test_database():
         db.session.add(Settings(setting="timezone", value=timezone))
 
         # Add latitude and longitude
-        long = "115"
+        long = "115.0"
         db.session.add(Settings(setting="longitude", value=long))
-        lat = "-30"
+        lat = "-30.0"
         db.session.add(Settings(setting="latitude", value=lat))
         db.session.commit()

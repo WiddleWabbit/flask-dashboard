@@ -168,13 +168,24 @@ def test_configuration_get(client):
     assert b"configuration" in resp.data.lower()
 
 # Test form submission on configuration page
-def test_configuration_latitude_success(client, resetdb):
+def test_configuration_latitude_success_both(client, resetdb):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/configuration?form=time_settings", data={"latitude": -50.0, "longitude": 125})
     assert resp.status_code == 302
     assert "/configuration" in resp.headers["location"]
     assert Settings.query.filter_by(setting="latitude").first().value == "-50.0"
+    assert Settings.query.filter_by(setting="longitude").first().value == "125.0"
+
+# Test form submission on configuration page
+def test_configuration_latitude_success_single(client, resetdb):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/configuration?form=time_settings", data={"latitude": -50.0})
+    assert resp.status_code == 302
+    assert "/configuration" in resp.headers["location"]
+    assert Settings.query.filter_by(setting="latitude").first().value == "-50.0"
+    assert Settings.query.filter_by(setting="longitude").first().value == "115.0"
 
 # Test form submission on configuration page
 def test_configuration_latitude_invalid(client, resetdb):
@@ -183,4 +194,4 @@ def test_configuration_latitude_invalid(client, resetdb):
     resp = client.post("/configuration?form=time_settings", data={"latitude": "invalid", "longitude": "invalid"})
     assert resp.status_code == 302
     assert "/configuration" in resp.headers["location"]
-    assert Settings.query.filter_by(setting="latitude").first().value == "-30"
+    assert Settings.query.filter_by(setting="latitude").first().value == "-30.0"

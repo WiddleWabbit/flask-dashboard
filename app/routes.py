@@ -32,27 +32,23 @@ def configuration():
                 flash('You need to login to make modifications.', 'danger')
                 return redirect(url_for("routes.login"))
             
-            # Check that the input is valid
-            if not sanitise(request.form.get("latitude"), float) and not sanitise(request.form.get("longitude"), float):
-                flash('Error: Invalid input received.', 'danger')
-                return redirect(url_for("routes.configuration"))
-
-            # Process the fields
-            lat = str(sanitise(request.form.get("latitude"), float))
-            long = str(sanitise(request.form.get("longitude"), float))
-            if not lat and not long:
-                flash('Nothing input for latitude or longitude.', 'danger')
-                return redirect(url_for("routes.configuration"))
-            
-            # Update the settings
             success_msg = ""
             failure_msg = ""
-            if lat:
+
+            if not request.form.get("latitude") and not request.form.get("longitude"):
+                flash('Nothing valid input for latitude or longitude.', 'danger')
+                return redirect(url_for("routes.configuration"))
+
+            # Check that the input is valid
+            if sanitise(request.form.get("latitude"), float):
+                lat = str(sanitise(request.form.get("latitude"), float))
                 if set_setting("latitude", lat):
-                    success_msg = "Succesfully updated latitude setting. "
+                    success_msg = success_msg + "Succesfully updated latitude setting. "
                 else:
-                    failure_msg = "Failed to update latitude setting. "
-            if long:
+                    failure_msg = failure_msg + "Failed to update latitude setting. "
+
+            if sanitise(request.form.get("longitude"), float):
+                long = str(sanitise(request.form.get("longitude"), float))
                 if set_setting("longitude", long):
                     success_msg = success_msg + "Succesfully updated longitude setting. "
                 else:
@@ -77,7 +73,7 @@ def configuration():
         "last_light": format_isotime(get_setting("last_light_iso"))
     }
 
-    return render_template('configuration.html', timezone = timezone, times = times, lat = latitude, long = longitude)
+    return render_template('configuration.html', timezone = timezone, times = times, lat = latitude, long = longitude), 200
 
 # Login Route
 @bp.route("/login", methods=["GET", "POST"])
