@@ -18,6 +18,23 @@ def home():
 def dashboard():
     return render_template('dashboard.html')
 
+# Return the variables to build the configuration page.
+def config_data():
+
+    data = {}
+    data["timezone"] = get_setting("timezone")
+    data["latitude"] = get_setting("latitude")
+    data["longitude"] = get_setting("longitude")
+    data["times"] = {
+        "sunrise": format_isotime(get_setting("sunrise_iso")),
+        "sunset": format_isotime(get_setting("sunset_iso")),
+        "dawn": format_isotime(get_setting("dawn_iso")),
+        "dusk": format_isotime(get_setting("dusk_iso")),
+        "first_light": format_isotime(get_setting("first_light_iso")),
+        "last_light": format_isotime(get_setting("last_light_iso"))
+    }
+    return data
+
 # Configuration Route
 @bp.route("/configuration", methods=["GET", "POST"])
 def configuration():
@@ -25,7 +42,6 @@ def configuration():
     if request.method == "POST":
 
         if request.args.get("form") == "time_settings":
-            # Swap redirects to use html codes and render templates
 
             # Check Authenticated
             if not current_user.is_authenticated:
@@ -39,16 +55,17 @@ def configuration():
                 flash('Nothing valid input for latitude or longitude.', 'danger')
                 return redirect(url_for("routes.configuration"))
 
-            # Check that the input is valid
-            if sanitise(request.form.get("latitude"), float):
-                lat = str(sanitise(request.form.get("latitude"), float))
+            lat = sanitise(request.form.get("latitude"), float)
+            if lat:
+                lat = str(lat)
                 if set_setting("latitude", lat):
                     success_msg = success_msg + "Succesfully updated latitude setting. "
                 else:
                     failure_msg = failure_msg + "Failed to update latitude setting. "
 
-            if sanitise(request.form.get("longitude"), float):
-                long = str(sanitise(request.form.get("longitude"), float))
+            long = sanitise(request.form.get("longitude"), float)
+            if long:
+                long = str(long)
                 if set_setting("longitude", long):
                     success_msg = success_msg + "Succesfully updated longitude setting. "
                 else:
@@ -60,20 +77,9 @@ def configuration():
                 flash(failure_msg, 'danger')
             return redirect(url_for("routes.configuration"))
 
-    timezone = get_setting("timezone")
-    latitude = get_setting("latitude")
-    longitude = get_setting("longitude")
 
-    times = {
-        "sunrise": format_isotime(get_setting("sunrise_iso")),
-        "sunset": format_isotime(get_setting("sunset_iso")),
-        "dawn": format_isotime(get_setting("dawn_iso")),
-        "dusk": format_isotime(get_setting("dusk_iso")),
-        "first_light": format_isotime(get_setting("first_light_iso")),
-        "last_light": format_isotime(get_setting("last_light_iso"))
-    }
 
-    return render_template('configuration.html', timezone = timezone, times = times, lat = latitude, long = longitude), 200
+    return render_template('configuration.html', data = config_data()), 200
 
 # Login Route
 @bp.route("/login", methods=["GET", "POST"])
