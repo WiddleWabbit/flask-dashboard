@@ -4,6 +4,11 @@ from app.models import db
 #from apscheduler.schedulers.background import BackgroundScheduler
 #from apscheduler.triggers.cron import CronTrigger
 
+
+# Set explicit types for all functions
+# Tests for the flash messages functions
+
+
 # Notes
 # - Finish Unit Test
 # - New Setup DB Function for app

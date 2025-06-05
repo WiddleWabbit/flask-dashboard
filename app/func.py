@@ -3,6 +3,7 @@ import html
 from datetime import datetime, time
 import pytz
 import requests
+from flask import flash
 from .models import db, Users, Settings
 #from . import db
 
@@ -152,6 +153,45 @@ def sanitise(value, expected_type=str):
         except (ValueError, TypeError):
             return False
     return False
+
+def update_status_messages(results: dict):
+    """
+    Accepts a dict like {'username': True, 'firstname': False, ...}
+    Returns (success_msg, failure_msg) summarizing which fields were updated or failed.
+
+    :param results: Dictionary or results with values of true or false
+    :return: Dict of messages, key's are the appropriate flash category.
+    """
+    success_fields = [field for field, ok in results.items() if ok]
+    fail_fields = [field for field, ok in results.items() if not ok]
+
+    messages = {}
+    if success_fields:
+        success_msg = "Successfully updated: " + ", ".join(success_fields) + "."
+        messages["success"] = success_msg
+    if fail_fields:
+        failure_msg = "Failed to update: " + ", ".join(fail_fields) + "."
+        messages["danger"] = failure_msg
+
+    return messages
+
+def flash_status_messages(messages: dict):
+    """
+    Flashes the supplied messages appropriately by category.
+
+    :param messages: Dict of the messages, key should be the category, val the message.
+    :return: True for success, false for failure.    
+    """
+    try:
+        if messages:
+            for key, val in messages.items():
+                flash(val, key)
+                return True
+        else:
+            return False
+    except (ValueError, TypeError):
+        print("Error flashing messages.")
+        return False
 
 def update_sun_times():
     """

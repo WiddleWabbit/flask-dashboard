@@ -39,6 +39,10 @@ def config_data():
 @bp.route("/configuration", methods=["GET", "POST"])
 def configuration():
 
+    if request.method == "GET":
+
+        return render_template('configuration.html', data = config_data()), 200
+    
     if request.method == "POST":
 
         # Time settings form submitted
@@ -53,43 +57,35 @@ def configuration():
             if not request.form.get("latitude") and not request.form.get("longitude"):
                 flash('Nothing valid input for latitude or longitude.', 'danger')
                 return render_template('configuration.html', data = config_data()), 422
-            
 
-            # Process the request and redirect
-            success_msg = ""
-            failure_msg = ""
+            # Process the form
+            results = {}
 
             lat = sanitise(request.form.get("latitude"), float)
             if lat:
                 lat = str(lat)
-                if set_setting("latitude", lat):
-                    success_msg = success_msg + "Succesfully updated latitude setting. "
-                else:
-                    failure_msg = failure_msg + "Failed to update latitude setting. "
+                results["latitude"] = set_setting("latitude", lat)
 
             long = sanitise(request.form.get("longitude"), float)
             if long:
                 long = str(long)
-                if set_setting("longitude", long):
-                    success_msg = success_msg + "Succesfully updated longitude setting. "
-                else:
-                    failure_msg = failure_msg + "Failed to update longitude setting. "
+                results["longitude"] = set_setting("longitude", long)
 
-            if len(success_msg) > 0:
-                flash(success_msg, 'success')
-            if len(failure_msg) > 0:
-                flash(failure_msg, 'danger')
+            messages = update_status_messages(results)
+            flash_status_messages(messages)
             return redirect(url_for("routes.configuration"))
         
         # Not a valid url argument, redirect
         else:
             return redirect(url_for("routes.configuration"))
 
-    return render_template('configuration.html', data = config_data()), 200
-
 # Login Route
 @bp.route("/login", methods=["GET", "POST"])
 def login():
+
+    if request.method == "GET":
+            
+        return render_template("login.html"), 200
 
     if request.method == "POST":
 
@@ -125,8 +121,6 @@ def login():
         else:
             return redirect(url_for("routes.login"))
 
-    return render_template("login.html"), 200
-
 # Return the variables to build the account page.
 def account_data():
     data = {}
@@ -139,8 +133,6 @@ def account_data():
 @login_required
 def account():
 
-    user = get_user(username=current_user.username)
-
     # Get Request
     if request.method == "GET":
 
@@ -149,6 +141,8 @@ def account():
     # Post Request
     elif request.method == "POST":
 
+        user = get_user(username=current_user.username)
+
         # Change Password Form
         if request.args.get("form") == "change_password":
 
@@ -156,14 +150,17 @@ def account():
             new_password = sanitise(request.form.get("new_password"))
             new_password_conf = sanitise(request.form.get("new_password_conf"))
 
+            # Validate all forms had valid inputs
             if not current_password or not new_password or not new_password_conf:
                 flash('Please submit your current password, new password and confirmation of your new password.', 'danger')
                 return render_template("account.html", data=account_data()), 403
 
+            # Confirm that the new password confirmation mathes the new password
             if new_password != new_password_conf:
                 flash('Provided new passwords do not match.', 'danger')
                 return render_template("account.html", data=account_data()), 403
 
+            # Confirm the current password is correct, if so update the password
             if check_password_hash(user.password, current_password):
                 hashed_password = generate_password_hash(new_password, method="pbkdf2:sha256")
                 if update_user(user.username, "password", hashed_password):
@@ -175,8 +172,6 @@ def account():
             else:
                 flash('Incorrect password entered.', 'danger')
                 return redirect(url_for("routes.account"))
-
-        ## UP TO HERE ##
 
         # Update account details form
         elif request.args.get("form") == "update_details":
@@ -216,36 +211,20 @@ def account():
                     flash('Something went wrong. Please try again.', 'danger')
                     return render_template("account.html", data=account_data()), 400
 
-            success_msg = ""
-            failure_msg = ""
+            results = {}
 
             # Update the fields input
             if username:
-                if update_user(user.username, "username", username):
-                    success_msg = success_msg + "Succesfully updated username setting. "
-                else:
-                    failure_msg = failure_msg + "Failed to update username setting. "
-
+                results['username'] = update_user(user.username, "username", username)
             if firstname:
-                if update_user(user.username, "firstname", firstname):
-                    success_msg = success_msg + "Succesfully updated firstname setting. "
-                else:
-                    failure_msg = failure_msg + "Failed to update firstname setting. "
+                results['firstname'] = update_user(user.username, "firstname", firstname)
             if lastname:
-                if update_user(user.username, "lastname", lastname):
-                    success_msg = success_msg + "Succesfully updated lastname setting. "
-                else:
-                    failure_msg = failure_msg + "Failed to update lastname setting. "
+                results['lastname'] = update_user(user.username, "lastname", lastname)
             if email:
-                if update_user(user.username, "email", email):
-                    success_msg = success_msg + "Succesfully updated email setting. "
-                else:
-                    failure_msg = failure_msg + "Failed to update email setting. "
+                results['email'] = update_user(user.username, "email", email)
 
-            if len(success_msg) > 0:
-                flash(success_msg, 'success')
-            if len(failure_msg) > 0:
-                flash(failure_msg, 'danger')
+            messages = update_status_messages(results)
+            flash_status_messages(messages)
             return redirect(url_for("routes.account"))       
     
     # Not a valid form / post request, redirect
