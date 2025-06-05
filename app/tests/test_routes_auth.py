@@ -85,9 +85,9 @@ def test_account_dup_user_update(client, resetdb):
     resp = client.post("/account?form=update_details", data={
         "username": "admin1", 
         "current_password_details": "admin", 
-        }, follow_redirects=True)
+        }, follow_redirects=False)
     # Confirm the response
-    assert resp.status_code == 200
+    assert resp.status_code == 422
     failed_update_user = Users.query.filter_by(username="admin").all()
     assert len(failed_update_user) == 1
 
@@ -107,7 +107,7 @@ def test_account_dup_email_update(client, resetdb):
         "current_password_details": "admin", 
         }, follow_redirects=True)
     # Confirm the response
-    assert resp.status_code == 200
+    assert resp.status_code == 422
     failed_update_user = Users.query.filter_by(email="dup_test@test.com").all()
     assert len(failed_update_user) == 1
 
@@ -119,9 +119,9 @@ def test_account_wrongpass_update(client, resetdb):
     resp = client.post("/account?form=update_details", data={
         "email": "new_email@test.com", 
         "current_password_details": "wrongpassword", 
-        }, follow_redirects=True)
+        }, follow_redirects=False)
     # Confirm the response
-    assert resp.status_code == 200
+    assert resp.status_code == 403
     failed_update_user = Users.query.filter_by(email="new_email@test.com").all()
     assert len(failed_update_user) == 0
 
@@ -142,8 +142,7 @@ def test_account_changepass_failed_confirmation(client, resetdb):
     with client.session_transaction() as session:
         session["_user_id"] = 1
     resp = client.post("/account?form=change_password", data={"current_password": "admin", "new_password": "admin1", "new_password_conf": "different"})
-    assert resp.status_code == 302
-    assert "/account" in resp.headers["location"]
+    assert resp.status_code == 403
 
     updated_user = Users.query.filter_by(username="admin").first()
     updated_password = updated_user.password

@@ -37,8 +37,10 @@ def update_user(username, setting, data):
             return True
         else:
             print(f"User not found or invalid setting: {setting}")
+            return False
     except Exception as e:
         print(f"Unable to update user: {e}")
+        return False
     return False
 
 def get_setting(setting_name):

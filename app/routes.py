@@ -127,67 +127,130 @@ def login():
 
     return render_template("login.html"), 200
 
+# Return the variables to build the account page.
+def account_data():
+    data = {}
+    data["user"] = get_user(username=current_user.username)
+    data["formatted_created"] = format_isotime(data["user"].created_at, "%B %d, %Y, %I:%M %p")
+    return data
+
 # Account Route
 @bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
 
     user = get_user(username=current_user.username)
-    formatted_created = format_isotime(user.created_at, "%B %d, %Y, %I:%M %p")
 
-    if request.method == "POST":
+    # Get Request
+    if request.method == "GET":
 
+        return render_template("account.html", data=account_data()), 200
+    
+    # Post Request
+    elif request.method == "POST":
+
+        # Change Password Form
         if request.args.get("form") == "change_password":
+
             current_password = sanitise(request.form.get("current_password"))
             new_password = sanitise(request.form.get("new_password"))
             new_password_conf = sanitise(request.form.get("new_password_conf"))
 
+            if not current_password or not new_password or not new_password_conf:
+                flash('Please submit your current password, new password and confirmation of your new password.', 'danger')
+                return render_template("account.html", data=account_data()), 403
+
             if new_password != new_password_conf:
-                flash('Provided new passwords do not match!', 'danger')
-                return redirect(url_for("routes.account"))
+                flash('Provided new passwords do not match.', 'danger')
+                return render_template("account.html", data=account_data()), 403
 
             if check_password_hash(user.password, current_password):
                 hashed_password = generate_password_hash(new_password, method="pbkdf2:sha256")
-                update_user(user.username, "password", hashed_password)
-                flash("You've successfully updated your password.", 'success')
-                return redirect(url_for("routes.account"))
+                if update_user(user.username, "password", hashed_password):
+                    flash("You've successfully updated your password.", 'success')
+                    return redirect(url_for("routes.account"))
+                else:
+                    flash('Something went wrong. Please try again.', 'danger')
+                    return redirect(url_for("routes.account"))
             else:
-                flash('Provided new passwords do not match!', 'danger')
+                flash('Incorrect password entered.', 'danger')
                 return redirect(url_for("routes.account"))
 
+        ## UP TO HERE ##
+
+        # Update account details form
         elif request.args.get("form") == "update_details":
+
             current_password = sanitise(request.form.get("current_password_details"))
             username = sanitise(request.form.get("username"))
             firstname = sanitise(request.form.get("firstname"))
             lastname = sanitise(request.form.get("lastname"))
             email = sanitise(request.form.get("email"))
 
-            if check_password_hash(user.password, current_password):
-                if not username and not firstname and not lastname and not email:
-                    flash("No fields submitted to change.", 'danger')
-                    return redirect(url_for("routes.account"))
-                if username or email:
+            # Validate the password was sanitised correctly.
+            if not current_password:
+                flash('Please input your current password along with changes.', 'danger')
+                return render_template("account.html", data=account_data()), 403
+
+            # Validate the password is correct
+            if not check_password_hash(user.password, current_password):
+                flash('Password entered is incorrect.', 'danger')
+                return render_template("account.html", data=account_data()), 403
+
+            # Confirm at least one field was submitted
+            if not username and not firstname and not lastname and not email:
+                flash("No fields submitted to change.", 'danger')
+                return render_template("account.html", data=account_data()), 422
+            
+            # Validate the username or email being changed is unique.
+            if username or email:
+                if username:
                     if get_user(username):
                         flash('Unable to update. Username already exists.', 'danger')
-                        return redirect(url_for("routes.account"))
+                        return render_template("account.html", data=account_data()), 422
+                elif email:
                     if len(Users.query.filter_by(email=email).all()) > 0:
                         flash('Unable to update. Email already exists.', 'danger')
-                        return redirect(url_for("routes.account"))
-                if username:
-                    update_user(user.username, "username", username)
-                if firstname:
-                    update_user(user.username, "firstname", firstname)
-                if lastname:
-                    update_user(user.username, "lastname", lastname)
-                if email:
-                    update_user(user.username, "email", email)
+                        return render_template("account.html", data=account_data()), 422
+                else:
+                    flash('Something went wrong. Please try again.', 'danger')
+                    return render_template("account.html", data=account_data()), 400
 
-                flash("You've successfully updated your details.", 'success')
-                return redirect(url_for("routes.account"))
-            else:
-                flash('Password entered is incorrect!', 'danger')
-                return redirect(url_for("routes.account"))
-    return render_template("account.html", user = user, created = formatted_created)
+            success_msg = ""
+            failure_msg = ""
+
+            # Update the fields input
+            if username:
+                if update_user(user.username, "username", username):
+                    success_msg = success_msg + "Succesfully updated username setting. "
+                else:
+                    failure_msg = failure_msg + "Failed to update username setting. "
+
+            if firstname:
+                if update_user(user.username, "firstname", firstname):
+                    success_msg = success_msg + "Succesfully updated firstname setting. "
+                else:
+                    failure_msg = failure_msg + "Failed to update firstname setting. "
+            if lastname:
+                if update_user(user.username, "lastname", lastname):
+                    success_msg = success_msg + "Succesfully updated lastname setting. "
+                else:
+                    failure_msg = failure_msg + "Failed to update lastname setting. "
+            if email:
+                if update_user(user.username, "email", email):
+                    success_msg = success_msg + "Succesfully updated email setting. "
+                else:
+                    failure_msg = failure_msg + "Failed to update email setting. "
+
+            if len(success_msg) > 0:
+                flash(success_msg, 'success')
+            if len(failure_msg) > 0:
+                flash(failure_msg, 'danger')
+            return redirect(url_for("routes.account"))       
+    
+    # Not a valid form / post request, redirect
+    else:
+        return redirect(url_for("routes.account"))
 
 # Logout Route
 @bp.route("/logout")
