@@ -8,28 +8,30 @@ from ..models import db, Users, Settings
 # Test an actual login
 @patch('app.routes.login_user')
 def test_login_success(login_user, client):
-    resp = client.post("/login", data={"username": "admin", "password": "admin"}, follow_redirects=False)
+    resp = client.post("/login?form=login", data={"username": "admin", "password": "admin"}, follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/dashboard")
     login_user.assert_called_once()
 
 # Test login with incorrect details
 def test_login_incorrect_details(client):
-    resp = client.post("/login", data={"username": "admin", "password": "wrongpassword"}, follow_redirects=False)
-    assert resp.status_code == 302
-    assert resp.headers["Location"].endswith("/login")
+    resp = client.post("/login?form=login", data={"username": "admin", "password": "wrongpassword"}, follow_redirects=False)
+    assert resp.status_code == 403
+    assert b"alert" in resp.data.lower()
 
-# Test the login redirect after entering incorrect details
-def test_login_incorrect_details_redirect(client):
-    resp = client.post("/login", data={"username": "admin", "password": "wrongpassword"}, follow_redirects=True)
-    assert resp.status_code == 200
-    assert b"invalid" in resp.data.lower()
+# Test the login with user already logged in
+def test_login_alreadyloggedin(client):
+    with client.session_transaction() as session:
+        session["_user_id"] = 1
+    resp = client.post("/login?form=login", data={"username": "admin", "password": "admin"}, follow_redirects=False)
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith("/dashboard")
 
 # Test login with non-existent user
 def test_login_nonexistent_user(client):
-    resp = client.post("/login", data={"username": "nonexistent", "password": "irrelevant"}, follow_redirects=False)
-    assert resp.status_code == 302
-    assert resp.headers["Location"].endswith("/login")
+    resp = client.post("/login?form=login", data={"username": "nonexistent", "password": "irrelevant"}, follow_redirects=False)
+    assert resp.status_code == 403
+    assert b"alert" in resp.data.lower()
 
 # Test logging out
 @patch('app.routes.logout_user')

@@ -41,19 +41,23 @@ def configuration():
 
     if request.method == "POST":
 
+        # Time settings form submitted
         if request.args.get("form") == "time_settings":
 
-            # Check Authenticated
+            # Check authenticated
             if not current_user.is_authenticated:
                 flash('You need to login to make modifications.', 'danger')
-                return redirect(url_for("routes.login"))
-            
-            success_msg = ""
-            failure_msg = ""
+                return render_template('configuration.html', data = config_data()), 403
 
+            # Check something submitted.
             if not request.form.get("latitude") and not request.form.get("longitude"):
                 flash('Nothing valid input for latitude or longitude.', 'danger')
-                return redirect(url_for("routes.configuration"))
+                return render_template('configuration.html', data = config_data()), 422
+            
+
+            # Process the request and redirect
+            success_msg = ""
+            failure_msg = ""
 
             lat = sanitise(request.form.get("latitude"), float)
             if lat:
@@ -76,29 +80,52 @@ def configuration():
             if len(failure_msg) > 0:
                 flash(failure_msg, 'danger')
             return redirect(url_for("routes.configuration"))
-
-
+        
+        # Not a valid url argument, redirect
+        else:
+            return redirect(url_for("routes.configuration"))
 
     return render_template('configuration.html', data = config_data()), 200
 
 # Login Route
 @bp.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
 
-        username = sanitise(request.form.get("username"))
-        password = sanitise(request.form.get("password"))
+        # Login form submitted
+        if request.args.get("form") == "login":
 
-        user = get_user(username)
+            # Check authenticated
+            if current_user.is_authenticated:
+                flash('You are already logged in', 'warning')
+                return redirect(url_for("routes.dashboard"))
 
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            return redirect(url_for("routes.dashboard"))
+            username = sanitise(request.form.get("username"))
+            password = sanitise(request.form.get("password"))
+
+            # Confirm both a username and password were submitted
+            if not username or not password:
+                flash('Please submit a username and a password.', 'danger')
+                return render_template("login.html"), 403
+
+            user = get_user(username)
+
+            # Attempt login
+            if user and check_password_hash(user.password, password):
+                login_user(user)
+                success_msg = "Welcome back " + user.firstname
+                flash(success_msg, 'success')
+                return redirect(url_for("routes.dashboard"))
+            else:
+                flash('Invalid username or password', 'danger')
+                return render_template("login.html"), 403
+        
+        # Not a valid url argument, redirect
         else:
-            flash('Invalid username or password', 'danger')
             return redirect(url_for("routes.login"))
 
-    return render_template("login.html")
+    return render_template("login.html"), 200
 
 # Account Route
 @bp.route("/account", methods=["GET", "POST"])

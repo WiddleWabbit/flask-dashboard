@@ -29,8 +29,8 @@ def test_configuration_get(client):
 # Test form time settings submission on configuration page
 def test_unauth_config_time_post(client):
     resp = client.post("/configuration?form=time_settings", data={"latitude": -30})
-    assert resp.status_code == 302
-    assert "/login" in resp.headers["location"]
+    assert resp.status_code == 403
+    assert b"alert" in resp.data.lower()
 
 # Test fetching the account page
 def test_account_get(client):
