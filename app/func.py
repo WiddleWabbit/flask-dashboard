@@ -160,8 +160,11 @@ def update_status_messages(results: dict):
     Returns (success_msg, failure_msg) summarizing which fields were updated or failed.
 
     :param results: Dictionary or results with values of true or false
-    :return: Dict of messages, key's are the appropriate flash category.
+    :return: Dict of messages, key's are the appropriate flash category. False on error.
     """
+    if not isinstance(results, dict):
+        return False
+
     success_fields = [field for field, ok in results.items() if ok]
     fail_fields = [field for field, ok in results.items() if not ok]
 
@@ -183,10 +186,13 @@ def flash_status_messages(messages: dict):
     :return: True for success, false for failure.    
     """
     try:
-        if messages:
+        if messages and isinstance(messages, dict):
             for key, val in messages.items():
-                flash(val, key)
-                return True
+                if len(key) > 0 and len(val) > 0:
+                    flash(val, key)
+                else:
+                    return False
+            return True
         else:
             return False
     except (ValueError, TypeError):

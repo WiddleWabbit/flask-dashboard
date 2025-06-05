@@ -119,6 +119,73 @@ def test_to_isotime(monkeypatch):
 def test_sanitise(value, expected_type, expected):
     assert func.sanitise(value, expected_type) == expected
 
+def test_update_status_messages_all_success():
+        results = {"username": True, "email": True}
+        messages = func.update_status_messages(results)
+        assert "success" in messages
+        assert messages["success"] == "Successfully updated: username, email."
+        assert "danger" not in messages
+
+def test_update_status_messages_all_fail():
+    results = {"username": False, "email": False}
+    messages = func.update_status_messages(results)
+    assert "danger" in messages
+    assert messages["danger"] == "Failed to update: username, email."
+    assert "success" not in messages
+
+def test_update_status_messages_mixed():
+    results = {"username": True, "email": False, "firstname": True, "lastname": False}
+    messages = func.update_status_messages(results)
+    assert "success" in messages
+    assert "danger" in messages
+    assert messages["success"] == "Successfully updated: username, firstname."
+    assert messages["danger"] == "Failed to update: email, lastname."
+
+def test_update_status_messages_empty():
+    results = {}
+    messages = func.update_status_messages(results)
+    assert messages == {}
+
+def test_update_status_messages_string():
+    results = "Test"
+    messages = func.update_status_messages(results)
+    assert messages == False
+
+def test_update_status_messages_list():
+    results = ["Test", 24]
+    messages = func.update_status_messages(results)
+    assert messages == False
+
+def test_update_status_messages_single_success():
+    results = {"username": True}
+    messages = func.update_status_messages(results)
+    assert messages == {"success": "Successfully updated: username."}
+
+def test_update_status_messages_single_fail():
+    results = {"username": False}
+    messages = func.update_status_messages(results)
+    assert messages == {"danger": "Failed to update: username."}
+
+@pytest.mark.parametrize("messages, expected", [
+    ({"success":"Test Success Message", "failure":"Test Failure Message"}, True),
+    ({"danger":"Test Danger Message"}, True),
+    ({"info":"Test Info Message"}, True),
+    ({"success":""}, False),
+    ("", False),
+    ({"":"", "Fail":"Failure"}, False),
+    (24, False),
+    ({24: 14}, False),
+    ({24, 14, 25}, False),
+])
+def test_flash_status_messages(app, messages, expected):
+    with patch("app.func.flash") as mock_flash:
+        #with app.app_context():
+        result = func.flash_status_messages(messages)
+        assert result == expected
+        if result is True and isinstance(messages, dict):
+            for key, val in messages.items():
+                mock_flash.assert_any_call(val, key)
+
 def test_update_sun_times_success(monkeypatch):
     monkeypatch.setattr(func, "get_setting", lambda name: "1" if name in ("latitude", "longitude") else "UTC")
     monkeypatch.setattr(func, "set_setting", lambda name, value: True)
