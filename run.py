@@ -6,8 +6,6 @@ from app.models import db
 
 
 # Set explicit types for all functions
-# Tests for the flash messages functions
-
 
 # Notes
 # - Finish Unit Test

@@ -7,7 +7,7 @@ from flask import flash
 from .models import db, Users, Settings
 #from . import db
 
-def get_user(username):
+def get_user(username:str):
     """
     Return the user object from the database by name.
 
@@ -21,7 +21,7 @@ def get_user(username):
         print(f"Unable to get user from database: {e}")
     return None
 
-def update_user(username, setting, data):
+def update_user(username:str, setting:str, data:str):
     """
     Update the specified user in the database with the provided data.
 
@@ -44,7 +44,7 @@ def update_user(username, setting, data):
         return False
     return False
 
-def get_setting(setting_name):
+def get_setting(setting_name:str):
     """
     Return the value of a setting from the database by name.
 
@@ -58,7 +58,7 @@ def get_setting(setting_name):
         print(f"Unable to get setting from database: {e}")
     return None
 
-def set_setting(setting_name, value):
+def set_setting(setting_name:str, value:str):
     """
     Set a value for a setting the database, will be created if it doesn't exist or updated if it does.
 
@@ -88,7 +88,7 @@ def set_setting(setting_name, value):
         print(f"Unable to set setting: {e}")
     return False
 
-def format_isotime(time, format="%I:%M %p"):
+def format_isotime(time:str, format:str="%I:%M %p"):
     """
     Reformat time from ISO format to a time object
 
@@ -103,7 +103,7 @@ def format_isotime(time, format="%I:%M %p"):
     except Exception as e:
         print(f"Error reformatting isotime: {e}")
 
-def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
+def to_isotime(local_time:str, input_format:str="%Y-%m-%d %H:%M:%S"):
     """
     Convert local time string to ISO format in UTC time
 
@@ -123,7 +123,7 @@ def to_isotime(local_time, input_format="%Y-%m-%d %H:%M:%S"):
         print(f"Error converting to ISO UTC: {e}")
     return None
 
-def sanitise(value, expected_type=str):
+def sanitise(value, expected_type:str=str):
     """
     Sanitise form input based on expected type.
     - For strings: strip whitespace and escape HTML.
