@@ -120,11 +120,11 @@ def test_sanitise(value, expected_type, expected):
     assert func.sanitise(value, expected_type) == expected
 
 def test_update_status_messages_all_success():
-        results = {"username": True, "email": True}
-        messages = func.update_status_messages(results)
-        assert "success" in messages
-        assert messages["success"] == "Successfully updated: username, email."
-        assert "danger" not in messages
+    results = {"username": True, "email": True}
+    messages = func.update_status_messages(results)
+    assert "success" in messages
+    assert messages["success"] == "Successfully updated: username, email."
+    assert "danger" not in messages
 
 def test_update_status_messages_all_fail():
     results = {"username": False, "email": False}
@@ -165,6 +165,23 @@ def test_update_status_messages_single_fail():
     results = {"username": False}
     messages = func.update_status_messages(results)
     assert messages == {"danger": "Failed to update: username."}
+
+@pytest.mark.parametrize("results, expected", [
+    ({"Zone 1":True, "Zone 2": True}, {"warning": 'Successfully deleted: Zone 1, Zone 2.'}),
+    ({"Zone 3":True}, {"warning": 'Successfully deleted: Zone 3.'}),
+    ({"Zone 1": False}, {"danger": 'Failed to delete: Zone 1.'}),
+    ({"Empty":""}, False),
+    ("", False),
+    ({"":"", "Fail":False}, False),
+    (24, False),
+    ({24: 12}, False),
+    ([24, 18], False),
+])
+def test_delete_status_messages(results, expected):
+    messages = func.delete_status_messages(results)
+    print(messages)
+    assert messages == expected
+    
 
 @pytest.mark.parametrize("messages, expected", [
     ({"success":"Test Success Message", "failure":"Test Failure Message"}, True),
