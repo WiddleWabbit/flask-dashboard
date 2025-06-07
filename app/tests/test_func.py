@@ -18,7 +18,7 @@ def mock_setting():
     setting.value = "UTC"
     return setting
 
-def test_get_user_found(monkeypatch, mock_user, resetdb):
+def test_get_user_found(monkeypatch, mock_user):
     query = MagicMock()
     query.filter_by.return_value.first.return_value = mock_user
     monkeypatch.setattr(func.Users, "query", query)
@@ -81,7 +81,7 @@ def test_set_setting_update(monkeypatch, mock_setting):
     ("", "test_value", False),
     (123, 123, False),
 ])
-def test_set_setting_create(setting, value, result, resetdb):
+def test_set_setting_create(setting, value, result):
     function_result = func.set_setting(setting, value)
     if result == True:
         assert function_result is True

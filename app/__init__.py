@@ -3,7 +3,6 @@ from flask_login import LoginManager
 
 login_manager = LoginManager()
 
-
 def create_app(config_file):
     """
     App factory function to create the application.
@@ -24,6 +23,7 @@ def create_app(config_file):
     login_manager.init_app(app)
     login_manager.login_view = "routes.login"
     login_manager.login_message_category = "warning"
+    login_manager.session_protection = "strong"
 
     from .models import Users
     @login_manager.user_loader
