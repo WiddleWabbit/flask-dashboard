@@ -129,7 +129,7 @@
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
                             {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show m-4 mb-5 mx-0" role="alert">
+                            <div class="alert alert-{{ category }} alert-dismissible fade show m-4 mx-0" role="alert">
                                 {% if category == "danger" %}
                                     <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use xlink:href="#exclamation-triangle-fill"/></svg>
                                 {% endif %}

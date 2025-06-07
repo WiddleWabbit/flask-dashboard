@@ -6,7 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import requests
 from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-#from .. import db
+from werkzeug.datastructures import MultiDict
 
 def get_zone(id):
     """
@@ -17,10 +17,11 @@ def get_zone(id):
     """
     try:
         zone = Zones.query.filter_by(id=id).first()
-        return zone if zone else None
+        return zone if zone else False
     except Exception as e:
         print(f"Unable to get zone from database: {e}")
-    return None
+        return False
+    return False
 
 def get_all_zones():
     """
@@ -82,3 +83,62 @@ def delete_zone(id):
     except Exception as e:
         print(f"Unable to delete zone: {id}, error: {e}")
     return False
+
+def get_group(id):
+    """
+    Retrieve a group from the database by its ID.
+
+    :param id: The ID of the group to retrieve.
+    :return: The group object if found, otherwise False.
+    """
+    try:
+        group = Groups.query.filter_by(id=id).first()
+        return group if group else False
+    except Exception as e:
+        print(f"Unable to get zone from database: {e}")
+        return False
+    return False
+
+def get_all_groups():
+    """
+    Retrieve all groups from the database.
+
+    :return: A list of all group objects if any exist, otherwise False.
+    """
+    try:
+        groups = Groups.query.all()
+        return groups if groups else False
+    except Exception as e:
+        print(f"Unable to get all zones from database: {e}")
+        return False
+    return False
+
+def count_fields(fields):
+    """
+    Count the number of duplicate fields. Identified by a -1, -2 etc.
+    
+    :param fields: The fields to count as a dictionary.
+    :return: The count of the number of duplicate fields as an int. Returns false on error.
+    """
+    try:
+        # Validate fields are submitted and as a dictionary
+        if not fields:
+            return False
+
+        # Count the fields
+        numbers = set()
+        for key, value in fields:
+            if "-" in key:
+                suffix = key.rsplit("-", 1)[-1]
+                if suffix.isdigit():
+                    numbers.add(suffix)
+        num_fields = len(numbers)
+
+        # Confirm the number of fields, or False if less than 1
+        if num_fields < 1:
+            return False
+        else:
+            return num_fields
+    
+    except Exception as e:
+        return False

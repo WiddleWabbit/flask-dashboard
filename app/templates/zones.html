@@ -14,7 +14,7 @@
     <div class="col-sm-12 col-xs-12 col-lg-8 col-md-10 mb-4">
         <form action="/zones?form=update_zones" method="post">
 
-            {% for zone in zones %}
+            {% for zone in data.zones %}
                 <div class="row zone">
                     <div class="d-none">
                         <div class="input-group pb-2">
@@ -86,7 +86,7 @@
     </div>
 
     <div class="d-none">
-        <span id="num-zones">{{ zones|length }}</span>
+        <span id="num-zones">{{ data.zones|length }}</span>
     </div>
 
 </div>

@@ -178,6 +178,30 @@ def update_status_messages(results: dict):
 
     return messages
 
+def delete_status_messages(results: dict):
+    """
+    Accepts a dict like {'username': True, 'firstname': False, ...}
+    Returns messages summarizing which fields were updated or failed.
+
+    :param results: Dictionary or results with values of true or false
+    :return: Dict of messages, key's are the appropriate flash category. False on error.
+    """
+    if not isinstance(results, dict):
+        return False
+
+    success_fields = [field for field, ok in results.items() if ok]
+    fail_fields = [field for field, ok in results.items() if not ok]
+
+    messages = {}
+    if success_fields:
+        success_msg = "Successfully deleted: " + ", ".join(success_fields) + "."
+        messages["success"] = success_msg
+    if fail_fields:
+        failure_msg = "Failed to delete: " + ", ".join(fail_fields) + "."
+        messages["danger"] = failure_msg
+
+    return messages
+
 def flash_status_messages(messages: dict):
     """
     Flashes the supplied messages appropriately by category.

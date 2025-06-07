@@ -1,36 +1,47 @@
 # Import the required libraries
 from datetime import datetime, time
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
+from flask_login import current_user
 from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from ..func import sanitise
+from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages
 #from .. import db
 from .func import *
 
 bp = Blueprint('scheduling_routes', __name__)
 
+# Return the variables to build the configuration page.
+def config_zones():
+    data = {}
+    data['zones'] = get_all_zones()
+    if not data['zones']:
+        data['zones'] = [{"id":1, "name":"", "description":"", "solenoid":""}]
+    return data
+
 # Zones Route
 @bp.route("/zones", methods=["GET", "POST"])
 def zones():
+
+    if request.method == "GET":
+        
+        return render_template('zones.html', data=config_zones())
 
     if request.method == "POST":
 
         if request.args.get("form") == "update_zones":
             
-            #submission = {}
-            fields = request.form.items()
+            # Check authenticated
+            if not current_user.is_authenticated:
+                flash('You need to login to make modifications.', 'danger')
+                return render_template('zones.html', data=config_zones()), 403
 
+            fields = request.form.items()
             if fields:
 
+                # Process the fields
                 fields = request.form.items()
-
-                # Should be a function
-                numbers = set()
-                for key, value in fields:
-                    if "-" in key:
-                        suffix = key.rsplit("-", 1)[-1]
-                        if suffix.isdigit():
-                            numbers.add(suffix)
-                num_zones = len(numbers)
+                num_zones = count_fields(fields)
+                update_results = {}
+                delete_results = {}
 
                 # Update submitted zones
                 for i in range(1, num_zones + 1):
@@ -40,9 +51,16 @@ def zones():
                     desc = sanitise(request.form.get(f"description-{i}"))
                     solenoid = sanitise(request.form.get(f"solenoid-{i}"))
 
-                    if not update_zone(id, name, desc, solenoid):
-                        flash(f"Error updating zone {i}", "danger")
-                        return redirect(url_for("scheduling_routes.zones"))
+                    # Ensure that the required fields were submitted
+                    if not id or not name or not solenoid:
+                        update_results[f'Zone {id} "{name}"'] = False
+                    
+                    # If the description field fails (usually because it's blank), just make it blank.
+                    if not desc:
+                        desc = ""
+
+                    # Update the zone
+                    update_results[f'Zone {id} "{name}"'] = update_zone(id, name, desc, solenoid)
 
                 # Check for unsubmitted zones and delete
                 all_zones = get_all_zones()
@@ -53,10 +71,15 @@ def zones():
                         next_zone_id = num_zones + 1
                         while next_zone_id <= len(all_zones):
 
-                            delete_zone(next_zone_id)
+                            # Delete the removed zones
+                            delete_results[f'Zone {id} "{name}"'] = delete_zone(next_zone_id)
                             next_zone_id = next_zone_id + 1
 
-                flash("Successfully updated zones.", 'success')
+                # Flash the messages of the updates and deletes
+                update_messages = update_status_messages(update_results)
+                flash_status_messages(update_messages)
+                delete_messages = delete_status_messages(delete_results)
+                flash_status_messages(delete_messages)
                 return redirect(url_for("scheduling_routes.zones"))
 
             else:
@@ -64,19 +87,11 @@ def zones():
                 flash('Empty form submitted', 'danger')
                 return redirect(url_for("scheduling_routes.zones"))
 
-    
-
-    all_zones = get_all_zones()
-    if not all_zones:
-        zones = [{"id":1, "name":"", "description":"", "solenoid":""}]
-    
-    return render_template('zones.html', zones=all_zones)
-
 # Schedules Route
 @bp.route("/schedules", methods=["GET", "POST"])
 def schedules():
 
-    groups = Groups.query.all()
+    groups = get_all_groups()
     zones = get_all_zones()
     days_of_week = DaysOfWeek.query.all()
 
