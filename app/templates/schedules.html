@@ -38,16 +38,6 @@
                                 <p class="mb-2 text-dark-emphasis ps-3 schedule-title">Schedule {{ schedule.id }}</p>
                                 <hr class="mt-0">
                             </div>
-                            <!--<div class="col-xs-12">
-                                <div class="input-group pb-3">
-                                    <input class="form-control" type="time" name="start-{{ schedule.id }}" placeholder="" value="{{ schedule.start }}" style="max-width:120px" required />
-                                    <input class="form-control" type="number" name="duration-{{ schedule.id }}" placeholder="" value="{{ schedule_durations[schedule.id] }}" style="max-width:100px" required />
-                                    {% for day in days %}
-                                        <input type="checkbox" class="btn-check" id="day-{{ day.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if day in schedule.days %}checked{% endif %}>
-                                        <label class="btn btn-outline-secondary px-2" for="day-{{ day.id }}-schedule-{{ schedule.id }}">{{ day.name|truncate(1, True, '', 0) }}</label>
-                                    {% endfor %}
-                                </div>
-                            </div>-->
                             <div class="row mb-4 ms-0">
                                 <div class="col-md-3">
                                     <p class="text-secondary mb-1"><small>Start Time:</small></p>
@@ -75,30 +65,25 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <p class="text-secondary mb-1"><small>Weather Dependent:</small></p>
+                                    <p class="text-secondary mb-1 d-inline"><small>Weather Mode: </small></p>
+                                    <a tabindex="0" role="button" data-bs-trigger="focus" class="d-inline text-secondary ms-2" style="cursor:pointer;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-title="Weather Mode" data-bs-html="true" data-bs-content="Choose whether schedules are effected by weather. Options are: <br>- Only run with no rain forecast, <br>- Run with light rain (<3mm) forecast,<br>- Ignore weather forecasts." >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+                                        </svg>
+                                    </a>
                                     <div class="input-group flex-nowrap">
-                                        <!--<span class="input-group-text" id="addon-wrapping">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-drizzle" viewBox="0 0 16 16">
-                                                <path d="M4.158 12.025a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m6 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m-3.5 1.5a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 0 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m6 0a.5.5 0 0 1 .316.633l-.5 1.5a.5.5 0 1 1-.948-.316l.5-1.5a.5.5 0 0 1 .632-.317m.747-8.498a5.001 5.001 0 0 0-9.499-1.004A3.5 3.5 0 1 0 3.5 11H13a3 3 0 0 0 .405-5.973M8.5 2a4 4 0 0 1 3.976 3.555.5.5 0 0 0 .5.445H13a2 2 0 0 1 0 4H3.5a2.5 2.5 0 1 1 .605-4.926.5.5 0 0 0 .596-.329A4 4 0 0 1 8.5 2"/>
-                                            </svg>
-                                        </span>-->
-                                        <!-- <select name="weather-{{ schedule.id }}" class="form-select" aria-label="Default select example">
-                                            <option value="1">Ignore any weather</option>
-                                            <option value="2">Skip watering in heavy rain</option>
-                                            <option value="3">Skip watering in light rain</option>
-                                        </select> -->
                                         <input type="radio" class="btn-check" value="1" name="weather-{{ schedule.id }}" id="weather-sun-{{ schedule.id }}" autocomplete="off" checked>
                                         <label class="btn btn-outline-secondary d-flex align-items-center px-3" style="border-radius:6px 0 0 6px; border-color: #dee2e6;" for="weather-sun-{{ schedule.id }}" style="border-color: #dee2e6;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-sun" viewBox="0 0 16 16">
-                                                <path d="M7 8a3.5 3.5 0 0 1 3.5 3.555.5.5 0 0 0 .624.492A1.503 1.503 0 0 1 13 13.5a1.5 1.5 0 0 1-1.5 1.5H3a2 2 0 1 1 .1-3.998.5.5 0 0 0 .51-.375A3.5 3.5 0 0 1 7 8m4.473 3a4.5 4.5 0 0 0-8.72-.99A3 3 0 0 0 3 16h8.5a2.5 2.5 0 0 0 0-5z"/>
-                                                <path d="M10.5 1.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm3.743 1.964a.5.5 0 1 0-.707-.707l-.708.707a.5.5 0 0 0 .708.708zm-7.779-.707a.5.5 0 0 0-.707.707l.707.708a.5.5 0 1 0 .708-.708zm1.734 3.374a2 2 0 1 1 3.296 2.198q.3.423.516.898a3 3 0 1 0-4.84-3.225q.529.017 1.028.129m4.484 4.074c.6.215 1.125.59 1.522 1.072a.5.5 0 0 0 .039-.742l-.707-.707a.5.5 0 0 0-.854.377M14.5 6.5a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1z"/>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sun" viewBox="0 0 16 16">
+                                                <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
                                             </svg>
                                         </label>
                                         <input type="radio" class="btn-check" value="2" name="weather-{{ schedule.id }}" id="weather-lightrain-{{ schedule.id }}" autocomplete="off">
                                         <label class="btn btn-outline-secondary d-flex align-items-center px-3" for="weather-lightrain-{{ schedule.id }}" style="border-color: #dee2e6;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clouds" viewBox="0 0 16 16">
-                                                <path d="M16 7.5a2.5 2.5 0 0 1-1.456 2.272 3.5 3.5 0 0 0-.65-.824 1.5 1.5 0 0 0-.789-2.896.5.5 0 0 1-.627-.421 3 3 0 0 0-5.22-1.625 5.6 5.6 0 0 0-1.276.088 4.002 4.002 0 0 1 7.392.91A2.5 2.5 0 0 1 16 7.5"/>
-                                                <path d="M7 5a4.5 4.5 0 0 1 4.473 4h.027a2.5 2.5 0 0 1 0 5H3a3 3 0 0 1-.247-5.99A4.5 4.5 0 0 1 7 5m3.5 4.5a3.5 3.5 0 0 0-6.89-.873.5.5 0 0 1-.51.375A2 2 0 1 0 3 13h8.5a1.5 1.5 0 1 0-.376-2.953.5.5 0 0 1-.624-.492z"/>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-sun" viewBox="0 0 16 16">
+                                                <path d="M7 8a3.5 3.5 0 0 1 3.5 3.555.5.5 0 0 0 .624.492A1.503 1.503 0 0 1 13 13.5a1.5 1.5 0 0 1-1.5 1.5H3a2 2 0 1 1 .1-3.998.5.5 0 0 0 .51-.375A3.5 3.5 0 0 1 7 8m4.473 3a4.5 4.5 0 0 0-8.72-.99A3 3 0 0 0 3 16h8.5a2.5 2.5 0 0 0 0-5z"/>
+                                                <path d="M10.5 1.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0zm3.743 1.964a.5.5 0 1 0-.707-.707l-.708.707a.5.5 0 0 0 .708.708zm-7.779-.707a.5.5 0 0 0-.707.707l.707.708a.5.5 0 1 0 .708-.708zm1.734 3.374a2 2 0 1 1 3.296 2.198q.3.423.516.898a3 3 0 1 0-4.84-3.225q.529.017 1.028.129m4.484 4.074c.6.215 1.125.59 1.522 1.072a.5.5 0 0 0 .039-.742l-.707-.707a.5.5 0 0 0-.854.377M14.5 6.5a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1z"/>
                                             </svg>
                                         </label>
                                         <input type="radio" class="btn-check" value="3" name="weather-{{ schedule.id }}" id="weather-heavyrain-{{ schedule.id }}" autocomplete="off">
@@ -111,13 +96,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <p class="text-secondary mb-1"><small>Status:</small></p>
-                                    <!--<div class="">
-                                        <input name="active-{{ schedule.id }}" type="checkbox" class="btn-check" id="btn-check-{{ schedule.id }}" checked autocomplete="off">
-                                        <label class="btn" for="btn-check-{{ schedule.id }}">Active</label>
-                                    </div>-->
                                     <div class="form-check form-switch">
-                                        <!--<input class="form-check-input" name="active-{{ schedule.id }}" type="checkbox" id="btn-check-{{ schedule.id }}" role="switch" checked>
-                                        <label class="form-check-label" for="btn-check-{{ schedule.id }}">Active</label>-->
                                         <input class="form-check-input" name="active-{{ schedule.id }}" type="checkbox" role="switch" id="btn-check-{{ schedule.id }}" checked>
                                         <label class="form-check-label" for="btn-check-{{ schedule.id }}">Active</label>
                                     </div>
@@ -126,10 +105,8 @@
                                     <p class="text-secondary mb-1"><small>Operating Days:</small></p>
                                     <div class="d-flex justify-content-start input-group">
                                         {% for day in days %}
-                                            <!--<div class="">-->
-                                                <input type="checkbox" class="btn-check" id="day-{{ day.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if day in schedule.days %}checked{% endif %}>
-                                                <label class="btn px-2 btn-outline-secondary" style="border-color: #dee2e6; {% if day.id == 1 %}border-radius: 6px 0 0 6px;{% endif %}" for="day-{{ day.id }}-schedule-{{ schedule.id }}">{{ day.name|truncate(3, True, '', 0) }}</label>
-                                            <!--</div>-->
+                                            <input type="checkbox" class="btn-check" id="day-{{ day.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if day in schedule.days %}checked{% endif %}>
+                                            <label class="btn px-2 btn-outline-secondary" style="border-color: #dee2e6; {% if day.id == 1 %}border-radius: 6px 0 0 6px;{% endif %}" for="day-{{ day.id }}-schedule-{{ schedule.id }}">{{ day.name|truncate(3, True, '', 0) }}</label>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -137,17 +114,12 @@
                                     <p class="text-secondary mb-1"><small>Operating Zones:</small></p>
                                     <div class="d-flex justify-content-start input-group">
                                         {% for zone in zones %}
-                                            <!--<div class="me-3">-->
-                                                <input type="checkbox" name="zone-{{zone.id}}-schedule-{{ schedule.id }}" class="btn-check" id="zone-{{ zone.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if zone in schedule.zones %}checked{% endif %}>
-                                                <label class="btn px-2 btn-outline-secondary" style="border-color: #dee2e6; {% if zone.id == 1 %}border-radius: 6px 0 0 6px;{% endif %}" for="zone-{{ zone.id }}-schedule-{{ schedule.id }}">{{ zone.name }}</label>
-                                            <!--</div>-->
+                                            <input type="checkbox" name="zone-{{zone.id}}-schedule-{{ schedule.id }}" class="btn-check" id="zone-{{ zone.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if zone in schedule.zones %}checked{% endif %}>
+                                            <label class="btn px-2 btn-outline-secondary" style="border-color: #dee2e6; {% if zone.id == 1 %}border-radius: 6px 0 0 6px;{% endif %}" for="zone-{{ zone.id }}-schedule-{{ schedule.id }}">{{ zone.name }}</label>
                                         {% endfor %}
                                     </div>
                                 </div>
                             </div>
-                            <!--<div class="col-xs-12">
-                                <hr class="mt-0 mb-0">
-                            </div>-->
                         </div>
                         <!-- End Schedule-->
                         {% endfor %}
@@ -165,6 +137,11 @@
 </div>
 
 <script>
+    document.addEventListener("DOMContentLoaded", function (event) {
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+    });
+
     document.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
     input.addEventListener('focus', function(event) {
         const btn = input.closest('.accordion-header').querySelector('.accordion-button');
@@ -184,6 +161,7 @@
 
     // Add schedule duplication logic for .add-schedule-g1
     document.querySelectorAll('.add-schedule-g1').forEach(function(btn) {
+
         btn.addEventListener('click', function(event) {
             const accordionItem = btn.closest('.accordion-item');
             if (!accordionItem) return;
@@ -194,7 +172,7 @@
             const lastSchedule = scheduleRows[scheduleRows.length - 1];
             const newSchedule = lastSchedule.cloneNode(true);
 
-            // Find the highest schedule id in this group
+            // Find the highest schedule id
             let maxId = 0;
             scheduleRows.forEach(function(row) {
                 row.querySelectorAll('[name],[id],[for]').forEach(function(el) {
@@ -241,6 +219,11 @@
             });
 
             lastSchedule.after(newSchedule);
+
+            // Initialise the popovers in the new schedule row
+            newSchedule.querySelectorAll('[data-bs-toggle="popover"]').forEach(function(popoverTriggerEl) {
+                new bootstrap.Popover(popoverTriggerEl);
+            });
         });
     });
 
