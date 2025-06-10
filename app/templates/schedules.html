@@ -30,12 +30,12 @@
                             </div>
                         </button>
                     </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                    <div id="collapseOne" class="accordion-collapse collapse show pt-4" data-bs-parent="#accordionExample">
                         <!-- Schedule-->
                         {% for schedule in group.schedules %}
-                        <div class="accordion-body row schedule">
+                        <div class="accordion-body row schedule pt-0">
                             <div class="col-xs-12">
-                                <p class="mb-2 text-dark-emphasis ps-3">Schedule {{ schedule.id }}</p>
+                                <p class="mb-2 text-dark-emphasis ps-3 schedule-title">Schedule {{ schedule.id }}</p>
                                 <hr class="mt-0">
                             </div>
                             <!--<div class="col-xs-12">
@@ -145,9 +145,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-xs-12">
-                                <hr class="mt-0">
-                            </div>
+                            <!--<div class="col-xs-12">
+                                <hr class="mt-0 mb-0">
+                            </div>-->
                         </div>
                         <!-- End Schedule-->
                         {% endfor %}
@@ -222,6 +222,12 @@
                     }
                 });
             });
+
+            // Update the schedule-title text
+            const title = newSchedule.querySelector('.schedule-title');
+            if (title) {
+                title.textContent = 'Schedule ' + newId;
+            }
 
             // Clear input/select values
             newSchedule.querySelectorAll('input, select').forEach(function(input) {
