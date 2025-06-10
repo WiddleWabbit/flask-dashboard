@@ -46,7 +46,7 @@ current_time_utc = datetime.now(pytz.utc)
 current_time_utc.isoformat()
 
 # Clear Tables
-from app import db, Users, Settings, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+from app import db, Users, Settings, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 db.drop_all()
 db.session.commit()
 
@@ -80,3 +80,8 @@ class Child(db.Model):
     day = DaysOfWeek.query.all()    
     d = day[2]
     sch.days.append(d)
+
+
+
+
+    flask --app "app:create_app('app.config.Config')" shell
