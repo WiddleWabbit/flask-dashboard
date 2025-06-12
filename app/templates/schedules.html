@@ -269,9 +269,8 @@
     function deleteGroup() {
         const accordions = document.querySelectorAll('.accordion-item');
         if (accordions.length > 1) {
-            return accordions[accordions.length - 1].remove();
+            accordions[accordions.length - 1].remove();
         }
-        return null;
     }
 
     function duplicateGroup() {
@@ -346,12 +345,37 @@
         renameGroupsAndSchedules();
     }
 
+    // Delete the last schedule in the group (May want to adjust to selectively delete)
+    function deleteSchedule() {
+        // Get the group this belongs to
+        const clickedElement = event.target;
+        const group = clickedElement.closest('.accordion-item');
+        if (!group) {
+            return;
+        }
+        // Get the last schedule and remove it
+        const schedules = group.querySelectorAll('.schedule');
+        if (schedules.length > 1) {
+            schedules[schedules.length - 1].remove();
+        }
+        renameGroupsAndSchedules();
+    }
+
     function addListenersToScheduleButtons () {
         const addScheduleButtons = document.querySelectorAll('[class*="add-schedule"]');
         addScheduleButtons.forEach(span => {
             span.removeEventListener('click', handleAddSchedule);
             span.addEventListener('click', handleAddSchedule);
         });
+        const removeScheduleButtons = document.querySelectorAll('[class*="remove-schedule"]');
+        removeScheduleButtons.forEach(span => {
+            span.removeEventListener('click', handleDeleteSchedule);
+            span.addEventListener('click', handleDeleteSchedule);
+        });
+    }
+
+    const handleDeleteSchedule = (event) => {
+        deleteSchedule(event);
     }
 
     const handleAddSchedule = (event) => {
