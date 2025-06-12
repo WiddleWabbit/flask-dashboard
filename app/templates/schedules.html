@@ -149,16 +149,18 @@
     });
 
     // On page load prevent clicking buttons / fields on the accordion header from collapsing the accordion
-    document.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
-        input.addEventListener('focus', function(event) {
-            const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-            if (btn) btn.setAttribute('data-bs-toggle', 'disabled');
+    function preventToggleOnAccordionFields(){
+        document.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
+            input.addEventListener('focus', function(event) {
+                const btn = input.closest('.accordion-header').querySelector('.accordion-button');
+                if (btn) btn.setAttribute('data-bs-toggle', 'disabled');
+            });
+            input.addEventListener('blur', function(event) {
+                const btn = input.closest('.accordion-header').querySelector('.accordion-button');
+                if (btn) btn.setAttribute('data-bs-toggle', 'collapse');
+            });
         });
-        input.addEventListener('blur', function(event) {
-            const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-            if (btn) btn.setAttribute('data-bs-toggle', 'collapse');
-        });
-    });
+    }
 
     function renameGroupsAndSchedules() {
         // Get all accordion-item groups
@@ -245,14 +247,15 @@
             field.htmlFor = field.htmlFor.replace(/(\d+)$/, scheduleNumber.toString());
             }
         });
-        
-        // Rename schedule classes with absolute numbering
-        // scheduleClassElements.forEach(elem => {
-        //     const newClasses = Array.from(elem.classList).map(cls => {
-        //         return cls.replace(/(\d+)$/, scheduleNumber.toString());
-        //     });
-        //     elem.className = newClasses.join(' ');
-        // });
+    }
+
+    // Delete the last group in the document (May want to adjust to selectively delete)
+    function deleteGroup() {
+        const accordions = document.querySelectorAll('.accordion-item');
+        if (accordions.length > 1) {
+            return accordions[accordions.length - 1].remove();
+        }
+        return null;
     }
 
     function duplicateGroup() {
@@ -270,9 +273,9 @@
         });
         
         // Clear form field values in the new group
-        const formFields = newGroup.querySelectorAll('input, select, textarea');
+        const formFields = newGroup.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
-            if (field.type === 'text' || field.type === 'textarea' || field.tagName.toLowerCase() === 'textarea') {
+            if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
             field.value = '';
             } else if (field.type === 'checkbox' || field.type === 'radio') {
             field.checked = false;
@@ -286,392 +289,80 @@
         
         // Re-run renaming to update all group and schedule numbers
         renameGroupsAndSchedules();
+        preventToggleOnAccordionFields();
+        addListenersToScheduleButtons();
+    }
+
+    // Duplicate the last schedule in the parent group to the clicked element
+    function duplicateSchedule(event) {
+
+        const clickedElement = event.target;
+        // Get the closest group
+        const group = clickedElement.closest('.accordion-item');
+        if (!group) {
+            return;
+        }
+        // Get the last schedule
+        const schedules = group.querySelectorAll('.schedule');
+        const lastSchedule = schedules[schedules.length - 1];
+        if (!lastSchedule) {
+            return;
+        }
+
+        // Take a copy of the last schedule in the group
+        const newSchedule = lastSchedule.cloneNode(true);
+
+        // Clear form field values in the new schedule
+        const formFields = newSchedule.querySelectorAll('input, select, textarea, time, number');
+        formFields.forEach(field => {
+            if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
+                field.value = '';
+            } else if (field.type === 'checkbox' || field.type === 'radio') {
+                field.checked = false;
+            } else if (field.tagName.toLowerCase() === 'select') {
+                field.selectedIndex = 0;
+            }
+        });
+        // Append the new Schedule
+        const firstSchedule = group.querySelector('.schedule');
+        firstSchedule.parentNode.appendChild(newSchedule);
+
+        renameGroupsAndSchedules();
+    }
+
+    function addListenersToScheduleButtons () {
+        const addScheduleButtons = document.querySelectorAll('[class*="add-schedule"]');
+        addScheduleButtons.forEach(span => {
+            span.addEventListener('click', handleAddSchedule);
+        });
+    }
+
+    const handleAddSchedule = (event) => {
+        duplicateSchedule(event);
     }
 
     // Add event listener for add-group button
     document.addEventListener('DOMContentLoaded', () => {
+
         renameGroupsAndSchedules();
+        preventToggleOnAccordionFields();
+        
         const addGroupButton = document.querySelector('.add-group');
+        const removeGroupButton = document.querySelector('.remove-group');
         if (addGroupButton) {
             addGroupButton.addEventListener('click', (event) => {
                 event.preventDefault();
                 duplicateGroup();
             });
         }
+        if (removeGroupButton) {
+            removeGroupButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                deleteGroup();
+            });
+        }
+        addListenersToScheduleButtons();
     });
-
-    //     // Add Group Button
-    // document.querySelector('.add-group').addEventListener('click', function(event) {
-    //     event.preventDefault();
-
-    //     const accordion = document.querySelector('#accordionExample');
-    //     const lastGroup = accordion.querySelector('.accordion-item:last-of-type');
-    //     if (!lastGroup) return;
-
-    //     // Clone the last group
-    //     const newGroup = lastGroup.cloneNode(true);
-
-    //     // Find the highest group number (from input name or id)
-    //     let maxGroupId = 0;
-    //     accordion.querySelectorAll('.accordion-item').forEach(function(item) {
-    //         const input = item.querySelector('.accordion-header input[name]');
-    //         if (input) {
-    //             const match = input.name.match(/(\d+)$/);
-    //             if (match) {
-    //                 const num = parseInt(match[1]);
-    //                 if (num > maxGroupId) maxGroupId = num;
-    //             }
-    //         }
-    //     });
-    //     const newGroupId = maxGroupId + 1;
-
-    //     // Update group name and input attributes
-    //     const groupInput = newGroup.querySelector('.accordion-header input[name]');
-    //     if (groupInput) {
-    //         groupInput.value = '';
-    //         groupInput.name = incrementLastNumber(groupInput.name, newGroupId);
-    //         groupInput.placeholder = 'Group ' + newGroupId;
-    //     }
-
-    //     // Update the add schedule / remove schedule buttons
-    //     const addScheduleBtn = newGroup.querySelector('[class*=add-schedule-g]');
-    //     if (addScheduleBtn) {
-    //         addScheduleBtn.classList.forEach(cls => {
-    //             if (/^add-schedule-g\d+$/.test(cls)) {
-    //                 addScheduleBtn.classList.remove(cls);
-    //             }
-    //         });
-    //         addScheduleBtn.classList.add('add-schedule-g' + newGroupId);
-    //         addScheduleBtn.setAttribute('data-group', newGroupId);
-    //     }
-    //     const removeScheduleBtn = newGroup.querySelector('[class*=remove-schedule-g]');
-    //     if (removeScheduleBtn) {
-    //         removeScheduleBtn.classList.forEach(cls => {
-    //             if (/^remove-schedule-g\d+$/.test(cls)) {
-    //                 removeScheduleBtn.classList.remove(cls);
-    //             }
-    //         });
-    //         removeScheduleBtn.classList.add('remove-schedule-g' + newGroupId);
-    //         removeScheduleBtn.setAttribute('data-group', newGroupId);
-    //     }
-
-    //     // Update accordion collapse IDs
-    //     const headerBtn = newGroup.querySelector('.accordion-button');
-    //     if (headerBtn) {
-    //         headerBtn.setAttribute('data-bs-target', '#collapseGroup' + newGroupId);
-    //         headerBtn.setAttribute('aria-controls', 'collapseGroup' + newGroupId);
-    //     }
-    //     const collapseDiv = newGroup.querySelector('.accordion-collapse');
-    //     if (collapseDiv) {
-    //         collapseDiv.id = 'collapseGroup' + newGroupId;
-    //     }
-
-    //     // Keep only the first schedule, remove others
-    //     const schedules = newGroup.querySelectorAll('.schedule');
-    //     schedules.forEach(function(schedule, idx) {
-    //         if (idx > 0) schedule.remove();
-    //     });
-
-    //     // Update the remaining schedule's IDs/names and clear values
-    //     const schedule = newGroup.querySelector('.schedule');
-    //     if (schedule) {
-    //         // Find the highest schedule id in all groups
-    //         let maxScheduleId = 0;
-    //         document.querySelectorAll('.schedule').forEach(function(row) {
-    //             row.querySelectorAll('[name],[id],[for]').forEach(function(el) {
-    //                 ['name', 'id', 'for'].forEach(function(attr) {
-    //                     if (el.hasAttribute(attr)) {
-    //                         const match = el.getAttribute(attr).match(/(\d+)$/);
-    //                         if (match) {
-    //                             const num = parseInt(match[1]);
-    //                             if (num > maxScheduleId) maxScheduleId = num;
-    //                         }
-    //                     }
-    //                 });
-    //             });
-    //         });
-    //         const newScheduleId = maxScheduleId + 1;
-
-    //         // Update all name, id, for attributes in the cloned schedule
-    //         schedule.querySelectorAll('[name],[id],[for]').forEach(function(el) {
-    //             ['name', 'id', 'for'].forEach(function(attr) {
-    //                 if (el.hasAttribute(attr)) {
-    //                     const val = el.getAttribute(attr);
-    //                     if (val && /\d+$/.test(val)) {
-    //                         el.setAttribute(attr, incrementLastNumber(val, newScheduleId));
-    //                     }
-    //                 }
-    //             });
-    //         });
-
-    //         // Update the schedule-title text
-    //         const title = schedule.querySelector('.schedule-title');
-    //         if (title) {
-    //             title.textContent = 'Schedule ' + newScheduleId;
-    //         }
-
-    //         // Clear input/select values
-    //         schedule.querySelectorAll('input, select').forEach(function(input) {
-    //             if (input.type === 'checkbox' || input.type === 'radio') {
-    //                 input.checked = false;
-    //             } else if (input.tagName === 'SELECT') {
-    //                 input.selectedIndex = 0;
-    //             } else {
-    //                 input.value = '';
-    //             }
-    //         });
-    //     }
-
-    //     // Insert the new group after the last group
-    //     lastGroup.after(newGroup);
-
-    //     // Re-initialize popovers in the new group
-    //     newGroup.querySelectorAll('[data-bs-toggle="popover"]').forEach(function(popoverTriggerEl) {
-    //         new bootstrap.Popover(popoverTriggerEl);
-    //     });
-
-    //     newGroup.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
-    //         input.addEventListener('focus', function(event) {
-    //             const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-    //             if (btn) btn.setAttribute('data-bs-toggle', 'disabled');
-    //         });
-    //         input.addEventListener('blur', function(event) {
-    //             const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-    //             if (btn) btn.setAttribute('data-bs-toggle', 'collapse');
-    //         });
-    //     });
-    // });
-
-
-    // // Helper to increment the last number in a string (e.g., "duration-5" -> "duration-6")
-    // function incrementLastNumber(str, newId) {
-    //     return str.replace(/(\D+)(\d+)$/, function(_, prefix, num) {
-    //         return prefix + newId;
-    //     });
-    // }
-
-    // // Add schedule duplication logic for .add-schedule-g1
-    // document.querySelectorAll('.add-schedule-g1').forEach(function(btn) {
-
-    //     btn.addEventListener('click', function(event) {
-    //         const accordionItem = btn.closest('.accordion-item');
-    //         if (!accordionItem) return;
-
-    //         // Find all .schedule rows and clone the last one
-    //         const scheduleRows = accordionItem.querySelectorAll('.schedule');
-    //         if (scheduleRows.length === 0) return;
-    //         const lastSchedule = scheduleRows[scheduleRows.length - 1];
-    //         const newSchedule = lastSchedule.cloneNode(true);
-
-    //         // Find the highest schedule id
-    //         let maxId = 0;
-    //         scheduleRows.forEach(function(row) {
-    //             row.querySelectorAll('[name],[id],[for]').forEach(function(el) {
-    //                 ['name', 'id', 'for'].forEach(function(attr) {
-    //                     if (el.hasAttribute(attr)) {
-    //                         const match = el.getAttribute(attr).match(/(\d+)$/);
-    //                         if (match) {
-    //                             const num = parseInt(match[1]);
-    //                             if (num > maxId) maxId = num;
-    //                         }
-    //                     }
-    //                 });
-    //             });
-    //         });
-    //         const newId = maxId + 1;
-
-    //         // Update all name, id, for attributes in the cloned row
-    //         newSchedule.querySelectorAll('[name],[id],[for]').forEach(function(el) {
-    //             ['name', 'id', 'for'].forEach(function(attr) {
-    //                 if (el.hasAttribute(attr)) {
-    //                     const val = el.getAttribute(attr);
-    //                     if (val && /\d+$/.test(val)) {
-    //                         el.setAttribute(attr, incrementLastNumber(val, newId));
-    //                     }
-    //                 }
-    //             });
-    //         });
-
-    //         // Update the schedule-title text
-    //         const title = newSchedule.querySelector('.schedule-title');
-    //         if (title) {
-    //             title.textContent = 'Schedule ' + newId;
-    //         }
-
-    //         // Clear input/select values
-    //         newSchedule.querySelectorAll('input, select').forEach(function(input) {
-    //             if (input.type === 'checkbox' || input.type === 'radio') {
-    //                 input.checked = false;
-    //             } else if (input.tagName === 'SELECT') {
-    //                 input.selectedIndex = 0;
-    //             } else {
-    //                 input.value = '';
-    //             }
-    //         });
-
-    //         lastSchedule.after(newSchedule);
-
-    //         // Initialise the popovers in the new schedule row
-    //         newSchedule.querySelectorAll('[data-bs-toggle="popover"]').forEach(function(popoverTriggerEl) {
-    //             new bootstrap.Popover(popoverTriggerEl);
-    //         });
-    //     });
-    // });
-
-    // // Remove schedule logic for .remove-schedule-g1
-    // document.querySelectorAll('.remove-schedule-g1').forEach(function(btn) {
-    //     btn.addEventListener('click', function(event) {
-    //         const accordionItem = btn.closest('.accordion-item');
-    //         if (!accordionItem) return;
-
-    //         const scheduleRows = accordionItem.querySelectorAll('.schedule');
-    //         if (scheduleRows.length > 1) {
-    //             scheduleRows[scheduleRows.length - 1].remove();
-    //         }
-    //     });
-    // });
-
-    // // Add Group Button
-    // document.querySelector('.add-group').addEventListener('click', function(event) {
-    //     event.preventDefault();
-
-    //     const accordion = document.querySelector('#accordionExample');
-    //     const lastGroup = accordion.querySelector('.accordion-item:last-of-type');
-    //     if (!lastGroup) return;
-
-    //     // Clone the last group
-    //     const newGroup = lastGroup.cloneNode(true);
-
-    //     // Find the highest group number (from input name or id)
-    //     let maxGroupId = 0;
-    //     accordion.querySelectorAll('.accordion-item').forEach(function(item) {
-    //         const input = item.querySelector('.accordion-header input[name]');
-    //         if (input) {
-    //             const match = input.name.match(/(\d+)$/);
-    //             if (match) {
-    //                 const num = parseInt(match[1]);
-    //                 if (num > maxGroupId) maxGroupId = num;
-    //             }
-    //         }
-    //     });
-    //     const newGroupId = maxGroupId + 1;
-
-    //     // Update group name and input attributes
-    //     const groupInput = newGroup.querySelector('.accordion-header input[name]');
-    //     if (groupInput) {
-    //         groupInput.value = '';
-    //         groupInput.name = incrementLastNumber(groupInput.name, newGroupId);
-    //         groupInput.placeholder = 'Group ' + newGroupId;
-    //     }
-
-    //     // Update the add schedule / remove schedule buttons
-    //     const addScheduleBtn = newGroup.querySelector('[class*=add-schedule-g]');
-    //     if (addScheduleBtn) {
-    //         addScheduleBtn.classList.forEach(cls => {
-    //             if (/^add-schedule-g\d+$/.test(cls)) {
-    //                 addScheduleBtn.classList.remove(cls);
-    //             }
-    //         });
-    //         addScheduleBtn.classList.add('add-schedule-g' + newGroupId);
-    //         addScheduleBtn.setAttribute('data-group', newGroupId);
-    //     }
-    //     const removeScheduleBtn = newGroup.querySelector('[class*=remove-schedule-g]');
-    //     if (removeScheduleBtn) {
-    //         removeScheduleBtn.classList.forEach(cls => {
-    //             if (/^remove-schedule-g\d+$/.test(cls)) {
-    //                 removeScheduleBtn.classList.remove(cls);
-    //             }
-    //         });
-    //         removeScheduleBtn.classList.add('remove-schedule-g' + newGroupId);
-    //         removeScheduleBtn.setAttribute('data-group', newGroupId);
-    //     }
-
-    //     // Update accordion collapse IDs
-    //     const headerBtn = newGroup.querySelector('.accordion-button');
-    //     if (headerBtn) {
-    //         headerBtn.setAttribute('data-bs-target', '#collapseGroup' + newGroupId);
-    //         headerBtn.setAttribute('aria-controls', 'collapseGroup' + newGroupId);
-    //     }
-    //     const collapseDiv = newGroup.querySelector('.accordion-collapse');
-    //     if (collapseDiv) {
-    //         collapseDiv.id = 'collapseGroup' + newGroupId;
-    //     }
-
-    //     // Keep only the first schedule, remove others
-    //     const schedules = newGroup.querySelectorAll('.schedule');
-    //     schedules.forEach(function(schedule, idx) {
-    //         if (idx > 0) schedule.remove();
-    //     });
-
-    //     // Update the remaining schedule's IDs/names and clear values
-    //     const schedule = newGroup.querySelector('.schedule');
-    //     if (schedule) {
-    //         // Find the highest schedule id in all groups
-    //         let maxScheduleId = 0;
-    //         document.querySelectorAll('.schedule').forEach(function(row) {
-    //             row.querySelectorAll('[name],[id],[for]').forEach(function(el) {
-    //                 ['name', 'id', 'for'].forEach(function(attr) {
-    //                     if (el.hasAttribute(attr)) {
-    //                         const match = el.getAttribute(attr).match(/(\d+)$/);
-    //                         if (match) {
-    //                             const num = parseInt(match[1]);
-    //                             if (num > maxScheduleId) maxScheduleId = num;
-    //                         }
-    //                     }
-    //                 });
-    //             });
-    //         });
-    //         const newScheduleId = maxScheduleId + 1;
-
-    //         // Update all name, id, for attributes in the cloned schedule
-    //         schedule.querySelectorAll('[name],[id],[for]').forEach(function(el) {
-    //             ['name', 'id', 'for'].forEach(function(attr) {
-    //                 if (el.hasAttribute(attr)) {
-    //                     const val = el.getAttribute(attr);
-    //                     if (val && /\d+$/.test(val)) {
-    //                         el.setAttribute(attr, incrementLastNumber(val, newScheduleId));
-    //                     }
-    //                 }
-    //             });
-    //         });
-
-    //         // Update the schedule-title text
-    //         const title = schedule.querySelector('.schedule-title');
-    //         if (title) {
-    //             title.textContent = 'Schedule ' + newScheduleId;
-    //         }
-
-    //         // Clear input/select values
-    //         schedule.querySelectorAll('input, select').forEach(function(input) {
-    //             if (input.type === 'checkbox' || input.type === 'radio') {
-    //                 input.checked = false;
-    //             } else if (input.tagName === 'SELECT') {
-    //                 input.selectedIndex = 0;
-    //             } else {
-    //                 input.value = '';
-    //             }
-    //         });
-    //     }
-
-    //     // Insert the new group after the last group
-    //     lastGroup.after(newGroup);
-
-    //     // Re-initialize popovers in the new group
-    //     newGroup.querySelectorAll('[data-bs-toggle="popover"]').forEach(function(popoverTriggerEl) {
-    //         new bootstrap.Popover(popoverTriggerEl);
-    //     });
-
-    //     newGroup.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
-    //         input.addEventListener('focus', function(event) {
-    //             const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-    //             if (btn) btn.setAttribute('data-bs-toggle', 'disabled');
-    //         });
-    //         input.addEventListener('blur', function(event) {
-    //             const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-    //             if (btn) btn.setAttribute('data-bs-toggle', 'collapse');
-    //         });
-    //     });
-    // });
 
 </script>
 
