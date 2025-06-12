@@ -291,11 +291,11 @@
         const formFields = newGroup.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
             if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
-            field.value = '';
+                field.value = '';
             } else if (field.type === 'checkbox' || field.type === 'radio') {
-            field.checked = false;
+                field.checked = false;
             } else if (field.tagName.toLowerCase() === 'select') {
-            field.selectedIndex = 0;
+                field.selectedIndex = 0;
             }
         });
         
@@ -304,7 +304,15 @@
         
         // Re-run renaming to update all group and schedule numbers
         renameGroupsAndSchedules();
+
+        const weather = newGroup.querySelector('[id*="weather-sun"]');
+        if (weather) {
+            weather.checked = true;
+        }
+
+        // Prevent toggling on the new accordion fields
         preventToggleOnAccordionFields();
+        // Add the listeners to the new buttons on the accordion header
         addListenersToScheduleButtons();
     }
 
@@ -342,7 +350,14 @@
         const firstSchedule = group.querySelector('.schedule');
         firstSchedule.parentNode.appendChild(newSchedule);
 
+        // Rename the groups and schedules so they are in order
         renameGroupsAndSchedules();
+        
+        // Reset the weather field
+        const weather = newGroup.querySelector('[id*="weather-sun"]');
+        if (weather) {
+            weather.checked = true;
+        }
     }
 
     // Delete the last schedule in the group (May want to adjust to selectively delete)
