@@ -148,17 +148,33 @@
         const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
     });
 
-    // On page load prevent clicking buttons / fields on the accordion header from collapsing the accordion
-    function preventToggleOnAccordionFields(){
-        document.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(function(input) {
-            input.addEventListener('focus', function(event) {
-                const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-                if (btn) btn.setAttribute('data-bs-toggle', 'disabled');
-            });
-            input.addEventListener('blur', function(event) {
-                const btn = input.closest('.accordion-header').querySelector('.accordion-button');
-                if (btn) btn.setAttribute('data-bs-toggle', 'collapse');
-            });
+    // Function to handle focus event
+    function handleAccordionFocus(event) {
+        const clickedElement = event.target;
+        const btn = clickedElement.closest('.accordion-header').querySelector('.accordion-button');
+        if (btn) {
+            btn.setAttribute('data-bs-toggle', 'disabled');
+        }
+    }
+
+    // Function to handle blur event
+    function handleAccordionBlur(event) {
+        const clickedElement = event.target;
+        const btn = clickedElement.closest('.accordion-header').querySelector('.accordion-button');
+        if (btn) {
+            btn.setAttribute('data-bs-toggle', 'collapse');
+        }
+    }
+
+    // Prevent clicking buttons/fields on the accordion header from collapsing the accordion
+    function preventToggleOnAccordionFields() {
+        document.querySelectorAll('.accordion .accordion-header input, .accordion .accordion-header .control').forEach(input => {
+            // Remove any existing listeners to prevent duplicates
+            input.removeEventListener('focus', handleAccordionFocus);
+            input.removeEventListener('blur', handleAccordionBlur);
+            // Add the focus and blur event listeners
+            input.addEventListener('focus', handleAccordionFocus);
+            input.addEventListener('blur', handleAccordionBlur);
         });
     }
 
@@ -333,6 +349,7 @@
     function addListenersToScheduleButtons () {
         const addScheduleButtons = document.querySelectorAll('[class*="add-schedule"]');
         addScheduleButtons.forEach(span => {
+            span.removeEventListener('click', handleAddSchedule);
             span.addEventListener('click', handleAddSchedule);
         });
     }
