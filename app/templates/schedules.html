@@ -17,7 +17,7 @@
         <form action="/schedules?form=update_schedules" method="post">
         <div class="accordion" id="accordionGroups">
 
-            {% for group in groups %}
+            {% for group in data.groups %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ group.id }}" aria-expanded="true" aria-controls="collapse-{{ group.id }}">
@@ -61,7 +61,7 @@
                                                 <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/>
                                             </svg>
                                         </span>
-                                        <input class="form-control" type="number" name="duration-{{ schedule.id }}" placeholder="" value="{{ schedule_durations[schedule.id] }}" required />
+                                        <input class="form-control" type="number" name="duration-{{ schedule.id }}" placeholder="" value="{{ data.schedule_durations[schedule.id] }}" required />
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -104,7 +104,7 @@
                                 <div class="col-md-6 mb-3">
                                     <p class="text-secondary mb-1"><small>Operating Days:</small></p>
                                     <div class="d-flex justify-content-start input-group">
-                                        {% for day in days %}
+                                        {% for day in data.days_of_week %}
                                             <input type="checkbox" class="btn-check" id="day-{{ day.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if day in schedule.days %}checked{% endif %}>
                                             <label class="btn px-2 btn-outline-secondary" style="border-color: #dee2e6; {% if day.id == 1 %}border-radius: 6px 0 0 6px;{% endif %}" for="day-{{ day.id }}-schedule-{{ schedule.id }}">{{ day.name|truncate(3, True, '', 0) }}</label>
                                         {% endfor %}
@@ -113,7 +113,7 @@
                                 <div class="col-md-6 mb-3">
                                     <p class="text-secondary mb-1"><small>Operating Zones:</small></p>
                                     <div class="d-flex justify-content-start input-group">
-                                        {% for zone in zones %}
+                                        {% for zone in data.zones %}
                                             <input type="checkbox" name="zone-{{zone.id}}-schedule-{{ schedule.id }}" class="btn-check" id="zone-{{ zone.id }}-schedule-{{ schedule.id }}" autocomplete="off" {% if zone in schedule.zones %}checked{% endif %}>
                                             <label class="btn px-2 btn-outline-secondary" style="border-color: #dee2e6; {% if zone.id == 1 %}border-radius: 6px 0 0 6px;{% endif %}" for="zone-{{ zone.id }}-schedule-{{ schedule.id }}">{{ zone.name }}</label>
                                         {% endfor %}
@@ -143,12 +143,17 @@
 <script>
 
     // Initialise popovers on page load
-    document.addEventListener("DOMContentLoaded", function (event) {
+    // document.addEventListener("DOMContentLoaded", function (event) {
+    //     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+    //     const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+    // });
+
+    function initialisePopovers() {
         const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
         const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
-    });
+    }
 
-    // Function to handle focus event
+    // Function to prevent focus events on form fields in the accordion header opening and closing the accordion.
     function handleAccordionFocus(event) {
         const clickedElement = event.target;
         const btn = clickedElement.closest('.accordion-header').querySelector('.accordion-button');
@@ -157,7 +162,7 @@
         }
     }
 
-    // Function to handle blur event
+    // Function to prevent blur events on form fields in the accordion header opening and closing the accordion.
     function handleAccordionBlur(event) {
         const clickedElement = event.target;
         const btn = clickedElement.closest('.accordion-header').querySelector('.accordion-button');
@@ -178,19 +183,23 @@
         });
     }
 
+    // Parent function to rename all the groups and schedules after changes
+    // We are cloning the entire accordion into memory to prevent issues with radio fields being cleared by the browser during the 
+    // tiny period they share the same name
     function renameGroupsAndSchedules() {
-        // Get all accordion-item groups
-        const groups = document.querySelectorAll('.accordion-item');
-        let scheduleCounter = 1; // Absolute counter for schedules across all groups
-        
-        // Iterate through each group
+        // Clone the container and its children into memory
+        const container = document.querySelector('.accordion');
+        if (!container) return;
+        const clonedContainer = container.cloneNode(true);
+        // Get all accordion-item groups in the cloned container
+        const groups = clonedContainer.querySelectorAll('.accordion-item');
+        let scheduleCounter = 1;
+        // Iterate through each group in the cloned container
         groups.forEach((group, groupIndex) => {
             // Get all schedules within the current group
             const schedules = group.querySelectorAll('.schedule');
-            
             // Rename group-specific fields and classes
             renameGroupAttributes(group, groupIndex + 1);
-            
             // Iterate through each schedule in the group
             schedules.forEach(schedule => {
                 // Rename schedule fields and classes with absolute numbering
@@ -199,13 +208,51 @@
                 scheduleCounter++; // Increment absolute counter for the next schedule
             });
         });
+        // Replace the original container's content with the modified clone
+        container.replaceWith(clonedContainer);
+        
     }
 
+    // Function to update the form with all usability actions including renaming fields accordingly,
+    // ensuring all header fields don't trigger the accordion and ensuring the add/remove schedule buttons work.
+    function updateForm() {
+        renameGroupsAndSchedules();
+        ensureRadioChecked();
+        addListenersToScheduleButtons();
+        preventToggleOnAccordionFields();
+        initialisePopovers();
+    }
+
+    // Ensure at least one radio option is selected in each radio field. (Can't validate these with bootstrap and server side is backup)
+    function ensureRadioChecked(container = document) {
+        // Get all radio buttons in the specified container
+        const radioButtons = container.querySelectorAll('input[type="radio"]');
+        
+        // Group radio buttons by their 'name' attribute using a Map
+        const groups = new Map();
+        radioButtons.forEach(radio => {
+            if (!groups.has(radio.name)) {
+                groups.set(radio.name, []);
+            }
+            groups.get(radio.name).push(radio);
+        });
+
+        // Check each radio group
+        groups.forEach(radios => {
+            // Check if any radio in the group is selected
+            const hasChecked = radios.some(radio => radio.checked);
+            // If no radio is checked, set the first one to checked
+            if (!hasChecked && radios.length > 0) {
+                radios[0].checked = true;
+            }
+        });
+    }
+
+    // Rename the parts of a group, including the buttons, name and accordion parts
     function renameGroupAttributes(group, groupNumber) {
         // Select group-specific fields (add-schedule and remove-schedule group-heading)
         const groupFields = group.querySelectorAll('[class*="add-schedule"], [class*="remove-schedule"], [class*="group-heading"]');
         const collapseFields = group.querySelectorAll('[data-bs-toggle*="collapse"], [class*="accordion-collapse"]');
-
         // Rename group field names and IDs
         groupFields.forEach(field => {
             if (field.name) {
@@ -218,7 +265,6 @@
                 field.placeholder = field.placeholder.replace(/(\d+)$/, groupNumber.toString());
             }
         });
-
         // Update the collapse fields for the group
         collapseFields.forEach(field => {
             if (field.dataset.bsTarget) {
@@ -228,7 +274,6 @@
                 field.id = field.id.replace(/(\d+)$/, groupNumber.toString());
             }
         });
-        
         // Rename group classes
         groupFields.forEach(elem => {
             const newClasses = Array.from(elem.classList).map(cls => {
@@ -238,7 +283,7 @@
         });
     }
 
-    // Function to update the schedule titles
+    // Function to rename the schedule titles
     function renameScheduleTitles(schedule, groupNumber) {
         const scheduleTitles = schedule.querySelectorAll('p.schedule-title');
         scheduleTitles.forEach(elem => {
@@ -246,6 +291,7 @@
         });
     }
 
+    // Rename all the form elements in a schedule with corrected id's names etc
     function renameScheduleAttributes(schedule, scheduleNumber) {
         // Define schedule fields (all inputs, selects, textareas within schedule)
         const scheduleFields = schedule.querySelectorAll('input, select, textarea, label');
@@ -273,20 +319,17 @@
         }
     }
 
+    // Duplicate the first group and append to the end blank
     function duplicateGroup() {
         // Get the first accordion-item group to duplicate
         const firstGroup = document.querySelector('.accordion-item');
-        if (!firstGroup) return; // Exit if no group exists
-        
-        // Clone the first group
-        const newGroup = firstGroup.cloneNode(true);
-        
+        if (!firstGroup) return;
+        const newGroup = firstGroup.cloneNode(true);    
         // Remove all schedules except the first one
         const schedules = newGroup.querySelectorAll('.schedule');
         schedules.forEach((schedule, index) => {
             if (index > 0) schedule.remove();
         });
-        
         // Clear form field values in the new group
         const formFields = newGroup.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
@@ -298,43 +341,26 @@
                 field.selectedIndex = 0;
             }
         });
-        
         // Append the new group to the parent container
-        firstGroup.parentNode.appendChild(newGroup);
-        
-        // Re-run renaming to update all group and schedule numbers
-        renameGroupsAndSchedules();
-
-        const weather = newGroup.querySelector('[id*="weather-sun"]');
-        if (weather) {
-            weather.checked = true;
-        }
-
-        // Prevent toggling on the new accordion fields
-        preventToggleOnAccordionFields();
-        // Add the listeners to the new buttons on the accordion header
-        addListenersToScheduleButtons();
+        firstGroup.parentNode.appendChild(newGroup); 
+        // Run form updates to ensure order and names are correct, buttons work etc.
+        updateForm();
     }
 
-    // Duplicate the last schedule in the parent group to the clicked element
     function duplicateSchedule(event) {
-
+        // Get the closest group to what was clicked on
         const clickedElement = event.target;
-        // Get the closest group
         const group = clickedElement.closest('.accordion-item');
         if (!group) {
             return;
         }
-        // Get the last schedule
+        // Get the last schedule and take a copy of it
         const schedules = group.querySelectorAll('.schedule');
         const lastSchedule = schedules[schedules.length - 1];
         if (!lastSchedule) {
             return;
         }
-
-        // Take a copy of the last schedule in the group
         const newSchedule = lastSchedule.cloneNode(true);
-
         // Clear form field values in the new schedule
         const formFields = newSchedule.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
@@ -345,19 +371,13 @@
             } else if (field.tagName.toLowerCase() === 'select') {
                 field.selectedIndex = 0;
             }
+
         });
         // Append the new Schedule
         const firstSchedule = group.querySelector('.schedule');
         firstSchedule.parentNode.appendChild(newSchedule);
-
-        // Rename the groups and schedules so they are in order
-        renameGroupsAndSchedules();
-        
-        // Reset the weather field
-        const weather = newGroup.querySelector('[id*="weather-sun"]');
-        if (weather) {
-            weather.checked = true;
-        }
+        // Run form updates to ensure order and names are correct, buttons work etc.
+        updateForm();
     }
 
     // Delete the last schedule in the group (May want to adjust to selectively delete)
@@ -373,9 +393,10 @@
         if (schedules.length > 1) {
             schedules[schedules.length - 1].remove();
         }
-        renameGroupsAndSchedules();
+        updateForm();
     }
 
+    // Function to add listeners to all the add/remove schedule buttons
     function addListenersToScheduleButtons () {
         const addScheduleButtons = document.querySelectorAll('[class*="add-schedule"]');
         addScheduleButtons.forEach(span => {
@@ -392,17 +413,12 @@
     const handleDeleteSchedule = (event) => {
         deleteSchedule(event);
     }
-
     const handleAddSchedule = (event) => {
         duplicateSchedule(event);
     }
 
-    // Add event listener for add-group button
+    // Document loaded actions
     document.addEventListener('DOMContentLoaded', () => {
-
-        renameGroupsAndSchedules();
-        preventToggleOnAccordionFields();
-        
         const addGroupButton = document.querySelector('.add-group');
         const removeGroupButton = document.querySelector('.remove-group');
         if (addGroupButton) {
@@ -417,7 +433,7 @@
                 deleteGroup();
             });
         }
-        addListenersToScheduleButtons();
+        updateForm();
     });
 
 </script>
