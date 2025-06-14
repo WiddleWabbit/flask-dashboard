@@ -39,7 +39,7 @@
                                 <hr class="mt-0">
                             </div>
                             <div class="row mb-4 ms-0">
-                                <div class="col-md-3">
+                                <div class="col-lg-4">
                                     <p class="text-secondary mb-1"><small>Start Time:</small></p>
                                     <div class="input-group pb-3" style="max-width:400px">
                                         <span class="input-group-text">
@@ -51,7 +51,7 @@
                                         <input class="form-control" type="time" name="start-{{ schedule.id }}" placeholder="" value="{{ schedule.start }}" required />
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-lg-4">
                                     <p class="text-secondary mb-1"><small>Duration (minutes):</small></p>
                                     <div class="input-group pb-3" style="max-width:400px">
                                         <span class="input-group-text">
@@ -64,15 +64,15 @@
                                         <input class="form-control" type="number" name="duration-{{ schedule.id }}" placeholder="" value="{{ data.schedule_durations[schedule.id] }}" required />
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-lg-4">
                                     <p class="text-secondary mb-1 d-inline"><small>Weather Mode: </small></p>
-                                    <a tabindex="0" role="button" data-bs-trigger="focus" class="d-inline text-secondary ms-2" style="cursor:pointer;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-title="Weather Mode" data-bs-html="true" data-bs-content="Choose whether schedules are effected by weather. Options are: <br>- Only run with no rain forecast, <br>- Run with light rain (<3mm) forecast,<br>- Ignore weather forecasts." >
+                                    <a tabindex="0" role="button" data-bs-trigger="focus" class="d-inline text-secondary ms-2" style="cursor:pointer;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-title="Weather Mode" data-bs-html="true" data-bs-content="Choose whether schedules are effected by weather. Options are: <br>- Run only with clear forecast<br>- Run with less than 3mm forecast<br>- Run regardless of forecast" >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
                                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                                             <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
                                         </svg>
                                     </a>
-                                    <div class="input-group flex-nowrap">
+                                    <div class="input-group flex-nowrap pt-1 pb-3">
                                         <input type="radio" class="btn-check" value="1" name="weather-{{ schedule.id }}" id="weather-sun-{{ schedule.id }}" autocomplete="off" checked>
                                         <label class="btn btn-outline-secondary d-flex align-items-center px-3" style="border-radius:6px 0 0 6px; border-color: #dee2e6;" for="weather-sun-{{ schedule.id }}" style="border-color: #dee2e6;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sun" viewBox="0 0 16 16">
@@ -94,14 +94,14 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-lg-2 order-2">
                                     <p class="text-secondary mb-1"><small>Status:</small></p>
-                                    <div class="form-check form-switch">
+                                    <div class="form-check form-switch d-flex gap-2 pt-1">
                                         <input class="form-check-input" name="active-{{ schedule.id }}" type="checkbox" role="switch" id="btn-check-{{ schedule.id }}" checked>
-                                        <label class="form-check-label" for="btn-check-{{ schedule.id }}">Active</label>
+                                        <label class="form-check-label text-body-secondary" for="btn-check-{{ schedule.id }}"><small>Active</small></label>
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-lg-6 mb-3 w-auto">
                                     <p class="text-secondary mb-1"><small>Operating Days:</small></p>
                                     <div class="d-flex justify-content-start input-group">
                                         {% for day in data.days_of_week %}
@@ -110,7 +110,7 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-lg-6 mb-3 w-auto">
                                     <p class="text-secondary mb-1"><small>Operating Zones:</small></p>
                                     <div class="d-flex justify-content-start input-group">
                                         {% for zone in data.zones %}
@@ -119,6 +119,7 @@
                                         {% endfor %}
                                     </div>
                                 </div>
+                                <input type="number" name="group-{{ group.id }}" class="d-none">
                             </div>
                         </div>
                         <!-- End Schedule-->
@@ -141,12 +142,6 @@
 </div>
 
 <script>
-
-    // Initialise popovers on page load
-    // document.addEventListener("DOMContentLoaded", function (event) {
-    //     const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
-    //     const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
-    // });
 
     function initialisePopovers() {
         const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
@@ -410,6 +405,7 @@
         });
     }
 
+    // Using these makes it easy to remove and add them each time to prevent double ups on event listeners
     const handleDeleteSchedule = (event) => {
         deleteSchedule(event);
     }
@@ -435,6 +431,10 @@
         }
         updateForm();
     });
+
+// ACTIVE BUTTONS
+// CONFIRMATION ON DELETION
+// CONFIRMATION ON FORM SUBMISSION WITH DELETION
 
 </script>
 
