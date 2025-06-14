@@ -119,7 +119,7 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                                <input type="number" name="group-{{ group.id }}" class="d-none">
+                                <input type="text" name="group-{{ schedule.id}}" class="d-none" value="group-{{ group.id }}">
                             </div>
                         </div>
                         <!-- End Schedule-->
@@ -247,6 +247,7 @@
     function renameGroupAttributes(group, groupNumber) {
         // Select group-specific fields (add-schedule and remove-schedule group-heading)
         const groupFields = group.querySelectorAll('[class*="add-schedule"], [class*="remove-schedule"], [class*="group-heading"]');
+        const groupValueFields = group.querySelectorAll('[name*="group"]');
         const collapseFields = group.querySelectorAll('[data-bs-toggle*="collapse"], [class*="accordion-collapse"]');
         // Rename group field names and IDs
         groupFields.forEach(field => {
@@ -268,6 +269,10 @@
             if (field.id) {
                 field.id = field.id.replace(/(\d+)$/, groupNumber.toString());
             }
+        });
+        // Adjust the group field
+        groupValueFields.forEach(field => {
+            field.value = field.value.replace(/(\d+)$/, groupNumber.toString());
         });
         // Rename group classes
         groupFields.forEach(elem => {
@@ -294,14 +299,16 @@
         
         // Rename schedule field names and IDs with absolute numbering
         scheduleFields.forEach(field => {
-            if (field.name) {
-            field.name = field.name.replace(/(\d+)$/, scheduleNumber.toString());
-            }
-            if (field.id) {
-            field.id = field.id.replace(/(\d+)$/, scheduleNumber.toString());
-            }
-            if (field.tagName.toLowerCase() === 'label' && field.htmlFor) {
-            field.htmlFor = field.htmlFor.replace(/(\d+)$/, scheduleNumber.toString());
+            if (field.name && !(field.name.includes("group"))) {
+                if (field.name) {
+                field.name = field.name.replace(/(\d+)$/, scheduleNumber.toString());
+                }
+                if (field.id) {
+                field.id = field.id.replace(/(\d+)$/, scheduleNumber.toString());
+                }
+                if (field.tagName.toLowerCase() === 'label' && field.htmlFor) {
+                field.htmlFor = field.htmlFor.replace(/(\d+)$/, scheduleNumber.toString());
+                }
             }
         });
     }
@@ -328,12 +335,14 @@
         // Clear form field values in the new group
         const formFields = newGroup.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
-            if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
-                field.value = '';
-            } else if (field.type === 'checkbox' || field.type === 'radio') {
-                field.checked = false;
-            } else if (field.tagName.toLowerCase() === 'select') {
-                field.selectedIndex = 0;
+            if (!field.name.includes("group")) {
+                if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
+                    field.value = '';
+                } else if (field.type === 'checkbox' || field.type === 'radio') {
+                    field.checked = false;
+                } else if (field.tagName.toLowerCase() === 'select') {
+                    field.selectedIndex = 0;
+                }
             }
         });
         // Append the new group to the parent container
@@ -359,12 +368,14 @@
         // Clear form field values in the new schedule
         const formFields = newSchedule.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
-            if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
-                field.value = '';
-            } else if (field.type === 'checkbox' || field.type === 'radio') {
-                field.checked = false;
-            } else if (field.tagName.toLowerCase() === 'select') {
-                field.selectedIndex = 0;
+            if (!field.name.includes("group")) {
+                if (field.type === 'text' || field.type === 'textarea' || field.type === 'time' || field.type === 'number' || field.tagName.toLowerCase() === 'textarea') {
+                    field.value = '';
+                } else if (field.type === 'checkbox' || field.type === 'radio') {
+                    field.checked = false;
+                } else if (field.tagName.toLowerCase() === 'select') {
+                    field.selectedIndex = 0;
+                }
             }
 
         });

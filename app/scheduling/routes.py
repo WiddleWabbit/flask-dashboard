@@ -122,30 +122,10 @@ def schedules():
 
     if request.method == "GET":
 
-        # groups = get_all_groups()
-        # zones = get_all_zones()
-        # days_of_week = DaysOfWeek.query.all()
-
-        # # Create a dict of schedule durations by schedule id
-        # schedule_durations = {}
-        # all_schedules = Schedules.query.all()
-        # for sched in all_schedules:
-        #     try:
-        #         start_dt = datetime.strptime(sched.start, "%H:%M")
-        #         end_dt = datetime.strptime(sched.end, "%H:%M")
-        #         # Handle overnight schedules
-        #         if end_dt < start_dt:
-        #             end_dt = end_dt.replace(day=start_dt.day + 1)
-        #         duration = (end_dt - start_dt).seconds // 60
-        #         schedule_durations[sched.id] = duration
-        #     except Exception as e:
-        #         schedule_durations[sched.id] = None
-
-        #return render_template('schedules.html', groups=groups, days=days_of_week, zones=zones, schedule_durations=schedule_durations)
         return render_template('schedules.html', data=config_schedules())
 
     if request.method == "POST":
 
-        if request.args.get("form") == "update_zones":
+        if request.args.get("form") == "update_schedules":
 
             return redirect(url_for("scheduling_routes.schedules"))
