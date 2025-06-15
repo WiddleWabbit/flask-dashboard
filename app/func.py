@@ -121,7 +121,8 @@ def to_isotime(local_time:str, input_format:str="%Y-%m-%d %H:%M:%S"):
         return utc_dt.isoformat()
     except Exception as e:
         print(f"Error converting to ISO UTC: {e}")
-    return None
+        return False
+    return False
 
 def sanitise(value, expected_type:str=str):
     """

@@ -85,3 +85,6 @@ class Child(db.Model):
 
 
     flask --app "app:create_app('app.config.Config')" shell
+
+    from app.models import db
+    from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules

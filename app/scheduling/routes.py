@@ -3,8 +3,9 @@ from datetime import datetime, time
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
 from flask_login import current_user
 from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages
+from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime
 #from .. import db
+import re
 from .func import *
 
 bp = Blueprint('scheduling_routes', __name__)
@@ -38,7 +39,7 @@ def zones():
             if fields:
 
                 # Process the fields
-                fields = request.form.items()
+                #fields = request.form.items()
                 num_zones = count_fields(fields)
                 update_results = {}
                 delete_results = {}
@@ -54,13 +55,13 @@ def zones():
                     # Ensure that the required fields were submitted
                     if not id or not name or not solenoid:
                         update_results[f'Zone {id} "{name}"'] = False
-                    
-                    # If the description field fails (usually because it's blank), just make it blank.
-                    if not desc:
-                        desc = ""
 
-                    # Update the zone
-                    update_results[f'Zone {id} "{name}"'] = update_zone(id, name, desc, solenoid)
+                    else:
+                        # If the description field fails (usually because it's blank), just make it blank.
+                        if not desc:
+                            desc = ""
+                        # Update the zone
+                        update_results[f'Zone {id} "{name}"'] = update_zone(id, name, desc, solenoid)
 
                 # Check for unsubmitted zones and delete
                 all_zones = get_all_zones()
@@ -128,4 +129,149 @@ def schedules():
 
         if request.args.get("form") == "update_schedules":
 
+            # Check authenticated
+            if not current_user.is_authenticated:
+                flash('You need to login to make modifications.', 'danger')
+                return render_template('schedules.html', data=config_schedules()), 403
+
+            # Fetch the fields and process
+            fields = request.form.items()
+            if fields:
+
+                # Count the fields and other data from database that is required
+                num_schedules = count_fields(fields)
+                days = DaysOfWeek.query.all()
+                zones = get_all_zones()
+
+                # Error checking these fields error if unexpected value
+                if not num_schedules or not days or not zones or num_schedules < 1 or len(days) < 1 or len(zones) < 1:
+                    flash('Serious error, please try again or contact your system administrator.', 'danger')
+                    return render_template('schedules.html', data=config_schedules()), 422
+
+                update_results = {}
+                delete_results = {}
+                sanitised_fields = {}
+
+                # Store groups
+                groups_submitted = {}
+                groups_submitted = {key: request.form[key] for key in request.form if re.match(r'^group-name-\d+$', key)}
+                print(f'Groups submitted: {groups_submitted}')
+                # Validate groups
+                for key, val in groups_submitted.items():
+                    if not isinstance(key, str) or not isinstance(val, str):
+                        print(f'Group names or values are not valid {key}: {val}')
+                        flash('Group names or values are not valid. Error in submission. No values saved.', 'danger')
+                        return render_template('schedules.html', data=config_schedules()), 422
+
+                # Iterate through the fields submitted
+                for i in range(1, num_schedules + 1):
+
+                    print(f'Processing schedule {i}')
+
+                    # Sanitse all the fields submitted
+                    sanitised_fields['start'] = sanitise(request.form.get(f"start-{i}"))
+                    sanitised_fields['duration'] = sanitise(request.form.get(f"duration-{i}"), int)
+                    sanitised_fields['weather'] = sanitise(request.form.get(f"weather-{i}"), int)
+                    sanitised_fields['active'] = sanitise(request.form.get(f"active-{i}"))
+                    sanitised_fields['group'] = sanitise(request.form.get(f"group-{i}"))
+                    sanitised_fields['days'] = {}
+                    for day in days:
+                        sanitised_fields['days'][f'{day.id}'] = sanitise(request.form.get(f"day-{day.id}-schedule-{i}"))
+                    sanitised_fields['zones'] = {}
+                    for zone in zones:
+                        sanitised_fields['zones'][f'{zone.id}'] = sanitise(request.form.get(f"zone-{zone.id}-schedule-{i}"))
+                    
+                    print(sanitised_fields)
+
+                    # Validate form fields
+                    if not sanitised_fields['start'] or not datetime.strptime(sanitised_fields['start'], "%H:%M"):
+                        print(f'Start not valid {sanitised_fields["start"]}')
+                        update_results[f'schedule-{i}'] = False
+                        break
+                    if not sanitised_fields['duration'] or not isinstance(sanitised_fields['duration'], int):
+                        print(f'duration not valid {sanitised_fields["duration"]}')
+                        update_results[f'schedule-{i}'] = False
+                        break
+                    if not sanitised_fields['weather'] or sanitised_fields['weather'] > 3:
+                        print(f'weather not valid {sanitised_fields["weather"]}')
+                        update_results[f'schedule-{i}'] = False
+                        break
+                    if not sanitised_fields['group'] or not isinstance(int(sanitised_fields['group'].split('-')[1]), int):
+                        print(f'group not valid {sanitised_fields["group"]}')
+                        update_results[f'schedule-{i}'] = False
+                        break
+                    if not sanitised_fields['active'] in {'on', False}:
+                        print(f'active not valid {sanitised_fields["active"]}')
+                        update_results[f'schedule-{i}'] = False
+                        break
+                    for key, val in sanitised_fields['days'].items():
+                        if val not in {'on', False}:
+                            print(f'day not valid {key}: {val}')
+                            update_results[f'schedule-{i}'] = False
+                            break
+                    for key, val in sanitised_fields['zones'].items():
+                        if val not in {'on', False}:
+                            print(f'zone not valid {key}: {val}')
+                            update_results[f'schedule-{i}'] = False
+                            break
+                    
+                    # Reformat fields for schedule update
+                    field_updates = {}
+                    field_updates['start'] = sanitised_fields['start']
+                    field_updates['end'] = add_minutes_to_time(field_updates['start'], sanitised_fields['duration'])
+                    field_updates['weather_dependent'] = sanitised_fields['weather']
+
+                    field_updates['group'] = int(sanitised_fields['group'].split('-')[1])
+                    #field_updates['group'] = get_group(int(sanitised_fields['group'].split('-')[1]))
+                    if not field_updates['group']:
+                        print(f'Unable to fetch group {sanitised_fields["group"]}')
+                        update_results[f'schedule-{i}'] = False
+                        break
+                    field_updates['active'] = 1 if sanitised_fields['active'] == 'on' else 0
+                    field_updates['days'] = []
+                    for key, val in sanitised_fields['days'].items():
+                        if val == 'on':
+                            day = get_day(int(key))
+                            if day:
+                                field_updates['days'].append(day)
+                            else:
+                                print(f'Unable to fetch day {key}')
+                                update_results[f'schedule-{i}'] = False
+                                break
+                    field_updates['zones'] = []
+                    for key, val in sanitised_fields['zones'].items():
+                        if val == 'on':
+                            zone = get_zone(int(key))
+                            if zone:
+                                field_updates['zones'].append(zone)
+                            else:
+                                print(f'Unable to fetch zone {key}')
+                                update_results[f'schedule-{i}'] = False
+                                break
+
+                    print(field_updates)
+
+
+                    # Create this schedules group if it doesn't exist
+                    group_id = sanitised_fields['group'].split('-')[1]
+                    update_results[f'Group: {group_id}'] = update_group(int(group_id), groups_submitted[f"group-name-{group_id}"])
+
+                    # Update schedules
+                    update_results[f'schedule-{i}'] = update_schedule(i, field_updates['group'], field_updates['start'], field_updates['end'], field_updates['active'], field_updates['weather_dependent'], field_updates['days'], field_updates['zones'])
+                    
+                    # Delete additional schedules / groups
+
+
+
+            else:
+                flash('No fields submitted, please try again.', 'danger')
+                return render_template('schedules.html', data=config_schedules()), 422
+
+            
+            flash(f'Num Schedules Submitted: {num_schedules}', 'info')
+
+            update_messages = update_status_messages(update_results)
+            flash_status_messages(update_messages)
+            delete_messages = delete_status_messages(delete_results)
+            flash_status_messages(delete_messages)
             return redirect(url_for("scheduling_routes.schedules"))
