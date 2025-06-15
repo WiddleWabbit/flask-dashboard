@@ -139,6 +139,7 @@ def schedules():
             if fields:
 
                 # Count the fields and other data from database that is required
+                ######## We will want a count schedules function #######
                 num_schedules = count_fields(fields)
                 days = DaysOfWeek.query.all()
                 zones = get_all_zones()
@@ -220,9 +221,7 @@ def schedules():
                     field_updates['start'] = sanitised_fields['start']
                     field_updates['end'] = add_minutes_to_time(field_updates['start'], sanitised_fields['duration'])
                     field_updates['weather_dependent'] = sanitised_fields['weather']
-
                     field_updates['group'] = int(sanitised_fields['group'].split('-')[1])
-                    #field_updates['group'] = get_group(int(sanitised_fields['group'].split('-')[1]))
                     if not field_updates['group']:
                         print(f'Unable to fetch group {sanitised_fields["group"]}')
                         update_results[f'schedule-{i}'] = False
@@ -251,7 +250,6 @@ def schedules():
 
                     print(field_updates)
 
-
                     # Create this schedules group if it doesn't exist
                     group_id = sanitised_fields['group'].split('-')[1]
                     update_results[f'Group: {group_id}'] = update_group(int(group_id), groups_submitted[f"group-name-{group_id}"])
@@ -259,17 +257,37 @@ def schedules():
                     # Update schedules
                     update_results[f'schedule-{i}'] = update_schedule(i, field_updates['group'], field_updates['start'], field_updates['end'], field_updates['active'], field_updates['weather_dependent'], field_updates['days'], field_updates['zones'])
                     
-                    # Delete additional schedules / groups
+                # Delete additional groups and all associated schedules
+                all_groups = get_all_groups()
+                if all_groups:
+                    if len(all_groups) > len(groups_submitted):
+                        del_group_id = len(groups_submitted) + 1
+                        while del_group_id <= len(all_groups):
+                            # Grab the group's name so we can print a readable message
+                            group_name = get_group(del_group_id).name
+                            # Delete the removed zones - schedules are deleted automatically due to the cascade deletion on the model
+                            delete_results[f'Group: {group_name}'] = delete_group(del_group_id)
+                            del_group_id = del_group_id + 1
+                else:
+                    flash('Failed to delete any groups', 'danger')
 
-
+                # Identify and delete schedules that were deleted as well
+                all_schedules = get_all_schedules()
+                if all_schedules:
+                    if len(all_schedules) > num_schedules:
+                        del_schedule_id = num_schedules + 1
+                        while del_schedule_id <= len(all_schedules):
+                            # Delete the removed schedules
+                            delete_results[f'Schedule: {del_schedule_id}'] = delete_schedule(del_schedule_id)
+                            del_schedule_id = del_schedule_id + 1
+                else:
+                    flash('Failed to delete schedules removed from groups.', 'danger')
 
             else:
                 flash('No fields submitted, please try again.', 'danger')
                 return render_template('schedules.html', data=config_schedules()), 422
 
-            
-            flash(f'Num Schedules Submitted: {num_schedules}', 'info')
-
+            # Redirect and print messages to screen
             update_messages = update_status_messages(update_results)
             flash_status_messages(update_messages)
             delete_messages = delete_status_messages(delete_results)

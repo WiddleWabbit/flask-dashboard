@@ -150,6 +150,28 @@ def update_group(id, name):
         return False
     return False
 
+def delete_group(id: int):
+    """
+    Delete a group from the database by its ID.
+
+    :param id: The ID of the group to delete.
+    :return: True if the group was deleted successfully, False otherwise.
+    """
+    if not isinstance(id, int):
+        print('Wrong id instance type submitted for delete schedule')
+        return False
+    try:
+        group = Groups.query.filter_by(id=id).first()
+        if group:
+            db.session.delete(group)
+            db.session.commit()
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Unable to delete zone: {id}, error: {e}")
+    return False
+
 def get_day(id):
     """
     Retrieve a day from the database by its ID.
@@ -165,6 +187,20 @@ def get_day(id):
             print(f"Unable to get day from database: {e}")
             return False
     else:
+        return False
+    return False
+
+def get_all_schedules():
+    """
+    Retrieve all schedules from the database.
+
+    :return: A list of all schedules objects if any exist, otherwise False.
+    """
+    try:
+        schedules = Schedules.query.all()
+        return schedules if schedules else False
+    except Exception as e:
+        print(f"Unable to get all sschedules from database: {e}")
         return False
     return False
 
@@ -218,6 +254,28 @@ def update_schedule(id:int, group:int, start:str, end:str, active:int, weather_d
         return False
     return False
 
+def delete_schedule(id: int):
+    """
+    Delete a schedule from the database by its ID.
+
+    :param id: The ID of the schedule to delete.
+    :return: True if the schedule was deleted successfully, False otherwise.
+    """
+    if not isinstance(id, int):
+        print('Wrong id instance type submitted for delete schedule')
+        return False
+    try:
+        schedule = Schedules.query.filter_by(id=id).first()
+        if schedule:
+            db.session.delete(schedule)
+            db.session.commit()
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Unable to delete zone: {id}, error: {e}")
+    return False
+
 def count_fields(fields):
     """
     Count the number of duplicate fields. Identified by a -1, -2 etc.
@@ -238,6 +296,7 @@ def count_fields(fields):
                 if suffix.isdigit():
                     numbers.add(suffix)
         num_fields = len(numbers)
+        print(numbers)
 
         # Confirm the number of fields, or False if less than 1
         if num_fields < 1:
