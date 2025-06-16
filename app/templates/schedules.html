@@ -176,6 +176,32 @@
             input.addEventListener('focus', handleAccordionFocus);
             input.addEventListener('blur', handleAccordionBlur);
         });
+        // Hotfix, because the renameGroupsAndSchedules() function clones and replaces, the handle events get left in the lurch.
+        // This part ensures they don't get stuck as disabled.
+        document.querySelectorAll('.accordion .accordion-header .accordion-button').forEach(btn => {
+            if (btn) {
+                btn.setAttribute('data-bs-toggle', 'collapse');
+            }
+        });
+    }
+
+    function reinitializeAccordion() {
+        const accordion = document.querySelector('.accordion');
+        if (!accordion) return;
+
+        // Destroy existing accordion instance (if any)
+        const existingAccordion = bootstrap.Collapse.getInstance(accordion);
+        if (existingAccordion) {
+            existingAccordion.dispose();
+        }
+
+        // Reinitialize accordion for all collapse elements
+        const collapseElements = accordion.querySelectorAll('.collapse');
+        collapseElements.forEach(collapse => {
+            new bootstrap.Collapse(collapse, {
+                toggle: false // Ensure it doesn't toggle automatically
+            });
+        });
     }
 
     // Parent function to rename all the groups and schedules after changes
@@ -248,7 +274,7 @@
         // Select group-specific fields (add-schedule and remove-schedule group-heading)
         const groupFields = group.querySelectorAll('[class*="add-schedule"], [class*="remove-schedule"], [class*="group-heading"]');
         const groupValueFields = group.querySelectorAll('[name*="group"]');
-        const collapseFields = group.querySelectorAll('[data-bs-toggle*="collapse"], [class*="accordion-collapse"]');
+        const collapseFields = group.querySelectorAll('[data-bs-toggle*="collapse"], [class*="accordion-button"], [class*="accordion-collapse"]');
         // Rename group field names and IDs
         groupFields.forEach(field => {
             if (field.name) {
