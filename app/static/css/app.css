@@ -10,6 +10,9 @@
 .accordion-collapse:last-child {
   padding-bottom: 30px;
 }
+.schedule-handle {
+    cursor:grab;
+}
 
 @media screen and (max-width:767px) {
     #sidebar {

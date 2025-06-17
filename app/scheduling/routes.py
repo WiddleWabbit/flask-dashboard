@@ -179,10 +179,10 @@ def schedules():
                     sanitised_fields['group'] = sanitise(request.form.get(f"group-{i}"))
 
 
-
+#########################################
                     sanitised_fields['id'] = sanitise(request.form.get(f"id-{i}"))
                     sanitised_fields['sort-order'] = sanitise(request.form.get(f"sort-order-{i}"))
-
+#########################################
 
 
                     sanitised_fields['days'] = {}
