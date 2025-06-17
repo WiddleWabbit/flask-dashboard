@@ -17,6 +17,7 @@
         <form action="/schedules?form=update_schedules" method="post">
         <div class="accordion" id="accordionGroups">
 
+            <!-- Group -->
             {% for group in data.groups %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
@@ -31,14 +32,18 @@
                         </button>
                     </h2>
                     <div id="collapse-{{ group.id }}" class="accordion-collapse collapse show pt-4">
-                        <!-- Schedule-->
-                        {% for schedule in group.schedules %}
-                        <div class="accordion-body row schedule pt-0">
+
+                        {# Create a counter variable for all the schedules that don't have a sort order #}
+                        {% set counter = 1 %}
+
+                        <!-- Schedule -->
+                        {% for schedule in group.schedules|sort(attribute='sort_order') %}
+                        <div class="accordion-body row schedule">
                             <div class="col-xs-12">
                                 <p class="mb-2 text-dark-emphasis ps-3 schedule-title">Schedule {{ schedule.id }}</p>
                                 <hr class="mt-0">
                             </div>
-                            <div class="row mb-4 ms-0">
+                            <div class="row ms-0">
                                 <div class="col-lg-4">
                                     <p class="text-secondary mb-1"><small>Start Time:</small></p>
                                     <div class="input-group pb-3" style="max-width:400px">
@@ -119,13 +124,19 @@
                                         {% endfor %}
                                     </div>
                                 </div>
+                                <!-- Hidden Admin Fields -->
                                 <input type="text" name="group-{{ schedule.id}}" class="d-none" value="group-{{ group.id }}">
+                                <input type="text" name="id-{{ schedule.id}}" class="d-none" value="{{ schedule.id }}">
+                                <input type="text" name="sort-order-{% if schedule.sort_order %}{{ schedule.sort_order}}{% else %}{{ counter }}{% endif %}" class="d-none" value="{% if schedule.sort_order %}{{ schedule.sort_order}}{% else %}{{ counter }}{% endif %}">
+                                <!-- End Hidden Admin Fields -->
+                                {% set counter = counter + 1 %}
                             </div>
                         </div>
-                        <!-- End Schedule-->
+                        <!-- End Schedule -->
                         {% endfor %}
                     </div>
                 </div>
+            <!-- End Group -->
             {% endfor %}
 
         </div>
@@ -135,6 +146,10 @@
             <button class="my-3 btn btn-outline-danger d-block remove-group" type="submit">Remove Group</button>
         </div>
         </form>
+
+        <div id="schedule-info" class="d-none">
+            <span id="max-schedule-id">{{ data.max_schedule_id }}</span>
+        </div>
 
 
     </div>
@@ -199,6 +214,8 @@
         let scheduleCounter = 1;
         // Iterate through each group in the cloned container
         groups.forEach((group, groupIndex) => {
+            // Create a sort order counter for this group
+            let sortCounter = 1;
             // Get all schedules within the current group
             const schedules = group.querySelectorAll('.schedule');
             // Rename group-specific fields and classes
@@ -208,12 +225,21 @@
                 // Rename schedule fields and classes with absolute numbering
                 renameScheduleAttributes(schedule, scheduleCounter);
                 renameScheduleTitles(schedule, scheduleCounter);
-                scheduleCounter++; // Increment absolute counter for the next schedule
+                updateScheduleSortOrder(schedule, sortCounter);
+                scheduleCounter++;
+                sortCounter++;
             });
         });
         // Replace the original container's content with the modified clone
         container.replaceWith(clonedContainer);
-        
+    }
+
+    // Update the sort order field's value with the sort order
+    function updateScheduleSortOrder(schedule, sortCounter) {
+        const order = schedule.querySelector('[name*="sort-order"]')
+        if (order) {
+            order.value = sortCounter;
+        }
     }
 
     // Function to update the form with all usability actions including renaming fields accordingly,
@@ -224,6 +250,15 @@
         addListenersToScheduleButtons();
         preventToggleOnAccordionFields();
         initialisePopovers();
+        setupSortables();
+    }
+
+    // Function for when the form has been reordered. Not all the same things required as when the form is updated.
+    function formReordered() {
+        renameGroupsAndSchedules();
+        addListenersToScheduleButtons();
+        preventToggleOnAccordionFields();
+        setupSortables();
     }
 
     // Ensure at least one radio option is selected in each radio field. (Can't validate these with bootstrap and server side is backup)
@@ -256,7 +291,6 @@
         // Select group-specific fields (add-schedule and remove-schedule group-heading)
         const groupFields = group.querySelectorAll('[class*="add-schedule"], [class*="remove-schedule"], [class*="group-heading"]');
         const groupValueFields = group.querySelectorAll('[name*="group"]');
-        const collapseFields = group.querySelectorAll('[data-bs-toggle*="collapse"], [class*="accordion-button"], [class*="accordion-collapse"]');
         const collapseFields = group.querySelectorAll('[data-bs-toggle*="collapse"], [class*="accordion-button"], [class*="accordion-collapse"]');
         // Rename group field names and IDs
         groupFields.forEach(field => {
@@ -432,6 +466,43 @@
         duplicateSchedule(event);
     }
 
+
+
+    // Store Sortable instances to allow cleanup
+    let sortableInstances = [];
+
+    // Function to set up all sortable elements
+    function setupSortables(options = {}) {
+    // Default options for Sortable
+    const defaultOptions = {
+        animation: 150,
+        ghostClass: 'sortable-ghost-class',
+        group: 'test'
+    };
+
+    // Clean up existing Sortable instances
+    sortableInstances.forEach(instance => instance.destroy());
+    sortableInstances = [];
+
+    // Select all elements with the 'sortable' class
+    const sortableElements = document.querySelectorAll('.accordion-collapse');
+
+    // Initialize Sortable on each element
+    sortableElements.forEach(element => {
+        const sortable = new Sortable(element, {
+        ...defaultOptions,
+        // Triggers after a move
+        onEnd: (evt) => {
+            console.log(`Moved item from index ${evt.oldIndex} to ${evt.newIndex}`);
+            formReordered();
+        }
+        });
+        sortableInstances.push(sortable);
+    });
+    }
+
+
+
     // Document loaded actions
     document.addEventListener('DOMContentLoaded', () => {
         const addGroupButton = document.querySelector('.add-group');
@@ -449,12 +520,16 @@
             });
         }
         updateForm();
+        setupSortables();
     });
 
-// ACTIVE BUTTONS
 // CONFIRMATION ON DELETION
 // CONFIRMATION ON FORM SUBMISSION WITH DELETION
+// ADD BUTTONS DON'T WORK WITH EMPTY GROUP
+// PREVENT FORM SUBMISSION WITH EMPTY GROUP?
 
 </script>
+
+<script src="{{ url_for('static', filename='js/Sortable.min.js') }}"></script>
 
 {% endblock %}

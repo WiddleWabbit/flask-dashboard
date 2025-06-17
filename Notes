@@ -9,6 +9,14 @@ apt-get install python3-flask-sqlalchemy
 apt-get install python3-flask-login
 apt-get install python3-apscheduler
 
+
+Includes Bootstrap Library
+Includes Popper Library
+https://popper.js.org/docs/v2/
+Includes SortableJS Library
+https://github.com/SortableJS/Sortable/releases/tag/1.15.6
+
+
 # Run Dev App
 flask --app app run
 

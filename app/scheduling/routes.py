@@ -2,6 +2,7 @@
 from datetime import datetime, time
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
 from flask_login import current_user
+from sqlalchemy import func
 from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime
 #from .. import db
@@ -95,6 +96,7 @@ def config_schedules():
     data['groups'] = get_all_groups()
     data['zones'] = get_all_zones()
     data['days_of_week'] = DaysOfWeek.query.all()
+    data['max_schedule_id'] = db.session.query(func.max(Schedules.id)).scalar() or 0
 
     # Create a dict of schedule durations by schedule id
     schedule_durations = {}
@@ -175,6 +177,14 @@ def schedules():
                     sanitised_fields['weather'] = sanitise(request.form.get(f"weather-{i}"), int)
                     sanitised_fields['active'] = sanitise(request.form.get(f"active-{i}"))
                     sanitised_fields['group'] = sanitise(request.form.get(f"group-{i}"))
+
+
+
+                    sanitised_fields['id'] = sanitise(request.form.get(f"id-{i}"))
+                    sanitised_fields['sort-order'] = sanitise(request.form.get(f"sort-order-{i}"))
+
+
+
                     sanitised_fields['days'] = {}
                     for day in days:
                         sanitised_fields['days'][f'{day.id}'] = sanitise(request.form.get(f"day-{day.id}-schedule-{i}"))

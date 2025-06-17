@@ -1,4 +1,15 @@
 /* Main CSS */
+.sortable-ghost-class {
+    opacity: 0.4;
+    background-color:#dceaff !important;
+}
+.schedule {
+    padding-top:20px;
+    padding-bottom:20px;
+}
+.accordion-collapse:last-child {
+  padding-bottom: 30px;
+}
 
 @media screen and (max-width:767px) {
     #sidebar {
