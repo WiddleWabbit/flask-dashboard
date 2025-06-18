@@ -46,7 +46,7 @@ class Groups(db.Model):
 # Zones Database Model
 class Zones(db.Model):
     __tablename__ = "zones"
-    id = db.Column(db.Integer, primary_key=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
     name = db.Column(db.String(250), nullable=False)
     description = db.Column(db.String(250), nullable=True)
     solenoid = db.Column(db.Integer, nullable=False, unique=True)
@@ -63,9 +63,10 @@ class Zones(db.Model):
         return f'<{self.name}>'
 
 # Schedules Database Model
+# Auto increment on for the ID to prevent ID's being reused after one is removed.
 class Schedules(db.Model):
     __tablename__ = "schedules"
-    id = db.Column(db.Integer, primary_key=True, unique=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
     group = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
     sort_order = db.Column(db.Integer, nullable=True)
     start = db.Column(db.String(50), nullable=False)

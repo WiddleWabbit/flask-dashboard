@@ -204,14 +204,14 @@ def get_all_schedules():
         return False
     return False
 
-def update_schedule(id:int, group:int, start:str, end:str, active:int, weather_dependent:int, days:list, zones:list):
+def update_schedule(id:int, sort_order:int, group:int, start:str, end:str, active:int, weather_dependent:int, days:list, zones:list):
     """
     Create or update a schedule in the database.
 
     If a schedule with the given ID exists, it is updated.
     If it does not exist, a new schedule is created with the provided values.
 
-    :param id: The ID of the schedule.
+    :param id: The ID of the schedule. To create a new one, supply false.
     :param group: The int id of the group it is under.
     :param start: The start time in HH:MM format.
     :param end: The end time in HH:MM format.
@@ -221,31 +221,49 @@ def update_schedule(id:int, group:int, start:str, end:str, active:int, weather_d
     :param zones: List of zone objects from the zones table, representing the zones this schedule is active on.
     :return: True for success, False for failure.
     """
-    if not isinstance(id, int) or not isinstance(group, int) or not isinstance(end, str) or not isinstance(active, int) or not isinstance(weather_dependent, int) or not isinstance(days, list) or not isinstance(zones, list):
-        print('Instance not correct')
+    if not isinstance(group, int) or not isinstance(end, str) or not isinstance(active, int) or not isinstance(weather_dependent, int) or not isinstance(days, list) or not isinstance(zones, list) or not isinstance(sort_order, int):
+        print('Instance Invalid')
         return False
     if weather_dependent > 3 or weather_dependent < 1:
+        print('Weather Dependent field invalid')
         return False
     for day in days:
         if not isinstance(day, object):
+            print('Invalid Day')
             return False
     for zone in zones:
         if not isinstance(zone, object):
+            print('Invalid Zone')
             return False
     if not datetime.strptime(start, "%H:%M") or not datetime.strptime(end, "%H:%M"):
+        print('Invalid start or end time')
         return False
+    if sort_order < 0:
+        print('Invalid id or sort_order supplied')
+        return False
+    if not id == None:
+        if not isinstance(id, int) or id < 0:
+            print('Invalid ID supplied')
+            return False
     try:
-        schedule = Schedules.query.filter_by(id=id).first()
-        if schedule:
-            schedule.group = group
-            schedule.start = start
-            schedule.end = end
-            schedule.active = active
-            schedule.weather_dependent  = weather_dependent
-            schedule.days = days
-            schedule.zones = zones
+        if id:
+            schedule = Schedules.query.filter_by(id=id).first()
+            print(f"Schedule found: {schedule}")
+            if schedule:
+                schedule.group = group
+                schedule.sort_order = sort_order
+                schedule.start = start
+                schedule.end = end
+                schedule.active = active
+                schedule.weather_dependent  = weather_dependent
+                schedule.days = days
+                schedule.zones = zones
+            else:
+                schedule = Schedules(id=id, sort_order = sort_order, group=group, start=start, end=end, active=active, weather_dependent=weather_dependent, days=days, zones=zones)
+                print(f"Updating schedule {id} with {start} etc.")
         else:
-            schedule = Schedules(id=id, group=group, start=start, end=end, active=active, weather_dependent=weather_dependent, days=days, zones=zones)
+            schedule = Schedules(sort_order = sort_order, group=group, start=start, end=end, active=active, weather_dependent=weather_dependent, days=days, zones=zones)
+            print(f"No ID, adding schedule with {start} etc.")
             db.session.add(schedule)
         db.session.commit()
         return True

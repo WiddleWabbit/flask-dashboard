@@ -17,6 +17,9 @@
         <form action="/schedules?form=update_schedules" method="post">
         <div class="accordion" id="accordionGroups">
 
+            {# Create a list to store all the id's of all schedules #}
+            {% set ids = [] %}
+            
             <!-- Group -->
             {% for group in data.groups %}
                 <div class="accordion-item">
@@ -38,6 +41,8 @@
 
                         <!-- Schedule -->
                         {% for schedule in group.schedules|sort(attribute='sort_order') %}
+                        {# Store the schedule id in the ids list #}
+                        {% set _ = ids.append(schedule.id) %}
                         <div class="accordion-body row schedule">
                             <div class="col-xs-12">
                                 <div class="d-flex justify-content-between">
@@ -151,11 +156,26 @@
             <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
             <button class="my-3 btn btn-outline-secondary d-block add-group" type="submit">Add Group</button>
             <button class="my-3 btn btn-outline-danger d-block remove-group" type="submit">Remove Group</button>
+            <input type="text" name="all_ids" class="d-none" value="{{ ids|replace("[", "")|replace("]", "") }}">
         </div>
         </form>
 
-        <div id="schedule-info" class="d-none">
-            <span id="max-schedule-id">{{ data.max_schedule_id }}</span>
+        <div class="modal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Deletion - Confirmation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>You are deleting schedules/groups, <strong>this cannot be reversed</strong>. Are you sure you want to continue?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger">Confirm Changes</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
 
@@ -501,7 +521,6 @@
         ...defaultOptions,
         // Triggers after a move
         onEnd: (evt) => {
-            console.log(`Moved item from index ${evt.oldIndex} to ${evt.newIndex}`);
             formReordered();
         }
         });
