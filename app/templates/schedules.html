@@ -156,7 +156,7 @@
             <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
             <button class="my-3 btn btn-outline-secondary d-block add-group" type="submit">Add Group</button>
             <button class="my-3 btn btn-outline-danger d-block remove-group" type="submit">Remove Group</button>
-            <input type="text" name="all_ids" class="d-none" value="{{ ids|replace("[", "")|replace("]", "") }}">
+            <input type="text" name="all-ids" class="d-none" value="{{ ids|replace("[", "")|replace("]", "") }}">
         </div>
         </form>
 
@@ -169,6 +169,8 @@
                     </div>
                     <div class="modal-body">
                         <p>You are deleting schedules/groups, <strong>this cannot be reversed</strong>. Are you sure you want to continue?</p>
+                        <ul class="modal-deletions-list">
+                        </ul>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -236,18 +238,14 @@
         const container = document.querySelector('.accordion');
         if (!container) return;
         const clonedContainer = container.cloneNode(true);
-        // Get all accordion-item groups in the cloned container
         const groups = clonedContainer.querySelectorAll('.accordion-item');
         let scheduleCounter = 1;
         // Iterate through each group in the cloned container
         groups.forEach((group, groupIndex) => {
             // Create a sort order counter for this group
             let sortCounter = 1;
-            // Get all schedules within the current group
             const schedules = group.querySelectorAll('.schedule');
-            // Rename group-specific fields and classes
             renameGroupAttributes(group, groupIndex + 1);
-            // Iterate through each schedule in the group
             schedules.forEach(schedule => {
                 // Rename schedule fields and classes with absolute numbering
                 renameScheduleAttributes(schedule, scheduleCounter);
@@ -493,42 +491,34 @@
         duplicateSchedule(event);
     }
 
-
-
     // Store Sortable instances to allow cleanup
     let sortableInstances = [];
-
     // Function to set up all sortable elements
     function setupSortables(options = {}) {
-    // Default options for Sortable
-    const defaultOptions = {
-        animation: 150,
-        ghostClass: 'sortable-ghost-class',
-        group: 'Schedule-Group',
-        handle: '.schedule-handle'
-    };
-
-    // Clean up existing Sortable instances
-    sortableInstances.forEach(instance => instance.destroy());
-    sortableInstances = [];
-
-    // Select all elements with the 'sortable' class
-    const sortableElements = document.querySelectorAll('.accordion-collapse');
-
-    // Initialize Sortable on each element
-    sortableElements.forEach(element => {
-        const sortable = new Sortable(element, {
-        ...defaultOptions,
-        // Triggers after a move
-        onEnd: (evt) => {
-            formReordered();
-        }
+        // Default options for Sortable
+        const defaultOptions = {
+            animation: 150,
+            ghostClass: 'sortable-ghost-class',
+            group: 'Schedule-Group',
+            handle: '.schedule-handle'
+        };
+        // Clean up existing Sortable instances
+        sortableInstances.forEach(instance => instance.destroy());
+        sortableInstances = [];
+        // Select all elements with the 'sortable' class
+        const sortableElements = document.querySelectorAll('.accordion-collapse');
+        // Initialize Sortable on each element
+        sortableElements.forEach(element => {
+            const sortable = new Sortable(element, {
+            ...defaultOptions,
+            // Triggers after a move
+            onEnd: (evt) => {
+                formReordered();
+            }
+            });
+            sortableInstances.push(sortable);
         });
-        sortableInstances.push(sortable);
-    });
     }
-
-
 
     // Document loaded actions
     document.addEventListener('DOMContentLoaded', () => {
@@ -548,10 +538,74 @@
         }
         updateForm();
         setupSortables();
+        setupSubmitModal();
     });
 
-// CONFIRMATION ON DELETION
-// CONFIRMATION ON FORM SUBMISSION WITH DELETION
+    const numSchedules = document.querySelectorAll('.schedule').length;
+    // Function to take over control of the submit button if any schedules were deleted
+    function setupSubmitModal() {
+        // Setup the modal for deletion confirmation
+        const form = document.querySelector('form[action^="/schedules"]');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const modal = document.querySelector('.modal');
+        const confirmBtn = modal.querySelector('.btn-danger');
+        let pendingSubmit = false;
+        form.addEventListener('submit', function(e) {
+            const schedules = form.querySelectorAll('.schedule');
+            if ((schedules.length < numSchedules) && !pendingSubmit) {
+                e.preventDefault();        
+                updateModalIdList(modal);
+                // Show modal
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                // Set flag to allow submit after confirmation
+                pendingSubmit = true;
+            }
+        });
+        confirmBtn.addEventListener('click', function() {
+            if (pendingSubmit) {
+                pendingSubmit = false;
+                // Hide modal and submit form
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                bsModal.hide();
+                form.submit();
+            }
+        });
+        modal.addEventListener('hidden.bs.modal', function() {
+            pendingSubmit = false;
+        });
+    }
+
+    function updateModalIdList(modal) {
+        // Remove list elements and replace with ones that have been deleted
+        const list = modal.querySelector('.modal-deletions-list');
+        while (list.firstChild) {
+            list.removeChild(list.lastChild);
+        }
+        // Get the relevant info
+        const listField = document.querySelector('[name="all-ids"]').value;
+        const schedules = document.querySelectorAll('.schedule');
+        const validIds = listField
+            .split(',')
+            .map(id => id.trim())
+            .filter(id => id !== '');
+        // Check each id from the page's original content to what's on there now and append differences to modal
+        validIds.forEach(id => {
+            found = 0;
+            schedules.forEach(schedule => {
+                const scheduleId = schedule.querySelector('[name*="id-"]').value;
+                console.log(scheduleId);
+                console.log(id);
+                if (scheduleId == id) {
+                    found = 1;
+                }
+            });
+            if (!found == 1) {
+                    list.insertAdjacentHTML('beforeend', `<li>Schedule ID: ${id}</li>`);
+            }
+        });
+    }
+
 // ADD BUTTONS DON'T WORK WITH EMPTY GROUP
 // PREVENT FORM SUBMISSION WITH EMPTY GROUP?
 
