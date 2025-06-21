@@ -46,6 +46,7 @@ class Groups(db.Model):
 # Zones Database Model
 class Zones(db.Model):
     __tablename__ = "zones"
+    __table_args__ = {'sqlite_autoincrement': True}
     id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
     name = db.Column(db.String(250), nullable=False)
     description = db.Column(db.String(250), nullable=True)
@@ -66,7 +67,8 @@ class Zones(db.Model):
 # Auto increment on for the ID to prevent ID's being reused after one is removed.
 class Schedules(db.Model):
     __tablename__ = "schedules"
-    id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
+    __table_args__ = {'sqlite_autoincrement': True}
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
     group = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
     sort_order = db.Column(db.Integer, nullable=True)
     start = db.Column(db.String(50), nullable=False)
