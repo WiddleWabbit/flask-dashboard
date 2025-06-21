@@ -96,7 +96,7 @@ def config_schedules():
     data['groups'] = get_all_groups()
     data['zones'] = get_all_zones()
     data['days_of_week'] = DaysOfWeek.query.all()
-    #data['max_schedule_id'] = db.session.query(func.max(Schedules.id)).scalar() or 0
+    data['max_schedule_id'] = db.session.query(func.max(Schedules.id)).scalar() or 0
 
     # Create a dict of schedule durations by schedule id
     schedule_durations = {}

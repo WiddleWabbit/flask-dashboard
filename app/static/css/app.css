@@ -13,6 +13,9 @@
 .schedule-handle {
     cursor:grab;
 }
+.delete-this-schedule {
+    cursor:pointer;
+}
 
 @media screen and (max-width:767px) {
     #sidebar {

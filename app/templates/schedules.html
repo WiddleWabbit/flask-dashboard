@@ -46,10 +46,17 @@
                         <div class="accordion-body row schedule">
                             <div class="col-xs-12">
                                 <div class="d-flex justify-content-between">
-                                    <p class="mb-2 text-dark-emphasis ps-3 schedule-title">Schedule {{ schedule.id }}</p>
-                                    <span class="schedule-handle">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16">
-                                            <path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"/>
+                                    <div class="d-flex gap-3">
+                                        <p class="mb-2 text-dark-emphasis ps-3 schedule-title">Schedule {{ schedule.id }}</p>
+                                        <span class="schedule-handle">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"/>
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <span class="delete-this-schedule">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
                                         </svg>
                                     </span>
                                 </div>
@@ -157,6 +164,7 @@
             <button class="my-3 btn btn-outline-secondary d-block add-group" type="submit">Add Group</button>
             <button class="my-3 btn btn-outline-danger d-block remove-group" type="submit">Remove Group</button>
             <input type="text" name="all-ids" class="d-none" value="{{ ids|replace("[", "")|replace("]", "") }}">
+            <input type="text" name="max-id" class="d-none" value="{{ data.max_schedule_id }}">
         </div>
         </form>
 
@@ -249,7 +257,6 @@
             schedules.forEach(schedule => {
                 // Rename schedule fields and classes with absolute numbering
                 renameScheduleAttributes(schedule, scheduleCounter);
-                renameScheduleTitles(schedule, scheduleCounter);
                 updateScheduleSortOrder(schedule, sortCounter);
                 scheduleCounter++;
                 sortCounter++;
@@ -398,6 +405,9 @@
         schedules.forEach((schedule, index) => {
             if (index > 0) schedule.remove();
         });
+        // Set the title to new schedule
+        const scheduleTitle = newGroup.querySelector('p.schedule-title');
+        scheduleTitle.innerHTML = "New Schedule"
         // Clear form field values in the new group
         const formFields = newGroup.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
@@ -446,6 +456,9 @@
             }
 
         });
+        // Set the title to new schedule
+        const scheduleTitle = newSchedule.querySelector('p.schedule-title');
+        scheduleTitle.innerHTML = "New Schedule"
         // Append the new Schedule
         const firstSchedule = group.querySelector('.schedule');
         firstSchedule.parentNode.appendChild(newSchedule);
@@ -468,6 +481,17 @@
         }
         updateForm();
     }
+    // Delete the last schedule in the group (May want to adjust to selectively delete)
+    function deleteThisSchedule() {
+        // Get the group this belongs to
+        const clickedElement = event.target;
+        // Get the last schedule and remove it
+        const schedule = clickedElement.closest('.schedule');
+        if (schedule) {
+            schedule.remove();
+        }
+        updateForm();
+    }
 
     // Function to add listeners to all the add/remove schedule buttons
     function addListenersToScheduleButtons () {
@@ -481,6 +505,11 @@
             span.removeEventListener('click', handleDeleteSchedule);
             span.addEventListener('click', handleDeleteSchedule);
         });
+        const removeThisScheduleButtons = document.querySelectorAll('.delete-this-schedule');
+        removeThisScheduleButtons.forEach(span => {
+            span.removeEventListener('click', handleDeleteThisSchedule);
+            span.addEventListener('click', handleDeleteThisSchedule);
+        });
     }
 
     // Using these makes it easy to remove and add them each time to prevent double ups on event listeners
@@ -489,6 +518,9 @@
     }
     const handleAddSchedule = (event) => {
         duplicateSchedule(event);
+    }
+    const handleDeleteThisSchedule = (event) => {
+        deleteThisSchedule(event);
     }
 
     // Store Sortable instances to allow cleanup
