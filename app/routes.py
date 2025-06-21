@@ -22,6 +22,9 @@ def dashboard():
 def config_data():
 
     data = {}
+    data["mqtt_user"] = get_setting("mqtt_user")
+    data["watering_topic"] = get_setting("watering_topic")
+    data["sensor_topic"] = get_setting("sensor_topic")
     data["timezone"] = get_setting("timezone")
     data["latitude"] = get_setting("latitude")
     data["longitude"] = get_setting("longitude")
@@ -45,32 +48,61 @@ def configuration():
     
     if request.method == "POST":
 
-        # Time settings form submitted
-        if request.args.get("form") == "time_settings":
-
+        if request.args.get("form") == "mqtt_settings":
             # Check authenticated
             if not current_user.is_authenticated:
                 flash('You need to login to make modifications.', 'danger')
                 return render_template('configuration.html', data = config_data()), 403
+            # Validate form
+            user = sanitise(request.form.get("mqtt_user"))
+            password = sanitise(request.form.get("mqtt_password"))
+            watering_topic = sanitise(request.form.get("watering_topic"))
+            sensor_topic = sanitise(request.form.get("sensor_topic"))
+            if not user:
+                flash('Please ensure a MQTT user is set.', 'danger')
+                return render_template('configuration.html', data = config_data()), 422
+            if not get_setting("mqtt_password"):
+                if not password:
+                    flash('Please input a valid password for mqtt user.', 'danger')
+                    return render_template('configuration.html', data = config_data()), 422
+            if not watering_topic or not sensor_topic:
+                flash('Please input sensor and watering topics.', 'danger')
+                return render_template('configuration.html', data = config_data()), 422
+            
+            # Update the settings
+            results = {}
+            results["MQTT User"] = set_setting("mqtt_user", user)
+            if password:
+                hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+                results["MQTT Password"] = set_setting("mqtt_password", hashed_password)
+            results["Watering Topic"] = set_setting("watering_topic", watering_topic)
+            results["Sensor Topic"] = set_setting("sensor_topic", sensor_topic)
 
+            # Redirect back to page
+            messages = update_status_messages(results)
+            flash_status_messages(messages)
+            return redirect(url_for("routes.configuration"))
+
+        # Time settings form submitted
+        if request.args.get("form") == "time_settings":
+            # Check authenticated
+            if not current_user.is_authenticated:
+                flash('You need to login to make modifications.', 'danger')
+                return render_template('configuration.html', data = config_data()), 403
             # Check something submitted.
             if not request.form.get("latitude") and not request.form.get("longitude"):
                 flash('Nothing valid input for latitude or longitude.', 'danger')
                 return render_template('configuration.html', data = config_data()), 422
-
             # Process the form
             results = {}
-
             lat = sanitise(request.form.get("latitude"), float)
             if lat:
                 lat = str(lat)
                 results["latitude"] = set_setting("latitude", lat)
-
             long = sanitise(request.form.get("longitude"), float)
             if long:
                 long = str(long)
                 results["longitude"] = set_setting("longitude", long)
-
             messages = update_status_messages(results)
             flash_status_messages(messages)
             return redirect(url_for("routes.configuration"))
