@@ -146,6 +146,7 @@ def schedules():
                 zones = get_all_zones()
                 # Collect now, before changes are made and these are modified. This way checks can be made against original schedules for deletions
                 all_schedules = get_all_schedules()
+                all_groups = get_all_groups()
 
                 # Error checking these fields error if unexpected value
                 if not num_schedules or not days or not zones or num_schedules < 1 or len(days) < 1 or len(zones) < 1:
@@ -169,10 +170,6 @@ def schedules():
                 # Iterate through the fields submitted
                 for i in range(1, num_schedules + 1):
 
-                    ######
-                    print(f'Processing schedule {i}')
-                    ######
-
                     # Fetch the ID, when fetching, set it to nothing if blank
                     if request.form.get(f'id-{i}') == "" or request.form.get(f'id-{i}') == "None":
                         sanitised_fields['id'] = None
@@ -192,10 +189,6 @@ def schedules():
                     sanitised_fields['zones'] = {}
                     for zone in zones:
                         sanitised_fields['zones'][f'{zone.id}'] = sanitise(request.form.get(f"zone-{zone.id}-schedule-{i}"))
-                    
-                    #######
-                    print(sanitised_fields)
-                    #######
 
                     # Validate form fields
                     if not sanitised_fields['id'] == None:
@@ -272,10 +265,6 @@ def schedules():
                                 update_results[f'schedule-{i}'] = False
                                 break
 
-                    ########
-                    print(field_updates)
-                    ########
-
                     # Create this schedules group if it doesn't exist
                     group_id = sanitised_fields['group'].split('-')[1]
                     update_results[f'Group: {group_id}'] = update_group(int(group_id), groups_submitted[f"group-name-{group_id}"])
@@ -286,21 +275,21 @@ def schedules():
                 # Identify and delete schedules that were not in the form submitted.
                 # This is run before the group deletion. If we were to run it after, it would error deleting the
                 # schedules which were deleted as part of the cascade deletion on the groups model.
-                for schedule in all_schedules:
-                    print(f"Looking for Schedule: {schedule.id}")
-                    found = 0
-                    for i in range(1, num_schedules + 1):
-                        id = sanitise(request.form.get(f"id-{i}"), int)
-                        print(f"Checking Submitted Schedule: {id}")
-                        if id == schedule.id:
-                            print(f"Found: {id}")
-                            found = 1
-                            break
-                    if found == 0:
-                        delete_results[f'Schedule: {schedule.id}'] = delete_schedule(schedule.id)
+                if all_schedules:
+                    for schedule in all_schedules:
+                        print(f"Looking for Schedule: {schedule.id}")
+                        found = 0
+                        for i in range(1, num_schedules + 1):
+                            id = sanitise(request.form.get(f"id-{i}"), int)
+                            print(f"Checking Submitted Schedule: {id}")
+                            if id == schedule.id:
+                                print(f"Found: {id}")
+                                found = 1
+                                break
+                        if found == 0:
+                            delete_results[f'Schedule: {schedule.id}'] = delete_schedule(schedule.id)
 
                 # Delete additional groups and any remaining associated schedules
-                all_groups = get_all_groups()
                 if all_groups:
                     if len(all_groups) > len(groups_submitted):
                         del_group_id = len(groups_submitted) + 1
