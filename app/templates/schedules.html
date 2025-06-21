@@ -105,8 +105,8 @@
             </div>
             <!-- Hidden Admin Fields -->
             <input type="text" name="group-{{ schedule.id}}" class="d-none" value="group-{{ group_id }}">
-            <input type="text" name="id-{{ schedule.id}}" class="d-none" value="{{ schedule.id }}">
-            <input type="text" name="sort-order-{% if schedule.sort_order %}{{ schedule.sort_order}}{% else %}{{ counter }}{% endif %}" class="d-none" value="{% if schedule.sort_order %}{{ schedule.sort_order}}{% else %}{{ counter }}{% endif %}">
+            <input type="text" name="id-{{ schedule.id}}" class="d-none" value="{% if not schedule.template %}{{ schedule.id }}{% endif %}">
+            <input type="text" name="sort-order-{{ schedule.id}}" class="d-none" value="{% if schedule.sort_order %}{{ schedule.sort_order}}{% else %}{{ counter }}{% endif %}">
         </div>
     </div>
 {% endmacro %}
@@ -197,6 +197,13 @@
     </div>
 
 </div>
+
+<template id="schedule-template">
+<!--<script type="text/template" id="schedule-template">-->
+    {% set template_schedule = {'id': 1, 'start': '', 'duration': '', 'weather_dependent': '', 'status': 0, 'sort_order': 0, 'zones': data.zones, 'days': data.days_of_week, 'template': 1} %}
+    {{ render_schedule(template_schedule, '1') }}
+<!--</script>-->
+</template>
 
 <script>
 
@@ -410,9 +417,14 @@
         schedules.forEach((schedule, index) => {
             if (index > 0) schedule.remove();
         });
+        if (!schedules) {
+            console.log('No Schedules');
+        }
         // Set the title to new schedule
         const scheduleTitle = newGroup.querySelector('p.schedule-title');
-        scheduleTitle.innerHTML = "New Schedule"
+        if (scheduleTitle) {
+            scheduleTitle.innerHTML = "New Schedule"
+        }
         // Clear form field values in the new group
         const formFields = newGroup.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
@@ -440,13 +452,10 @@
         if (!group) {
             return;
         }
-        // Get the last schedule and take a copy of it
-        const schedules = group.querySelectorAll('.schedule');
-        const lastSchedule = schedules[schedules.length - 1];
-        if (!lastSchedule) {
-            return;
-        }
-        const newSchedule = lastSchedule.cloneNode(true);
+        // Get the template schedule and take a copy of it
+        const template = document.querySelector('#schedule-template').content;
+        const templateSchedule = template.querySelector('.schedule');
+        const newSchedule = templateSchedule.cloneNode(true);
         // Clear form field values in the new schedule
         const formFields = newSchedule.querySelectorAll('input, select, textarea, time, number');
         formFields.forEach(field => {
@@ -465,8 +474,8 @@
         const scheduleTitle = newSchedule.querySelector('p.schedule-title');
         scheduleTitle.innerHTML = "New Schedule"
         // Append the new Schedule
-        const firstSchedule = group.querySelector('.schedule');
-        firstSchedule.parentNode.appendChild(newSchedule);
+        const parentCollapse = group.querySelector('.accordion-collapse');
+        parentCollapse.appendChild(newSchedule);
         // Run form updates to ensure order and names are correct, buttons work etc.
         updateForm();
     }
