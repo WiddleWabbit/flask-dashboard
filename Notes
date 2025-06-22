@@ -8,6 +8,8 @@ apt-get install python3-flask
 apt-get install python3-flask-sqlalchemy
 apt-get install python3-flask-login
 apt-get install python3-apscheduler
+apt-get install python3-paho-mqtt
+apt-get install python3-dotenv
 
 
 Includes Bootstrap Library
@@ -16,6 +18,16 @@ https://popper.js.org/docs/v2/
 Includes SortableJS Library
 https://github.com/SortableJS/Sortable/releases/tag/1.15.6
 
+mqtt.env in app/mqtt
+Requires MQTT_USERNAME and MQTT_PASSWORD or attempts unauthed:
+MQTT_USERNAME
+MQTT_PASSWORD
+Default broker_url is localhost
+default broker port is 1883
+Default client id is flask_mqtt_client
+If above three not provided then will either accept at runtime or use default if nothing provided at runtime.
+
+python3 run.py
 
 # Run Dev App
 flask --app app run
