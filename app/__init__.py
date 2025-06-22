@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_login import LoginManager
+from app.mqtt.mqtt_handler import MQTTHandler
 
 login_manager = LoginManager()
 
@@ -34,6 +35,9 @@ def create_app(config_file):
     app.register_blueprint(routes_bp)
 
     from .scheduling.routes import bp as scheduling_routes
-    app.register_blueprint(scheduling_routes)
+    app.register_blueprint(scheduling_routes)    
+
+    # Initialise the MQTT Handler
+    app.mqtt_handler = MQTTHandler()
 
     return app

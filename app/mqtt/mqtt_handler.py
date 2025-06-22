@@ -139,3 +139,16 @@ class MQTTHandler:
         Returns a list of topics the client is currently subscribed to.
         """
         return list(self.subscriptions.keys())
+
+    def unsubscribe_all(self):
+        """
+        Unsubscribes from all currently subscribed topics.
+        """
+        if self.client.is_connected():
+            for topic in list(self.subscriptions.keys()):
+                try:
+                    self.client.unsubscribe(topic)
+                    self.logger.info(f"Unsubscribed from topic: {topic}")
+                except Exception as e:
+                    self.logger.error(f"Error unsubscribing from {topic}: {e}")
+        self.subscriptions.clear()

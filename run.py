@@ -1,10 +1,10 @@
 from app import create_app
 from app.models import db
-from app.mqtt.mqtt_handler import MQTTHandler
 from app.scheduling.scheduler import init_scheduler, start_scheduler, shutdown_scheduler
-import logging
 import atexit
 import os
+import logging
+
 
 # Notes
 # - Finish Unit Test
@@ -36,11 +36,8 @@ with app.app_context():
 
 if __name__ == '__main__':
 
-    # Initialise the MQTT Handler
-    mqtt_handler = MQTTHandler()
-
     # Initialize and start the scheduler
-    init_scheduler()
+    init_scheduler(app)
     start_scheduler()
     
     # Register scheduler shutdown when app exits
