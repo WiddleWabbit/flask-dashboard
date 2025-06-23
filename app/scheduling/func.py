@@ -190,6 +190,20 @@ def get_day(id):
         return False
     return False
 
+def get_all_days():
+    """
+    Retrieve all days from the database.
+
+    :return: The days objects if found, otherwise False.
+    """
+    try:
+        days = DaysOfWeek.query.all()
+        return days if days else False
+    except Exception as e:
+        print(f"Unable to get day from database: {e}")
+        return False
+    return False
+
 def get_all_schedules():
     """
     Retrieve all schedules from the database.

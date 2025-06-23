@@ -277,13 +277,10 @@ def schedules():
                 # schedules which were deleted as part of the cascade deletion on the groups model.
                 if all_schedules:
                     for schedule in all_schedules:
-                        print(f"Looking for Schedule: {schedule.id}")
                         found = 0
                         for i in range(1, num_schedules + 1):
                             id = sanitise(request.form.get(f"id-{i}"), int)
-                            print(f"Checking Submitted Schedule: {id}")
                             if id == schedule.id:
-                                print(f"Found: {id}")
                                 found = 1
                                 break
                         if found == 0:

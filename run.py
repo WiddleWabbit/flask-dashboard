@@ -1,6 +1,6 @@
 from app import create_app
 from app.models import db
-from app.scheduling.scheduler import init_scheduler, start_scheduler, shutdown_scheduler
+from app.scheduling.scheduler import init_scheduler, start_scheduler, shutdown_scheduler, is_mqtt_setup
 import atexit
 import os
 import logging
@@ -35,6 +35,9 @@ with app.app_context():
     firstrun(app)
 
 if __name__ == '__main__':
+
+    # Setup MQTT with anything already configured
+    is_mqtt_setup(app)
 
     # Initialize and start the scheduler
     init_scheduler(app)
