@@ -262,7 +262,6 @@ def update_schedule(id:int, sort_order:int, group:int, start:str, end:str, activ
     try:
         if id:
             schedule = Schedules.query.filter_by(id=id).first()
-            print(f"Schedule found: {schedule}")
             if schedule:
                 schedule.group = group
                 schedule.sort_order = sort_order
@@ -274,10 +273,8 @@ def update_schedule(id:int, sort_order:int, group:int, start:str, end:str, activ
                 schedule.zones = zones
             else:
                 schedule = Schedules(id=id, sort_order = sort_order, group=group, start=start, end=end, active=active, weather_dependent=weather_dependent, days=days, zones=zones)
-                print(f"Updating schedule {id} with {start} etc.")
         else:
             schedule = Schedules(sort_order = sort_order, group=group, start=start, end=end, active=active, weather_dependent=weather_dependent, days=days, zones=zones)
-            print(f"No ID, adding schedule with {start} etc.")
             db.session.add(schedule)
         db.session.commit()
         return True

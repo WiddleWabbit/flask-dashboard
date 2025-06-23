@@ -1,7 +1,7 @@
 from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from ..models import Settings
 from ..func import get_setting
-from .func import get_all_days
+from .func import get_all_days, get_all_zones
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
@@ -15,8 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 # Function will be for recieving messages
-def print_test(message):
+def print_message(message):
     logger.info(message.payload)
+
+# Function to check time range
+def is_time_in_range(start_str, end_str, now_time):
+    """Check if now_time is within the start and end time (handles overnight)."""
+    start = datetime.strptime(start_str, "%H:%M").time()
+    end = datetime.strptime(end_str, "%H:%M").time()
+    if start <= end:
+        return start <= now_time < end
+    else:
+        # Over midnight
+        return now_time >= start or now_time < end
 
 # Function to check is MQTT is setup?
 def is_mqtt_setup(app):
@@ -28,7 +39,7 @@ def is_mqtt_setup(app):
                 if sensor_topic not in subscribed_topics:
                     logger.info(f"Sensor topic {sensor_topic} not in subscribed topics {subscribed_topics}. Subscribing...")
                     app.mqtt_handler.unsubscribe_all()
-                    app.mqtt_handler.subscribe(topic=sensor_topic, callback=print_test)
+                    app.mqtt_handler.subscribe(topic=sensor_topic, callback=print_message)
                 else:
                     logger.info(f"Sensor topic up to date. Doing nothing.")
         else:
@@ -37,40 +48,58 @@ def is_mqtt_setup(app):
 # Function to check is any schedules are active
 def is_schedule_active(app):
 
+    # Add weather
+    # Adjust to use MQTT Updates function, split across this for getting active schedules etc
+    # Confirm receipt of published information
+
+    # The MQTT handler is a property of the app, so we use app context
     with app.app_context():
+
+        # Get the relevant time and day
         now = datetime.now()
-        current_time = now.time()
+        current_time = now.time()        
         days = get_all_days()
         day_of_week = now.strftime("%A")
         today = DaysOfWeek.query.filter_by(name=day_of_week).first()
+        # Get all the zones and the watering topic
+        zones = get_all_zones()
         watering_topic = get_setting("watering_topic")
+        # Prepare Variables
+        inactive_solenoids = []
+        active_solenoids = []
+        action = "stop"
 
-        # Add weather
-        # Add time
-        # Confirm receipt of published information
-        # Add turn off solenoid logic?
-
-        # Microcontroller must stop all not in solenoid list each time
-
+        # Proceed only if we have a valid time, date, have access to the MQTT class and a watering MQTT topic is configured
         if today and current_time and app.mqtt_handler and watering_topic:
-            
+            # Require MQTT to be connected to proceed
             if app.mqtt_handler.is_connected():
+
+                # Find the schedules that run today and are active
                 active_schedules = Schedules.query.filter(Schedules.active==1).filter(Schedules.days.contains(today)).all()
-                solenoids = []
+                # Check if each schedule should be active according to it's time
                 for schedule in active_schedules:
+                    if is_time_in_range(schedule.start, schedule.end, current_time):
+                        action = "run"
+                        # Get the solenoid for each zone in this schedule and add them to the list of solenoids that should be on
+                        for zone in schedule.zones:
+                            # Ensure no doubleup's before appending
+                            if zone.solenoid not in active_solenoids:
+                                active_solenoids.append(zone.solenoid)
 
-                    logger.info(f"Schedule {schedule.id} starts at {schedule.start} and runs till {schedule.end}")
-                    for zone in schedule.zones:
-                        solenoids.append(zone.solenoid)
-                        logger.info(f"Adding Schedules, Zone Solenoid: {zone.solenoid}")
+                # Mark any solenoids not already marked active, and add them to those that should be inactive.
+                for zone in zones:
+                    if zone.solenoid not in active_solenoids:
+                        inactive_solenoids.append(zone.solenoid)
 
+                # Build the JSON Data and send to MQTT Watering Topic
                 data = {
-                    "action": "run",
-                    "solenoids": solenoids
+                    "action": action,
+                    "open": active_solenoids,
+                    "close": inactive_solenoids
                 }
                 json_data = json.dumps(data)
                 app.mqtt_handler.publish(watering_topic, json_data, 1)
-
+            # If MQTT not connected skip
             else:
                 logger.warning("MQTT not currently connected. Skipping...")
 
@@ -101,7 +130,7 @@ def init_scheduler(app):
         )
         scheduler.add_job(
             func=is_schedule_active,
-            trigger=IntervalTrigger(seconds=30),
+            trigger=IntervalTrigger(minutes=1),
             id='is_schedule_active',
             name='Check if any Schedule Should be Active',
             replace_existing=True,
