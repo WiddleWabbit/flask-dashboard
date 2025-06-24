@@ -14,7 +14,7 @@ apt-get install python3-dotenv
 apt-get install gunicorn
 
 
-https://api.openweathermap.org/data/2.5/forecast?lat=31.88&lon=116.05&units=metric&appid=b388bf4228ef8259e2f19004e96a62f9
+https://api.openweathermap.org/data/2.5/forecast?lat=31.88&lon=116.05&units=metric&appid=
 
 Includes Bootstrap Library
 Includes Popper Library
