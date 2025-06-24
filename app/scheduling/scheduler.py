@@ -30,7 +30,7 @@ def is_time_in_range(start_str, end_str, now_time):
         return now_time >= start or now_time < end
 
 # Function to check is MQTT is setup?
-def is_mqtt_setup(app):
+def check_mqtt_topics(app):
     with app.app_context():
         if app.mqtt_handler:
             subscribed_topics = app.mqtt_handler.get_subscribed_topics()
@@ -121,10 +121,10 @@ def init_scheduler(app):
     """Initialize and configure the scheduler with jobs."""
     try:
         scheduler.add_job(
-            func=is_mqtt_setup,
+            func=check_mqtt_topics,
             trigger=IntervalTrigger(minutes=5),
-            id='is_mqtt_setup',
-            name='Check if MQTT is Setup',
+            id='check_mqtt_topics',
+            name='Check MQTT Topics',
             replace_existing=True,
             args=[app]
         )
@@ -132,7 +132,7 @@ def init_scheduler(app):
             func=is_schedule_active,
             trigger=IntervalTrigger(minutes=1),
             id='is_schedule_active',
-            name='Check if any Schedule Should be Active',
+            name='Check for Active Schedules',
             replace_existing=True,
             args=[app]
         )
