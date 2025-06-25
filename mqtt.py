@@ -3,7 +3,7 @@
 from app import create_app
 from app.models import db
 from app.mqtt.mqtt_handler import MQTTHandler
-from app.scheduling.scheduler import init_scheduler, start_scheduler, shutdown_scheduler, is_mqtt_setup
+from app.scheduling.scheduler import init_scheduler, start_scheduler, shutdown_scheduler, check_mqtt_topics
 from run import app
 import atexit
 
@@ -17,7 +17,7 @@ with app.app_context():
     app.mqtt_handler = MQTTHandler()
 
     # Setup MQTT with anything already configured
-    is_mqtt_setup(app)
+    check_mqtt_topics(app)
 
     # Initialize and start the scheduler
     init_scheduler(app)

@@ -14,6 +14,13 @@ apt-get install python3-dotenv
 apt-get install gunicorn
 
 
+
+# Structure will probably be, 
+# - Gunicorn running flask app with a couple of workers, first time run / setup in gunicorn.conf.py file.
+# - Python running the mqtt file, which runs the mqtt handler and schedules
+# - Nginx running SSL termination and front end
+
+
 https://api.openweathermap.org/data/2.5/forecast?lat=31.88&lon=116.05&units=metric&appid=
 
 Includes Bootstrap Library

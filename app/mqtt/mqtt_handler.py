@@ -116,8 +116,10 @@ class MQTTHandler:
         try:
             self.client.publish(topic, message, qos)
             self.logger.info(f"Published to {topic}: {message}")
+            return True
         except Exception as e:
             self.logger.error(f"Error publishing to {topic}: {e}")
+            return False
 
     def disconnect(self):
         try:

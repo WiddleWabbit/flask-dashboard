@@ -17,7 +17,6 @@ schedule_days = db.Table(
     db.Column('day_id', db.Integer, db.ForeignKey('days_of_week.id'), primary_key=True)
 )
 
-
 # DaysOfWeek Database Model
 class DaysOfWeek(db.Model):
     __tablename__ = "days_of_week"
@@ -55,8 +54,8 @@ class Zones(db.Model):
     schedules = db.relationship(
         'Schedules',
         secondary=zone_schedules,
-        lazy=True,
-        backref=db.backref('zones', lazy=True),
+        lazy='subquery',
+        backref=db.backref('zones', lazy='subquery'),
         cascade="all, delete"
     )
 
