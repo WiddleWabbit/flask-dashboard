@@ -180,7 +180,8 @@ def mqtt_updates(app):
 
 ###### RUN IMMEDIATELY FIRST TIME ONLY FOR OTHER FUNCTIONS??? #########
 ###### LOCATION BASED, TRACK LAT & LONG OF QUERIES? ##########
-# New function and schedule to update the weather api
+
+# Fetch the weather forecast
 def get_forecast(app):
     with app.app_context():
         try:
@@ -219,6 +220,14 @@ def init_scheduler(app):
             trigger=IntervalTrigger(minutes=1),
             id='mqtt_updates',
             name='Send MQTT Updates',
+            replace_existing=True,
+            args=[app]
+        )
+        scheduler.add_job(
+            func=get_forecast,
+            trigger=IntervalTrigger(hours=12),
+            id='get_forecast',
+            name='Get Weather Forecast',
             replace_existing=True,
             args=[app]
         )
