@@ -14,7 +14,7 @@ class WeatherService:
         # Load environment variables
         env_path = Path(__file__).parent / "weather.env"
         load_dotenv(dotenv_path=env_path)
-        self.apikey = os.getenv("OPEN_WEATHER_MAP_APIKEEY")
+        self.apikey = os.getenv("OPEN_WEATHER_MAP_APIKEY")
         # Prepare static variables
         self.base_url = "https://api.openweathermap.org/data/2.5/forecast"
         self.units = "metric"
