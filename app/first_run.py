@@ -11,7 +11,6 @@ from .scheduling.func import get_all_zones
 
 def firstrun(app):
 
-    # Prepare the application
     with app.app_context():
 
         # Create a default user if none exist
@@ -33,25 +32,23 @@ def firstrun(app):
                 db.session.add(DaysOfWeek(name=day))
         db.session.commit()
 
+        # Add a single default zone if none exist
         all_zones = get_all_zones()
         if not all_zones:
             db.session.add(Zones(name="Zone 1", solenoid=1))
             db.session.commit()
 
+        # Add a single default group if none exist
         groups = Groups.query.all()
         if not groups:
             db.session.add(Groups(name="Group 1"))
             db.session.commit()
 
+        # Add a single default inactive schedule if none exist
         schedules = Schedules.query.all()
         if not schedules:
             group = Groups.query.first()
-            zone = Zones.query.first()
-            days = DaysOfWeek.query.all()
-            day = days[2]
-            new_sch = Schedules(group=group.id, start="23:59", end="00:05", active=0, weather_dependent=0)
-            new_sch.days.append(day)
-            new_sch.zones.append(zone)
+            new_sch = Schedules(group=group.id, start="05:00", end="05:10", active=0, weather_dependent=0)
             db.session.add(new_sch)
             db.session.commit()
 
@@ -62,7 +59,6 @@ def firstrun(app):
             lat = "-31.889105"
             db.session.add(Settings(setting="latitude", value=lat))
             db.session.commit()
-
         if not long_exists:
             long = "116.04647"
             db.session.add(Settings(setting="longitude", value=long))
@@ -75,33 +71,21 @@ def firstrun(app):
             db.session.add(Settings(setting="timezone", value=timezone))
         
         # Create the sunrise and sunset settings if they don't exist
-        sunrise_exists = Settings.query.filter_by(setting="sunrise_iso").first()
-        sunset_exists = Settings.query.filter_by(setting="sunset_iso").first()
-        if not sunrise_exists:
-            now = datetime.now(pytz.timezone(timezone))
-            sixam_naive = datetime.combine(now.date(), time(6, 0, 0))
-            sixam_perth = pytz.timezone(timezone).localize(sixam_naive)
-            sixam_utc = sixam_perth.astimezone(pytz.utc)
-            sunrise_iso = sixam_utc.isoformat()
-            db.session.add(Settings(setting="sunrise_iso", value=sunrise_iso))
-            db.session.commit()
-        if not sunset_exists:
-            now = datetime.now(pytz.timezone(timezone))
-            sixpm_naive = datetime.combine(now.date(), time(18, 0, 0))
-            sixpm_perth = pytz.timezone(timezone).localize(sixpm_naive)
-            sixpm_utc = sixpm_perth.astimezone(pytz.utc)
-            sunset_iso = sixpm_utc.isoformat()
-            db.session.add(Settings(setting="sunset_iso", value=sunset_iso))
-            db.session.commit()
-        
-        # Uncomment to update sunrise/sunset on app startup
-        #update_sun_times()
-
-    # Start the scheduler
-    #scheduler = BackgroundScheduler()
-    #scheduler.add_job(
-    #    func=update_sun_times,
-    #    trigger=CronTrigger(hour=1, minute=0),
-    #    id='update_sun_times_daily'
-    #)
-    #scheduler.start()
+        # sunrise_exists = Settings.query.filter_by(setting="sunrise_iso").first()
+        # sunset_exists = Settings.query.filter_by(setting="sunset_iso").first()
+        # if not sunrise_exists:
+        #     now = datetime.now(pytz.timezone(timezone))
+        #     sixam_naive = datetime.combine(now.date(), time(6, 0, 0))
+        #     sixam_perth = pytz.timezone(timezone).localize(sixam_naive)
+        #     sixam_utc = sixam_perth.astimezone(pytz.utc)
+        #     sunrise_iso = sixam_utc.isoformat()
+        #     db.session.add(Settings(setting="sunrise_iso", value=sunrise_iso))
+        #     db.session.commit()
+        # if not sunset_exists:
+        #     now = datetime.now(pytz.timezone(timezone))
+        #     sixpm_naive = datetime.combine(now.date(), time(18, 0, 0))
+        #     sixpm_perth = pytz.timezone(timezone).localize(sixpm_naive)
+        #     sixpm_utc = sixpm_perth.astimezone(pytz.utc)
+        #     sunset_iso = sixpm_utc.isoformat()
+        #     db.session.add(Settings(setting="sunset_iso", value=sunset_iso))
+        #     db.session.commit()
