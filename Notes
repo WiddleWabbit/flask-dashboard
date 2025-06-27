@@ -15,6 +15,9 @@ apt-get install gunicorn
 
 
 
+gunicorn -c gunicorn.conf.py run:app
+
+
 # Structure will probably be, 
 # - Gunicorn running flask app with a couple of workers, first time run / setup in gunicorn.conf.py file.
 # - Python running the mqtt file, which runs the mqtt handler and schedules
@@ -28,6 +31,21 @@ Includes Popper Library
 https://popper.js.org/docs/v2/
 Includes SortableJS Library
 https://github.com/SortableJS/Sortable/releases/tag/1.15.6
+
+
+
+# Uses the following table arguments:
+# 1) db.Index so the database keeps a separate ordered index of timestamps.
+# This will speed up querying based on timestamp massively when there is a lot of data.
+# Will also increase database size, by the size of a extra timestamp and id being stored.
+# 2) Autoincrement so that indexes are never reused
+#    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+#        {'sqlite_autoincrement': True}
+    # __table_args__ = (
+    #     db.Index('idx_weather_timestamp', 'timestamp'),
+    # )
+
+
 
 mqtt.env in app/mqtt
 Requires MQTT_USERNAME and MQTT_PASSWORD or attempts unauthed:

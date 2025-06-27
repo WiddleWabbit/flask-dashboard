@@ -3,7 +3,7 @@
 from app import create_app
 from app.models import db
 from app.mqtt.mqtt_handler import MQTTHandler
-from app.scheduling.scheduler import init_scheduler, start_scheduler, shutdown_scheduler, check_mqtt_topics
+from app.background_tasks.scheduler import init_scheduler, start_scheduler, shutdown_scheduler, check_mqtt_topics, get_forecast
 from run import app
 import atexit
 
@@ -25,6 +25,12 @@ with app.app_context():
 
     # Register scheduler shutdown when app exits
     atexit.register(shutdown_scheduler)
+
+
+    ####################################
+    get_forecast(app)
+    ###################################
+
 
     # Keep the process alive
     import time

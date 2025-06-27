@@ -1,6 +1,6 @@
 # Import the required libraries
 import html
-from datetime import datetime, time
+from datetime import datetime, time, timezone, timedelta
 import pytz
 import requests
 from flask import flash
@@ -123,6 +123,22 @@ def to_isotime(local_time:str, input_format:str="%Y-%m-%d %H:%M:%S"):
         print(f"Error converting to ISO UTC: {e}")
         return False
     return False
+
+def timestamp_to_db(timestamp, tz=pytz.utc):
+    """
+    Convert a Unix timestamp to a timezone-aware datetime object for db.DateTime.
+    
+    :param timestamp: Int or Float, Unix timestamp (seconds since 1970-01-01 00:00:00 UTC).
+    :param tz: (pytz.timezone, optional): Timezone for the timestamp. Defaults to UTC.
+    :return: Timezone-aware datetime object suitable for db.DateTime.
+    """
+    try:
+        # Convert Unix timestamp to datetime with specified timezone
+        dt = datetime.fromtimestamp(timestamp, tz=tz)
+        # Ensure UTC for storage consistency
+        return dt.astimezone(pytz.utc)
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"Invalid Unix timestamp: {timestamp}. Error: {str(e)}")
 
 def sanitise(value, expected_type:str=str):
     """
