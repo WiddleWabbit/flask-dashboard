@@ -17,31 +17,6 @@
         <p class="text-secondary mb-3"><small>Settings related to the MQTT broker, authentication and channels.</small></p>
         <form action="/configuration?form=mqtt_settings" method="post">
 
-            <div class="d-flex mt-2 mb-2 gap-3">
-                <div class="">
-                    <p class="text-secondary mb-1"><small>MQTT Username:</small></p>
-                    <div class="input-group pb-2" style="max-width:350px">
-                        <span class="input-group-text">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
-                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-                            </svg>
-                        </span>
-                        <input class="form-control" type="text" name="mqtt_user" value="{% if data.mqtt_user %}{{ data.mqtt_user }}{% endif %}" placeholder="Username" {% if not current_user.is_authenticated %}disabled{% endif %} required/>
-                    </div>
-                </div>
-                <div class="">
-                    <p class="text-secondary mb-1"><small>MQTT Password:</small></p>
-                    <div class="input-group pb-2" style="max-width:350px">
-                        <span class="input-group-text">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-unlock2" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M8 0c1.07 0 2.041.42 2.759 1.104l.14.14.062.08a.5.5 0 0 1-.71.675l-.076-.066-.216-.205A3 3 0 0 0 5 4v2h6.5A2.5 2.5 0 0 1 14 8.5v5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 2 13.5v-5a2.5 2.5 0 0 1 2-2.45V4a4 4 0 0 1 4-4M4.5 7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7z"/>
-                            </svg>
-                        </span>
-                        <input class="form-control" type="password" name="mqtt_password" placeholder="Password" {% if not current_user.is_authenticated %}disabled{% endif %} />
-                    </div>
-                </div>
-            </div>
             <div class="d-flex mt-3 mb-2 gap-3">
                 <div class="">
                     <p class="text-secondary mb-1"><small>Watering Topic (Solenoids):</small></p>

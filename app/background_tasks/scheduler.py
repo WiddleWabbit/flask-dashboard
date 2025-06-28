@@ -180,6 +180,10 @@ def mqtt_updates(app):
 
 ###### RUN IMMEDIATELY FIRST TIME ONLY FOR OTHER FUNCTIONS??? #########
 ###### LOCATION BASED, TRACK LAT & LONG OF QUERIES? ##########
+###### ADD WEATHER CHECKING TO SCHEDULING ########
+###### RUN FIRST RUN ON BACKGROUND_TASK FILE ########
+###### CONFIRM DATE / TIME WORK OUT EASIEST QUERYING - LOCAL? #######
+
 
 # Fetch the weather forecast
 def get_forecast(app):

@@ -49,32 +49,21 @@ def configuration():
     if request.method == "POST":
 
         if request.args.get("form") == "mqtt_settings":
+
             # Check authenticated
             if not current_user.is_authenticated:
                 flash('You need to login to make modifications.', 'danger')
                 return render_template('configuration.html', data = config_data()), 403
+            
             # Validate form
-            user = sanitise(request.form.get("mqtt_user"))
-            password = sanitise(request.form.get("mqtt_password"))
             watering_topic = sanitise(request.form.get("watering_topic"))
             sensor_topic = sanitise(request.form.get("sensor_topic"))
-            if not user:
-                flash('Please ensure a MQTT user is set.', 'danger')
-                return render_template('configuration.html', data = config_data()), 422
-            if not get_setting("mqtt_password"):
-                if not password:
-                    flash('Please input a valid password for mqtt user.', 'danger')
-                    return render_template('configuration.html', data = config_data()), 422
             if not watering_topic or not sensor_topic:
                 flash('Please input sensor and watering topics.', 'danger')
                 return render_template('configuration.html', data = config_data()), 422
             
             # Update the settings
             results = {}
-            results["MQTT User"] = set_setting("mqtt_user", user)
-            if password:
-                hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
-                results["MQTT Password"] = set_setting("mqtt_password", hashed_password)
             results["Watering Topic"] = set_setting("watering_topic", watering_topic)
             results["Sensor Topic"] = set_setting("sensor_topic", sensor_topic)
 
