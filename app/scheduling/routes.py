@@ -4,7 +4,7 @@ from flask import Blueprint, Flask, request, render_template, url_for, redirect,
 from flask_login import current_user
 from sqlalchemy import func
 from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime
+from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime, get_setting
 #from .. import db
 import re
 from .func import *
@@ -114,9 +114,8 @@ def config_schedules():
             schedule_durations[sched.id] = None
 
     data['schedule_durations'] = schedule_durations
+    data['rain_threshold'] = get_setting("rain_threshold")
 
-    # if not data['zones']:
-    #     data['zones'] = [{"id":1, "name":"", "description":"", "solenoid":""}]
     return data
 
 # Schedules Route

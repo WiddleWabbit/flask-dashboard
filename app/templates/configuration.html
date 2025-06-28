@@ -11,6 +11,36 @@
         <p class="text-secondary mb-0"><small>Setup the dashboard configuration on this page.</small></p>
     </div>
 
+    <!-- Watering Settings -->
+    <div class="col-xs-12 mb-5">
+        <h4>Weather Settings</h4>
+        <p class="text-secondary mb-3"><small>Settings related to the weather.</small></p>
+        <form action="/configuration?form=weather_settings" method="post">
+
+            <div class="d-flex mt-3 mb-2 gap-3">
+                <div class="">
+                    <div class="d-flex">
+                        <p class="text-secondary mb-1"><small>Rainfall threshold:</small></p>
+                        <a tabindex="0" role="button" data-bs-trigger="focus" class="d-inline text-secondary ms-2" style="cursor:pointer;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-title="Weather Mode" data-bs-html="true" data-bs-content="Set the threshold in mm, used by rainfall level dependent schedules." >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+                        </svg>
+                    </a>
+                    </div>
+                    <div class="input-group pb-2" style="max-width:350px">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moisture" viewBox="0 0 16 16">
+                                <path d="M13.5 0a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V7.5h-1.5a.5.5 0 0 0 0 1H15v2.75h-.5a.5.5 0 0 0 0 1h.5V15h-1.5a.5.5 0 0 0 0 1h2a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5zM7 1.5l.364-.343a.5.5 0 0 0-.728 0l-.002.002-.006.007-.022.023-.08.088a29 29 0 0 0-1.274 1.517c-.769.983-1.714 2.325-2.385 3.727C2.368 7.564 2 8.682 2 9.733 2 12.614 4.212 15 7 15s5-2.386 5-5.267c0-1.05-.368-2.169-.867-3.212-.671-1.402-1.616-2.744-2.385-3.727a29 29 0 0 0-1.354-1.605l-.022-.023-.006-.007-.002-.001zm0 0-.364-.343zm-.016.766L7 2.247l.016.019c.24.274.572.667.944 1.144.611.781 1.32 1.776 1.901 2.827H4.14c.58-1.051 1.29-2.046 1.9-2.827.373-.477.706-.87.945-1.144zM3 9.733c0-.755.244-1.612.638-2.496h6.724c.395.884.638 1.741.638 2.496C11 12.117 9.182 14 7 14s-4-1.883-4-4.267"/>
+                            </svg>
+                        </span>
+                        <input class="form-control" type="number" step=0.1 name="rain_threshold" value="{% if data.rain_threshold %}{{ data.rain_threshold }}{% endif %}" {% if not current_user.is_authenticated %}disabled{% endif %} required />
+                    </div>
+                </div>
+            </div>
+            <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
+        </form>
+    </div>
     <!-- MQTT Broker Settings -->
     <div class="col-xs-12 mb-5">
         <h4>MQTT Settings</h4>
@@ -48,13 +78,12 @@
     </div>
     <!-- Time Settings Section-->
     <div class="col-xs-12">
-        <h4>Time Settings</h4>
-        <p class="text-secondary mb-3"><small>Settings related to schedule times & timezones.</small></p>
+        <h4>Location Settings</h4>
+        <p class="text-secondary mb-3"><small>Settings related to location and timezone.</small></p>
         <form action="/configuration?form=time_settings" method="post">
 
             <div class="d-flex mt-2 gap-3">
                 <div class="">
-                    <!-- Settings for latitude and longitude -->
                      <p class="text-secondary mb-1"><small>Latitude:</small></p>
                     <div class="input-group pb-2" style="max-width:350px">
                         <span class="input-group-text">
@@ -62,7 +91,7 @@
                                 <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855q-.215.403-.395.872c.705.157 1.472.257 2.282.287zM4.249 3.539q.214-.577.481-1.078a7 7 0 0 1 .597-.933A7 7 0 0 0 3.051 3.05q.544.277 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9 9 0 0 1-1.565-.667A6.96 6.96 0 0 0 1.018 7.5zm1.4-2.741a12.3 12.3 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332M8.5 5.09V7.5h2.99a12.3 12.3 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.6 13.6 0 0 1 7.5 10.91V8.5zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741zm-3.282 3.696q.18.469.395.872c.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a7 7 0 0 1-.598-.933 9 9 0 0 1-.481-1.079 8.4 8.4 0 0 0-1.198.49 7 7 0 0 0 2.276 1.522zm-1.383-2.964A13.4 13.4 0 0 1 3.508 8.5h-2.49a6.96 6.96 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667m6.728 2.964a7 7 0 0 0 2.275-1.521 8.4 8.4 0 0 0-1.197-.49 9 9 0 0 1-.481 1.078 7 7 0 0 1-.597.933M8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855q.216-.403.395-.872A12.6 12.6 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.96 6.96 0 0 0 14.982 8.5h-2.49a13.4 13.4 0 0 1-.437 3.008M14.982 7.5a6.96 6.96 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008zM11.27 2.461q.266.502.482 1.078a8.4 8.4 0 0 0 1.196-.49 7 7 0 0 0-2.275-1.52c.218.283.418.597.597.932m-.488 1.343a8 8 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
                             </svg>
                         </span>
-                        <input class="form-control" type="number" step="any" name="latitude" placeholder="{{ data.latitude }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+                        <input class="form-control" type="number" step="any" name="latitude" placeholder="Latitude" value="{{ data.latitude }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
                     </div>
                 </div>
                 <div class="">
@@ -73,7 +102,7 @@
                                 <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a7 7 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7 7 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7 7 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a7 7 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7 7 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/>
                             </svg>
                         </span>
-                        <input class="form-control" type="number" step="any" name="longitude" placeholder="{{ data.longitude }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+                        <input class="form-control" type="number" step="any" name="longitude" placeholder="Longitude" value="{{ data.longitude }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
                     </div>
                 </div>
             </div>
@@ -145,4 +174,21 @@
     </div>
 
 </div>
+
+
+<script>
+
+    // Initialises the popovers in the schedules form
+    function initialisePopovers() {
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+    }
+
+    // Document loaded actions
+    document.addEventListener('DOMContentLoaded', () => {
+        initialisePopovers();
+    });
+
+</script>
+
 {% endblock %}

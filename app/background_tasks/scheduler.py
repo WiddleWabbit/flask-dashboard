@@ -176,10 +176,8 @@ def mqtt_updates(app):
 
 # New function and schedule to update the sunrise sunset times
 
-###### RUN IMMEDIATELY FIRST TIME ONLY FOR OTHER FUNCTIONS??? #########
 ###### LOCATION BASED, TRACK LAT & LONG OF QUERIES? ##########
 ###### ADD WEATHER CHECKING TO SCHEDULING ########
-###### RUN FIRST RUN ON BACKGROUND_TASK FILE ########
 ###### CONFIRM DATE / TIME WORK OUT EASIEST QUERYING - LOCAL? #######
 
 # Fetch the weather forecast
@@ -201,15 +199,12 @@ def get_forecast(app):
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
 
-def example_job():
-    """Example background job."""
-    logger.info("Running example job")
-
 def init_scheduler(app):
     """Initialize and configure the scheduler with jobs.
-    
+
        If required set the initial start time to shortly after the schedule is made so it runs initally and
-       then on it's schedule.
+       then on it's schedule. Done like this to run them as actual schedules rather than manual runs, that
+       block execution.
     """
     try:
         scheduler.add_job(

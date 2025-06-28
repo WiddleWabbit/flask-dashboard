@@ -22,6 +22,7 @@ def dashboard():
 def config_data():
 
     data = {}
+    data["rain_threshold"] = get_setting("rain_threshold")
     data["mqtt_user"] = get_setting("mqtt_user")
     data["watering_topic"] = get_setting("watering_topic")
     data["sensor_topic"] = get_setting("sensor_topic")
@@ -47,6 +48,28 @@ def configuration():
         return render_template('configuration.html', data = config_data()), 200
     
     if request.method == "POST":
+
+        if request.args.get("form") == "weather_settings":
+
+            # Check authenticated
+            if not current_user.is_authenticated:
+                flash('You need to login to make modifications.', 'danger')
+                return render_template('configuration.html', data = config_data()), 403
+            
+            # Validate form
+            rain_threshold = sanitise(request.form.get("rain_threshold"), float)
+            if not rain_threshold or not isinstance(rain_threshold, float):
+                flash('Please input a valid rain threshold above 0.', 'danger')
+                return render_template('configuration.html', data = config_data()), 422
+            
+            # Update the settings
+            results = {}
+            results["Rainfall Threshold"] = set_setting("rain_threshold", str(rain_threshold))
+
+            # Redirect back to page
+            messages = update_status_messages(results)
+            flash_status_messages(messages)
+            return redirect(url_for("routes.configuration"))
 
         if request.args.get("form") == "mqtt_settings":
 

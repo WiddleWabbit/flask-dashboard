@@ -52,6 +52,13 @@ def firstrun(app):
             db.session.add(new_sch)
             db.session.commit()
 
+        # Create a default rainfall threshold
+        rain_threshold = Settings.query.filter_by(setting="rain_threshold").first()
+        if not rain_threshold:
+            def_rain_threshold = "3.0"
+            db.session.add(Settings(setting="rain_threshold", value=def_rain_threshold))
+            db.session.commit() 
+
         # Create default latitude and longitude if none exist
         lat_exists = Settings.query.filter_by(setting="latitude").first()
         long_exists = Settings.query.filter_by(setting="longitude").first()
