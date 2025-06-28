@@ -18,7 +18,7 @@ class WeatherService:
         # Prepare static variables
         self.base_url = "https://api.openweathermap.org/data/2.5/forecast"
         self.units = "metric"
-        self.cnt = 8
+        self.cnt = 24
         # Fetch dynamic variables from db
         self.lat = get_setting("latitude")
         self.long = get_setting("longitude")
@@ -70,7 +70,7 @@ class WeatherService:
                         existing.wind_gust = forecast.get("wind", {}).get("gust", 0)
                         existing.rainfall = forecast.get("rain", {}).get("3h", 0)
                         existing.readable = forecast.get("weather", [{}])[0].get("main", "Blank")
-                        self.logger.info(f"Found existing weather data for {forecast["dt"]}")
+                        self.logger.info(f"Updating existing weather data for {forecast["dt"]}")
                     else:
                         # Add new weather data
                         weather_entry = Weather(
