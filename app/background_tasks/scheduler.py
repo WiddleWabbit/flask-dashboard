@@ -129,40 +129,95 @@ def is_weather_compatible(schedule, threshold):
     return False
 
 
-# Function to check is any schedules are active
-def is_schedule_active(app):
+# # Function to check is any schedules are active
+# def is_schedule_active(app):
 
-    # Add weather
+#     # Add weather
+
+#     # Use app context to access database and MQTT Handler
+#     with app.app_context():
+
+#         # Get the relevant time and day
+#         now = datetime.now()
+#         current_time = now.time()        
+#         days = get_all_days()
+#         day_of_week = now.strftime("%A")
+#         today = DaysOfWeek.query.filter_by(name=day_of_week).first()
+#         threshold = float(get_setting("rain_threshold"))
+
+#         # Proceed only if we have a valid time, date, have access to the MQTT class and a watering MQTT topic is configured
+#         if today and current_time and threshold:
+
+#             # Find the schedules that run today and are active
+#             active_schedules = Schedules.query.filter(Schedules.active==1).filter(Schedules.days.contains(today)).all()
+
+#             # Check if each schedule should be active according to it's time and put it in the list if it should be
+#             filtered_schedules = [
+#                 schedule for schedule in active_schedules
+#                 if is_time_in_range(schedule.start, schedule.end, current_time)
+#                 and is_weather_compatible(schedule, threshold)
+#             ]
+#             return filtered_schedules if filtered_schedules else False
+        
+#         else:
+#             logger.error("Unable to fetch time, date or required settings...")
+
+def is_schedule_active(app):
 
     # Use app context to access database and MQTT Handler
     with app.app_context():
 
-        # Get the relevant time and day
+        # Get the relevant time, day and other settings
         now = datetime.now()
-        current_time = now.time()        
-        days = get_all_days()
+        current_time = now.time()
         day_of_week = now.strftime("%A")
         today = DaysOfWeek.query.filter_by(name=day_of_week).first()
+        yesterday = DaysOfWeek.query.filter_by(id=((today.id - 2) % 7 + 1)).first()  # Get the previous day
         threshold = float(get_setting("rain_threshold"))
 
-        # Proceed only if we have a valid time, date, have access to the MQTT class and a watering MQTT topic is configured
-        if today and current_time and threshold:
+        # Proceed only if we have valid time, date, and settings
+        if today and yesterday and current_time and threshold:
+            # Find schedules that are active and run today or yesterday (for midnight-spanning schedules)
+            active_schedules = Schedules.query.filter(
+                Schedules.active == 1
+            ).filter(
+                (Schedules.days.contains(today)) | (Schedules.days.contains(yesterday))
+            ).all()
 
-            ################# PROBABLY STOPPING OVER MIDNIGHT? AS CONTAINS TODAY IS REQUIRED
+            # Check if each schedule should be active
+            filtered_schedules = []
+            for schedule in active_schedules:
+                # Convert string times (HH:MM) to time objects
+                try:
+                    start_time = datetime.strptime(schedule.start, "%H:%M").time()
+                    end_time = datetime.strptime(schedule.end, "%H:%M").time()
+                except ValueError as e:
+                    logger.error(f"Invalid time format for schedule {schedule.id}: {e}")
+                    continue
 
-            # Find the schedules that run today and are active
-            active_schedules = Schedules.query.filter(Schedules.active==1).filter(Schedules.days.contains(today)).all()
+                # Check if the schedule spans midnight (end time is earlier than start time)
+                if end_time < start_time:
+                    # Schedule crosses midnight
+                    if today in schedule.days:
+                        # Case 1: Current time is after start time (before midnight)
+                        if current_time >= start_time:
+                            if is_weather_compatible(schedule, threshold):
+                                filtered_schedules.append(schedule)
+                    if yesterday in schedule.days:
+                        # Case 2: Current time is before end time (after midnight)
+                        if current_time <= end_time:
+                            if is_weather_compatible(schedule, threshold):
+                                filtered_schedules.append(schedule)
+                else:
+                    # Schedule does not cross midnight, check if today is in the schedule
+                    if today in schedule.days and is_time_in_range(schedule.start, schedule.end, current_time):
+                        if is_weather_compatible(schedule, threshold):
+                            filtered_schedules.append(schedule)
 
-            # Check if each schedule should be active according to it's time and put it in the list if it should be
-            filtered_schedules = [
-                schedule for schedule in active_schedules
-                if is_time_in_range(schedule.start, schedule.end, current_time)
-                and is_weather_compatible(schedule, threshold)
-            ]
             return filtered_schedules if filtered_schedules else False
-        
         else:
-            logger.error("Unable to fetch time, date or required settings...")
+            logger.error("Unable to fetch time, date, or required settings...")
+            return False
 
 
 def build_mqtt_update(app, active_schedules):
