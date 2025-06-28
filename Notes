@@ -25,6 +25,8 @@ gunicorn -c gunicorn.conf.py run:app
 
 
 https://api.openweathermap.org/data/2.5/forecast?lat=31.88&lon=116.05&units=metric&appid=
+https://home.openweathermap.org/api_keys
+https://openweathermap.org/forecast5
 
 Includes Bootstrap Library
 Includes Popper Library

@@ -6,9 +6,10 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, time, timedelta
-from app.weather.weather_handler import WeatherService
+from app.weather.weather_handler import WeatherService, Weather
 import logging
 import json
+import pytz
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +50,83 @@ def update_mqtt_topics(app):
         else:
             logger.error(f"No MQTT Handler.")
 
+def is_weather_compatible(schedule, threshold):
+    """
+    Check if the given schedule's weather_dependent means a schedule should be active today.
+    
+    :param schedule: Schedule object with start (string 'HH:MM') and weather_dependent (int: 1, 2, or 3).
+    :param get_setting: Function to retrieve settings (e.g., rain_threshold).
+    :param reference_date: Optional date object for the schedule; defaults to current date.
+    
+    :return: True if the schedule is compatible with the weather forecast, False otherwise.
+    """
+    if not threshold or not isinstance(threshold, float):
+        logger.error(f"Error with threshold value, not valid. {threshold}")
+        return False
+
+    # If weather_dependent is 3, always return True
+    if schedule.weather_dependent == 3:
+        logger.info("Set to ignore weather, ignoring forecast.")
+        return True
+    
+    # Use current date in AWST
+    awst = pytz.timezone('Australia/Perth')
+    schedule_date = datetime.now(awst).date()
+    
+    # Parse the start time string (HH:MM)
+    try:
+        start_time = datetime.strptime(schedule.start, "%H:%M").time()
+    except ValueError:
+        logger.error("Invalid schedule time format.")
+        return False
+    
+    # Combine date and time for timezone-aware datetime in AWST
+    schedule_datetime = datetime.combine(schedule_date, start_time)
+    schedule_datetime = awst.localize(schedule_datetime)
+    
+    # Convert day's start and end to UTC for querying Weather table
+    start_of_day = datetime.combine(schedule_date, time.min)
+    end_of_day = datetime.combine(schedule_date, time.max)
+    start_of_day_awst = awst.localize(start_of_day)
+    end_of_day_awst = awst.localize(end_of_day)
+    start_of_day_utc = start_of_day_awst.astimezone(pytz.UTC)
+    end_of_day_utc = end_of_day_awst.astimezone(pytz.UTC)
+    
+    # Query weather forecasts for the schedule's day in UTC
+    weather_forecasts = db.session.query(Weather).filter(
+        Weather.timestamp >= start_of_day_utc,
+        Weather.timestamp <= end_of_day_utc
+    ).all()
+
+    logger.info(weather_forecasts)
+    
+    # If no forecasts are available, return False
+    if not weather_forecasts:
+        return False
+    
+    # Sum the rainfall for the day
+    total_rainfall = sum(forecast.rainfall for forecast in weather_forecasts)
+    
+    # For weather_dependent == 1, return True only if no rainfall is forecast
+    if schedule.weather_dependent == 1:
+        if total_rainfall == 0.0:
+            logger.info("Requires no rainfall. No rainfall forecast.")
+            return True
+        else:
+            logger.info("Requires no rainfall. There is rainfall forecast.")
+            return False
+    
+     # For weather_dependent == 2, return True if total rainfall is less than the threshold
+    if schedule.weather_dependent == 2:
+        if total_rainfall < threshold:
+            logger.info(f"Requires less than {threshold} rainfall. Forecast amount {total_rainfall}. Run schedule.")
+            return True
+        else:
+            logger.info(f"Requires less than {threshold} rainfall. Forecast amount {total_rainfall} is more. Do not run.")
+            return False
+    
+    # Default case: invalid weather_dependent value
+    return False
 
 
 # Function to check is any schedules are active
@@ -65,9 +143,12 @@ def is_schedule_active(app):
         days = get_all_days()
         day_of_week = now.strftime("%A")
         today = DaysOfWeek.query.filter_by(name=day_of_week).first()
+        threshold = float(get_setting("rain_threshold"))
 
         # Proceed only if we have a valid time, date, have access to the MQTT class and a watering MQTT topic is configured
-        if today and current_time:
+        if today and current_time and threshold:
+
+            ################# PROBABLY STOPPING OVER MIDNIGHT? AS CONTAINS TODAY IS REQUIRED
 
             # Find the schedules that run today and are active
             active_schedules = Schedules.query.filter(Schedules.active==1).filter(Schedules.days.contains(today)).all()
@@ -76,8 +157,12 @@ def is_schedule_active(app):
             filtered_schedules = [
                 schedule for schedule in active_schedules
                 if is_time_in_range(schedule.start, schedule.end, current_time)
+                and is_weather_compatible(schedule, threshold)
             ]
             return filtered_schedules if filtered_schedules else False
+        
+        else:
+            logger.error("Unable to fetch time, date or required settings...")
 
 
 def build_mqtt_update(app, active_schedules):
@@ -173,12 +258,7 @@ def mqtt_updates(app):
         # Send the MQTT update
         send_mqtt_update(app, json_data)
 
-
 # New function and schedule to update the sunrise sunset times
-
-###### LOCATION BASED, TRACK LAT & LONG OF QUERIES? ##########
-###### ADD WEATHER CHECKING TO SCHEDULING ########
-###### CONFIRM DATE / TIME WORK OUT EASIEST QUERYING - LOCAL? #######
 
 # Fetch the weather forecast
 def get_forecast(app):
