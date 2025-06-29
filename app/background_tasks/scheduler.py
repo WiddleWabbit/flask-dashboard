@@ -390,7 +390,7 @@ def init_scheduler(app):
         )
         scheduler.add_job(
             func=get_forecast,
-            trigger=IntervalTrigger(hours=12, start_date=datetime.now() + timedelta(seconds=15)),
+            trigger=IntervalTrigger(hours=6, start_date=datetime.now() + timedelta(seconds=15)),
             id='get_forecast',
             name='Get Weather Forecast',
             replace_existing=True,
