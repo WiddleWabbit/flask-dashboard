@@ -57,9 +57,9 @@
             {% endfor %}
             
             <div class="button-div d-flex align-items-center gap-2">
-                <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
-                <button type="button" class="btn btn-outline-secondary add-zone my-3 d-block">Add Zone</button>
-                <button type="button" class="btn btn-outline-danger remove-zone my-1 d-block">Remove Zone</button>
+                <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
+                <button type="button" class="btn btn-outline-secondary add-zone my-3 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Add Zone</button>
+                <button type="button" class="btn btn-outline-danger remove-zone my-1 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Remove Zone</button>
             </div>
         </form>
     </div>

@@ -38,7 +38,7 @@
                     </div>
                 </div>
             </div>
-            <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
+            <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
         </form>
     </div>
     <!-- MQTT Broker Settings -->
@@ -73,7 +73,7 @@
                     </div>
                 </div>
             </div>
-            <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
+            <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
         </form>
     </div>
     <!-- Time Settings Section-->
@@ -169,7 +169,7 @@
                     <input class="form-control" type="text" name="last_light" placeholder="Last Light: {{ data.times.last_light }}" required disabled/>
                 </div>
             </div>
-            <button class="my-3 btn btn-outline-secondary d-block" type="submit">Submit</button>
+            <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
         </form>
     </div>
 
