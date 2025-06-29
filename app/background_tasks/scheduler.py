@@ -4,7 +4,6 @@ from app.func import get_setting
 from app.scheduling.func import get_all_days, get_all_zones
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, time, timedelta
 from app.weather.weather_handler import WeatherService, Weather
 import logging
@@ -15,14 +14,28 @@ import pytz
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 # Function will be for recieving messages
 def print_message(message):
+    """
+    Log the payload of an MQTT message for development and testing purposes.
+
+    :param message: MQTT message object containing the payload to be logged.
+
+    :return: None
+    """
     logger.info(message.payload)
 
 # Function to check time range
 def is_time_in_range(start_str, end_str, now_time):
-    """Check if now_time is within the start and end time (handles overnight)."""
+    """
+    Check if the current time is within the specified start and end time range, handling overnight schedules.
+
+    :param start_str: Start time as a string in 'HH:MM' format.
+    :param end_str: End time as a string in 'HH:MM' format.
+    :param now_time: Current time as a time object to check against the range.
+
+    :return: True if now_time is within the time range, False otherwise.
+    """
     start = datetime.strptime(start_str, "%H:%M").time()
     end = datetime.strptime(end_str, "%H:%M").time()
     if start <= end:
@@ -31,10 +44,14 @@ def is_time_in_range(start_str, end_str, now_time):
         # Over midnight
         return now_time >= start or now_time < end
 
-# Function to check is MQTT is setup?
 def update_mqtt_topics(app):
+    """
+    Update MQTT topic subscriptions for the sensor topic.
 
-    # Use app context to access database and MQTT Handler
+    :param app: Flask application instance for context.
+
+    :return: None
+    """
     with app.app_context():
 
         if app.mqtt_handler:
@@ -97,8 +114,6 @@ def is_weather_compatible(schedule, threshold):
         Weather.timestamp >= start_of_day_utc,
         Weather.timestamp <= end_of_day_utc
     ).all()
-
-    logger.info(weather_forecasts)
     
     # If no forecasts are available, return False
     if not weather_forecasts:
@@ -128,41 +143,14 @@ def is_weather_compatible(schedule, threshold):
     # Default case: invalid weather_dependent value
     return False
 
-
-# # Function to check is any schedules are active
-# def is_schedule_active(app):
-
-#     # Add weather
-
-#     # Use app context to access database and MQTT Handler
-#     with app.app_context():
-
-#         # Get the relevant time and day
-#         now = datetime.now()
-#         current_time = now.time()        
-#         days = get_all_days()
-#         day_of_week = now.strftime("%A")
-#         today = DaysOfWeek.query.filter_by(name=day_of_week).first()
-#         threshold = float(get_setting("rain_threshold"))
-
-#         # Proceed only if we have a valid time, date, have access to the MQTT class and a watering MQTT topic is configured
-#         if today and current_time and threshold:
-
-#             # Find the schedules that run today and are active
-#             active_schedules = Schedules.query.filter(Schedules.active==1).filter(Schedules.days.contains(today)).all()
-
-#             # Check if each schedule should be active according to it's time and put it in the list if it should be
-#             filtered_schedules = [
-#                 schedule for schedule in active_schedules
-#                 if is_time_in_range(schedule.start, schedule.end, current_time)
-#                 and is_weather_compatible(schedule, threshold)
-#             ]
-#             return filtered_schedules if filtered_schedules else False
-        
-#         else:
-#             logger.error("Unable to fetch time, date or required settings...")
-
 def is_schedule_active(app):
+    """
+    Determine active schedules based on current time, day, and weather compatibility.
+
+    :param app: Flask application instance for context.
+
+    :return: List of active schedules that are compatible with current time, day, and weather conditions, or False if no valid schedules or required settings are unavailable.
+    """
 
     # Use app context to access database and MQTT Handler
     with app.app_context():
@@ -219,8 +207,15 @@ def is_schedule_active(app):
             logger.error("Unable to fetch time, date, or required settings...")
             return False
 
-
 def build_mqtt_update(app, active_schedules):
+    """
+    Build JSON data for MQTT update based on active schedules and zones.
+
+    :param app: Flask application instance for context.
+    :param active_schedules: List of active schedules to determine solenoid states.
+
+    :return: JSON string containing MQTT update data with action and solenoid states, or False if no zones are configured or JSON creation fails.
+    """
 
     # Use app context to access database and MQTT Handler
     with app.app_context():
@@ -268,6 +263,14 @@ def build_mqtt_update(app, active_schedules):
         return json_data if json_data else False
 
 def send_mqtt_update(app, json_data):
+    """
+    Publish MQTT update with the provided JSON data to the configured watering topic.
+
+    :param app: Flask application instance for context.
+    :param json_data: JSON data to be published via MQTT.
+
+    :return: None
+    """
 
     # Use app context to access database and MQTT Handler
     with app.app_context():
@@ -290,6 +293,13 @@ def send_mqtt_update(app, json_data):
             logger.error("Error publishing MQTT update.")
 
 def mqtt_updates(app):
+    """
+    Publish MQTT updates based on active schedules.
+
+    :param app: Flask application instance for context.
+
+    :return: None
+    """
 
     # Use app context to access database and MQTT Handler
     with app.app_context():
@@ -313,10 +323,14 @@ def mqtt_updates(app):
         # Send the MQTT update
         send_mqtt_update(app, json_data)
 
-# New function and schedule to update the sunrise sunset times
-
-# Fetch the weather forecast
 def get_forecast(app):
+    """
+    Fetch the weather forecast and save it to the database.
+
+    :param app: Flask application instance for context.
+
+    :return: True if weather data is successfully fetched and saved to the database, False otherwise.
+    """
     with app.app_context():
         try:
             with WeatherService() as collector:
@@ -325,11 +339,18 @@ def get_forecast(app):
                     db_result = collector.save_to_db(weather_data, db.session)
                     if db_result:
                         logger.info("Successfully fetched weather and saved to database.")
+                        return True
                     else:
                         logger.error("Failed to save weather data to database.")
+                        return False
+                else:
+                    logger.error("No weather data.")
+                    return False
         except Exception as e:
             logger.error(f"Error fetching the weather forecast and saving it: {e}")
+            return False
 
+# New function and schedule to update the sunrise sunset times
 
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
