@@ -12,7 +12,8 @@ import logging
 logging.basicConfig(
     level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
     handlers=[
-        logging.StreamHandler()  # Output logs to console
+        logging.StreamHandler(), #log to console
+        logging.FileHandler("app.log") # log to file
     ]
 )
 
