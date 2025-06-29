@@ -47,7 +47,7 @@ class MQTTHandler:
             else:
                 self.client_id = client_id
             # Setup MQTT Client
-            self.client = mqtt.Client(client_id=client_id)
+            self.client = mqtt.Client(client_id=self.client_id)
             self.client.on_connect = self.on_connect
             self.client.on_message = self.on_message
             self.client.on_disconnect = self.on_disconnect
