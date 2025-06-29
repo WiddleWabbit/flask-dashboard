@@ -11,9 +11,10 @@ import logging
 # Configure the root logger
 logging.basicConfig(
     level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Optional: Define log message format
     handlers=[
-        logging.StreamHandler(), #log to console
-        logging.FileHandler("app.log") # log to file
+        logging.FileHandler("app.log"),  # Output logs to a file named 'example.log'
+        logging.StreamHandler()  # Output logs to console
     ]
 )
 

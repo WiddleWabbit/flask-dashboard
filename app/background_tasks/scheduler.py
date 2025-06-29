@@ -10,9 +10,18 @@ import logging
 import json
 import pytz
 
+
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,  # Set the logging level to DEBUG to capture all messages
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Optional: Define log message format
+    handlers=[
+        logging.FileHandler("background_tasks.log"),  # Output logs to a file named 'example.log'
+        logging.StreamHandler() # output to console
+    ]
+)
 logger = logging.getLogger(__name__)
+
 
 # Function will be for recieving messages
 def print_message(message):
