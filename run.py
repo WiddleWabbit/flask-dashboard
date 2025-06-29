@@ -6,6 +6,7 @@ import logging
 
 # Notes
 # - Finish Unit Test
+# - Cleanup Logging
 # - DateTime incorrect on CreatedAt, Needs to be fixed to be UTC always
 
 # Configure the root logger

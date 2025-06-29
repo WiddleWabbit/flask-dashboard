@@ -256,10 +256,10 @@ def build_mqtt_update(app, active_schedules):
                     # Ensure no doubleup's before appending
                     if zone.solenoid not in active_solenoids:
                         active_solenoids.append(zone.solenoid)
-                # Mark any solenoids not already marked active, and add them to those that should be inactive.
-                for zone in zones:
-                    if zone.solenoid not in active_solenoids:
-                        inactive_solenoids.append(zone.solenoid)
+            # Mark any solenoids not already marked active, and add them to those that should be inactive.
+            for zone in zones:
+                if zone.solenoid not in active_solenoids:
+                    inactive_solenoids.append(zone.solenoid)
 
 
         # Build the JSON Data and send to MQTT Watering Topic
