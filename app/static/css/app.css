@@ -16,6 +16,11 @@
 .delete-this-schedule {
     cursor:pointer;
 }
+.report {
+    background-color:white;
+    padding:40px;
+    border-radius:20px;
+}
 
 @media screen and (max-width:767px) {
     #sidebar {
