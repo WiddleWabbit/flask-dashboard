@@ -8,3 +8,4 @@ app/mqtt/mqtt.env
 app/weather/weather.env
 app.log
 background_tasks.log
+error.log

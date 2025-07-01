@@ -8,6 +8,7 @@ from .models import db, Users, Settings
 from .scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
 from .func import *
 from .scheduling.func import get_all_zones
+from app.reports.models import Report
 
 def firstrun(app):
 
@@ -96,3 +97,10 @@ def firstrun(app):
         #     sunset_iso = sixpm_utc.isoformat()
         #     db.session.add(Settings(setting="sunset_iso", value=sunset_iso))
         #     db.session.commit()
+
+        if not Report.query.first():
+            reports = [
+                Report(name="Weather Report", template_file="reports/weather_report.html", js_file="js/reports/weather_report.js", active=1, position=1)
+            ]
+            db.session.bulk_save_objects(reports)
+            db.session.commit()

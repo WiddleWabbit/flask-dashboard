@@ -4,4 +4,15 @@
 
 {% block content %}
 
-{% endblock %}
+    {% set weather_data = data.weather_data %}
+
+    <!-- Load the report templates -->
+    <div id="report-container">
+        {% for report in data.reports | sort(attribute='position') %}
+            {% if report.active %}
+                {% include report.template_file ignore missing %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% endblock %}

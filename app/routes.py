@@ -4,7 +4,12 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from .func import *
+from app.func import *
+
+from app.reports.models import Report
+from app.weather.models import Weather
+from datetime import datetime, timedelta
+import json
 
 bp = Blueprint('routes', __name__)
 
@@ -13,10 +18,57 @@ bp = Blueprint('routes', __name__)
 def home():
     return render_template('dashboard.html')
 
+# Return the variables to build the dashboard page
+def config_dashboard():
+
+    data = {}
+
+    data['reports'] = Report.query.all()
+
+    start_date = datetime.now(pytz.utc)
+    end_date = start_date + timedelta(days=3)
+    weather_data = Weather.query.filter(Weather.timestamp >= start_date, Weather.timestamp <= end_date).order_by(Weather.timestamp).all()
+
+    data['weather_data'] = []
+    for record in weather_data:
+        data['weather_data'].append({
+            'time': record.timestamp.strftime('%Y-%m-%d %h:%m'),
+            'temp': record.temp,
+            'humidity': record.humidity,
+            'clouds': record.clouds,
+            'rainfall': record.rainfall,
+        })
+        
+    print(data['weather_data'])
+    # # Aggregate by day (average values)
+    # daily_data = {}
+    # for record in weather_data:
+    #     day = record.timestamp.strftime('%Y-%m-%d')
+    #     if day not in daily_data:
+    #         daily_data[day] = {'temp': [], 'humidity': [], 'clouds': [], 'rainfall': []}
+    #     daily_data[day]['temp'].append(record.temp)
+    #     daily_data[day]['humidity'].append(record.humidity)
+    #     daily_data[day]['clouds'].append(record.clouds)
+    #     daily_data[day]['rainfall'].append(record.rainfall)
+    
+    # # Compute averages
+    # weather_report_data = []
+    # for day, values in daily_data.items():
+    #     weather_report_data.append({
+    #         'date': day,
+    #         'temp': sum(values['temp']) / len(values['temp']),
+    #         'humidity': sum(values['humidity']) / len(values['humidity']),
+    #         'clouds': sum(values['clouds']) / len(values['clouds']),
+    #         'rainfall': sum(values['rainfall']) / len(values['rainfall']),
+    #     })
+
+    return data
+
 # Dashboard Route
 @bp.route("/dashboard")
 def dashboard():
-    return render_template('dashboard.html')
+
+    return render_template('dashboard.html', data=config_dashboard())
 
 # Return the variables to build the configuration page.
 def config_data():

@@ -1,4 +1,4 @@
-from ..models import db
+from app.models import db
 from flask_login import UserMixin
 from datetime import datetime, time
 import pytz
