@@ -1,14 +1,34 @@
 <div class="report" id="report-{{ report.id }}" style="width:100%; height:500px;">
     <h3>Weather Report</h3>
+
+    <div>
+    <label for="start">Start Date:</label>
+    <input type="date" id="startdate">
+    <label for="end">End Date:</label>
+    <input type="date" id="enddate">
+
+    <button onclick="fetchAndFilterData()" class="btn">Filter</button>
+
+    <select id="rangeSelect" class="form-select" onchange="applyPredefinedRange()">
+        <option value="all">All Time</option>
+        <option value="7days">Last 7 Days</option>
+        <option value="30days">Last 30 Days</option>
+        <option value="90days">Last 3 Months</option>
+    </select>
+    </div>
+
     <canvas id="chart-{{ report.id }}"></canvas>
 </div>
 
 <script>
+
+  let chart;
+
     document.addEventListener('DOMContentLoaded', function() {
         const weatherData = {{ weather_data | tojson }};
         const ctx = document.getElementById('chart-{{ report.id }}').getContext('2d');
         
-        new Chart(ctx, {
+        chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: weatherData.map(d => d.time),
@@ -22,13 +42,6 @@
                         yAxisID: 'temp',
                         fill: false
                     },
-                    // {
-                    //     label: 'Clouds (%)',
-                    //     data: weatherData.map(d => d.clouds),
-                    //     borderColor: 'rgba(75, 192, 192, 1)',
-                    //     yAxisID: 'percentage',
-                    //     fill: false
-                    // },
                     {
                         label: 'Rainfall (mm)',
                         data: weatherData.map(d => d.rainfall),
@@ -39,6 +52,85 @@
                         fill: true
                     }
                 ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Date' }
+                    },
+                    temp: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Temperature (°C)' },
+                        min: 0,
+                        max: 50
+                    },
+                    rainfall: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Rainfall (mm)' },
+                        grid: { drawOnChartArea: false } // Avoid overlapping grid lines
+                    }
+                }
+            }
+        });
+    });
+
+    // Fetch and filter data from Flask API
+    function fetchAndFilterData() {
+      const startDate = document.getElementById('startdate').value;
+      const endDate = document.getElementById('enddate').value;
+      
+      let url = '/api/weather_report';
+      if (startDate || endDate) {
+        url += '?';
+        if (startDate) url += `start=${startDate}&`;
+        if (endDate) url += `end=${endDate}`;
+      }
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          // Update all the data sets with the new data
+          chart.data.labels = data.map(d => d.time);
+          chart.data.datasets[0].data = data.map(d => d.temp);
+          chart.data.datasets[1].data = data.map(d => d.rainfall);
+          chart.update();
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    // Apply predefined date ranges
+    function applyPredefinedRange() {
+
+      const range = document.getElementById('rangeSelect').value;
+      let startDate, endDate = dayjs();
+
+      if (range === '7days') {
+        startDate = dayjs().subtract(7, 'day');
+      } else if (range === '30days') {
+        startDate = dayjs().subtract(30, 'day');
+      } else if (range === '90days') {
+        startDate = dayjs().subtract(90, 'day');
+      } else {
+      // Fetch all data
+        document.getElementById('startdate').value = '';
+        document.getElementById('enddate').value = '';
+        fetchAndFilterData();
+        return;
+      }
+
+      document.getElementById('startdate').value = startDate.format('YYYY-MM-DD');
+      document.getElementById('enddate').value = endDate.format('YYYY-MM-DD');
+      fetchAndFilterData();
+    }
+
+
                 // datasets: [
                 //     {
                 //         label: 'Avg Temp (°C)',
@@ -71,36 +163,7 @@
                 //         fill: true
                 //     }
                 // ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        title: { display: true, text: 'Date' }
-                    },
-                    temp: {
-                        type: 'linear',
-                        position: 'left',
-                        title: { display: true, text: 'Temperature (°C)' },
-                        min: 0,
-                        max: 50
-                    },
-                    // percentage: {
-                    //     type: 'linear',
-                    //     position: 'right',
-                    //     title: { display: true, text: 'Percentage (%)' },
-                    //     max: 100,
-                    //     min: 0
-                    // },
-                    rainfall: {
-                        type: 'linear',
-                        position: 'right',
-                        title: { display: true, text: 'Rainfall (mm)' },
-                        grid: { drawOnChartArea: false } // Avoid overlapping grid lines
-                    }
-                }
-            }
-        });
-    });
+
 </script>
+
+

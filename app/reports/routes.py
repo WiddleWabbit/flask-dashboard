@@ -1,5 +1,5 @@
-from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
-from app.func import get_setting
+from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash, jsonify
+from app.func import get_setting, sanitise
 from app.reports.models import Report
 from app.weather.models import Weather
 from datetime import datetime, timedelta
@@ -47,3 +47,55 @@ def config_dashboard():
 def dashboard():
 
     return render_template('dashboard.html', data=config_dashboard())
+
+# Weather API Update Route
+@bp.route("/api/weather_report")
+def api_weather_report():
+
+    start_date = sanitise(request.args.get('start'))
+    end_date = sanitise(request.args.get('end'))
+    
+    # Convert string dates to datetime objects
+    try:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
+        end_date = datetime.strptime(end_date, '%Y-%m-%d') if end_date else None
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+
+    print(start_date)
+
+    # Query the database
+    query = Weather.query
+    if start_date:
+        query = query.filter(Weather.timestamp >= start_date)
+    if end_date:
+        query = query.filter(Weather.timestamp <= end_date)
+    data = query.all()
+
+    print(data)
+
+    local_tz = pytz.timezone(get_setting("timezone"))
+    if not local_tz:
+        flash('No timezone set, using UTC time.', 'warning')
+
+    weather_data = []
+    for record in data:
+        
+        if local_tz:
+            local_time = record.timestamp.astimezone(local_tz)
+            time = local_time.strftime('%a %I:%M %p')
+        else:
+            time = record.timestamp.strftime('%a %I:%M %p')
+
+        weather_data.append({
+            'time': time,
+            'temp': record.temp,
+            'humidity': record.humidity,
+            'clouds': record.clouds,
+            'rainfall': record.rainfall,
+        })
+
+    print(weather_data)
+    
+    # Format data for Chart.js
+    return jsonify(weather_data)
