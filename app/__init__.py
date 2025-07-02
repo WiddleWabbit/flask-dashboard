@@ -30,10 +30,13 @@ def create_app(config_file):
     def load_user(user_id):
         return db.session.get(Users, int(user_id))
 
-    from .routes import bp as routes_bp
+    from app.routes import bp as routes_bp
     app.register_blueprint(routes_bp)
 
-    from .scheduling.routes import bp as scheduling_routes
-    app.register_blueprint(scheduling_routes)    
+    from app.scheduling.routes import bp as scheduling_routes
+    app.register_blueprint(scheduling_routes)
+
+    from app.reports.routes import bp as reports_routes
+    app.register_blueprint(reports_routes)    
 
     return app

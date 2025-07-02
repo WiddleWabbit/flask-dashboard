@@ -87,6 +87,7 @@ class WeatherService:
                             readable = forecast.get("weather", [{}])[0].get("main", "Blank")
                         )
                         db_session.add(weather_entry)
+                        self.logger.info(f"Added weather data for {timestamp}")
 
                 # Save the database changes
                 db_session.commit()
