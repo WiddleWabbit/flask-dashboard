@@ -6,6 +6,40 @@
 
     {% set weather_data = data.weather_data %}
 
+    <div class="">
+        <div class="align-items-center gap-3 justify-content-between d-sm-flex mb-4">
+            <div class="">
+                <h2>Dashboard</h2>
+                <p class="text-secondary mb-3"><small>Customiseable reporting dashboard.</small></p>
+            </div>
+            <div class="d-flex gap-3 align-items-center mt-2">
+                <label class="w-100" for="rangeSelect">Quick Filter:</label>
+                <select id="rangeSelect" class="form-select" style="max-width:250px;" onchange="applyPredefinedRange()">
+                    <option value="3days">3 Days</option>
+                    <option value="thisweek">This Week</option>
+                    <option value="prev7days">Last 7 Days</option>
+                    <option value="prev30days">Last 30 Days</option>
+                    <option value="prev90days">Last 3 Months</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="pb-2 border-bottom border-top">            
+            <div class="d-flex gap-3 w-100 mt-2">
+                <div class="">
+                    <label for="start">Start Date:</label>
+                    <input class="btn ps-0 ps-sm-3" type="date" id="startdate">
+                </div>
+                <div class="">
+                    <label for="end">End Date:</label>
+                    <input class="btn ps-0 ps-sm-3" type="date" id="enddate">
+                </div>
+                <button onclick="fetchAndFilterData()" class="btn">Apply</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Load the report templates -->
     <div id="report-container">
         {% for report in data.reports | sort(attribute='position') %}
@@ -18,8 +52,9 @@
     <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
     <script src="{{ url_for('static', filename='js/dayjs.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/chartjs-adapter-dayjs.min.js') }}"></script>
+
     <!-- <script src="{{ url_for('static', filename='js/chart.js.map') }}"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-dayjs@1.0.0/dist/chartjs-adapter-dayjs.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-dayjs@1.0.0/dist/chartjs-adapter-dayjs.min.js"></script> -->
 
 {% endblock %}
