@@ -8,6 +8,8 @@ import logging
 # - Finish Unit Test
 # - Cleanup Logging
 # - DateTime incorrect on CreatedAt, Needs to be fixed to be UTC always
+# - Graph to show watering times
+# - History Table to show active times etc in past.
 
 # Configure the root logger
 logging.basicConfig(

@@ -37,6 +37,9 @@ def create_app(config_file):
     app.register_blueprint(scheduling_routes)
 
     from app.reports.routes import bp as reports_routes
-    app.register_blueprint(reports_routes)    
+    app.register_blueprint(reports_routes)
+
+    from app.weather.routes import bp as weather_routes
+    app.register_blueprint(weather_routes)   
 
     return app

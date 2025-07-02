@@ -16,7 +16,7 @@ bp = Blueprint('routes', __name__)
 # Homepage Test Route
 @bp.route("/")
 def home():
-    return redirect(url_for("routes.dashboard"))
+    return redirect(url_for("reports_routes.dashboard"))
 
 # Return the variables to build the configuration page.
 def config_data():
@@ -139,7 +139,7 @@ def login():
             # Check authenticated
             if current_user.is_authenticated:
                 flash('You are already logged in', 'warning')
-                return redirect(url_for("routes.dashboard"))
+                return redirect(url_for("reports_routes.dashboard"))
 
             username = sanitise(request.form.get("username"))
             password = sanitise(request.form.get("password"))
@@ -156,7 +156,7 @@ def login():
                 login_user(user)
                 success_msg = "Welcome back " + user.firstname
                 flash(success_msg, 'success')
-                return redirect(url_for("routes.dashboard"))
+                return redirect(url_for("reports_routes.dashboard"))
             else:
                 flash('Invalid username or password', 'danger')
                 return render_template("login.html"), 403
