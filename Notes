@@ -139,3 +139,59 @@ flask --app "app:create_app('app.config.Config')" shell
 
 from app.models import db
 from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+
+
+
+
+                // plugins: {
+                //     legend: {
+                //         display: true,
+                //         onClick: (e, legendItem, legend) => {
+
+                //             // Get the default legend click handler
+                //             const defaultHandler = Chart.defaults.plugins.legend.onClick;
+                //             // Call the default handler to preserve animation
+                //             defaultHandler.call(legend, e, legendItem, legend);
+
+                //             // const index = legendItem.datasetIndex;
+                //             // const chart = legend.chart;
+                //             // const meta = chart.getDatasetMeta(index);
+
+                //             // Custom logic to toggle scale visibility
+                //             const chart = legend.chart;
+                //             const index = legendItem.datasetIndex;
+                //             const meta = chart.getDatasetMeta(index);
+                //             const yAxisID = chart.data.datasets[index].yAxisID;
+
+                //             // Update scale display based on dataset visibility
+                //             chart.options.scales[yAxisID].display = !meta.hidden;
+
+                //             // Update chart with animation
+                //             chart.update({
+                //                 duration: 400, // Match default animation duration
+                //                 easing: 'easeOutQuart' // Match default easing
+                //             });
+
+                //             // // Toggle dataset visibility
+                //             // // If meta.hidden is null, use the opposite of current dataset.hidden
+                //             // meta.hidden = meta.hidden === null ? !chart.data.datasets[index].hidden : null;
+                //             // chart.data.datasets[index].hidden = meta.hidden;
+
+                //             // // Get the yAxisID for this dataset
+                //             // const yAxisID = chart.data.datasets[index].yAxisID;
+
+                //             // // For all axes, check if any dataset using this axis is visible
+                //             // const anyVisible = chart.data.datasets.some((ds, i) =>
+                //             //     ds.yAxisID === yAxisID && !chart.getDatasetMeta(i).hidden
+                //             // );
+                //             // chart.options.scales[yAxisID].display = anyVisible;
+
+                //             // // Update chart to reflect changes
+                //             // //chart.update();
+                //             // chart.update({
+                //             //     duration: 400, // Match default animation duration
+                //             //     easing: 'easeOutQuart' // Match default easing
+                //             // });
+                //         }
+                //     }
+                // }

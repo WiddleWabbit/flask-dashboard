@@ -28,6 +28,22 @@
                         fill: false
                     },
                     {
+                        label: 'Humidity (%)',
+                        data: weatherData.map(d => d.humidity),
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        yAxisID: 'percentage',
+                        fill: false,
+                        hidden: true
+                    },
+                    {
+                        label: 'Clouds (%)',
+                        data: weatherData.map(d => d.clouds),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        yAxisID: 'percentage',
+                        fill: false,
+                        hidden: true
+                    },
+                    {
                         label: 'Rainfall (mm)',
                         data: weatherData.map(d => d.rainfall),
                         borderColor: 'rgba(54, 162, 235, 1)',
@@ -56,10 +72,19 @@
                         type: 'linear',
                         position: 'right',
                         title: { display: true, text: 'Rainfall (mm)' },
-                        grid: { drawOnChartArea: false } // Avoid overlapping grid lines
-                    }
+                        min: 0
+                    },
+                    percentage: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Percentage %' },
+                        min: 0,
+                        max: 100,
+                        grid: { drawOnChartArea: false }, // Avoid overlapping grid lines
+                        display: false
+                    },
                 }
-            }
+            },
         });
     });
 
@@ -68,6 +93,7 @@
       const startDate = document.getElementById('startdate').value;
       const endDate = document.getElementById('enddate').value;
       
+      // Build the URL to fetch data from with the options
       let url = '/api/weather_report';
       if (startDate || endDate) {
         url += '?';
@@ -75,6 +101,7 @@
         if (endDate) url += `end=${endDate}`;
       }
 
+      // Fetch the data and update the datasets
       fetch(url)
         .then(response => {
           if (!response.ok) throw new Error('Network response was not ok');
@@ -84,7 +111,9 @@
           // Update all the data sets with the new data
           chart.data.labels = data.map(d => d.time);
           chart.data.datasets[0].data = data.map(d => d.temp);
-          chart.data.datasets[1].data = data.map(d => d.rainfall);
+          chart.data.datasets[1].data = data.map(d => d.humidity);
+          chart.data.datasets[2].data = data.map(d => d.clouds);
+          chart.data.datasets[3].data = data.map(d => d.rainfall);
           chart.update();
         })
         .catch(error => console.error('Error fetching data:', error));
@@ -122,40 +151,6 @@
       fetchAndFilterData();
 
     }
-
-
-                // datasets: [
-                //     {
-                //         label: 'Avg Temp (°C)',
-                //         data: weatherData.map(d => d.temp),
-                //         borderColor: 'rgba(255, 99, 132, 1)',
-                //         pointRadius: 4,
-                //         yAxisID: 'temp',
-                //         fill: false
-                //     },
-                //     {
-                //         label: 'Humidity (%)',
-                //         data: weatherData.map(d => d.humidity),
-                //         borderColor: 'rgba(153, 102, 255, 1)',
-                //         yAxisID: 'percentage',
-                //         fill: false
-                //     },
-                //     {
-                //         label: 'Clouds (%)',
-                //         data: weatherData.map(d => d.clouds),
-                //         borderColor: 'rgba(75, 192, 192, 1)',
-                //         yAxisID: 'percentage',
-                //         fill: false
-                //     },
-                //     {
-                //         label: 'Rainfall (mm)',
-                //         data: weatherData.map(d => d.rainfall),
-                //         borderColor: 'rgba(54, 162, 235, 1)',
-                //         backgroundColor: '#edf3ff',
-                //         yAxisID: 'rainfall',
-                //         fill: true
-                //     }
-                // ]
 
 </script>
 
