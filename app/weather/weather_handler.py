@@ -18,7 +18,7 @@ class WeatherService:
         # Prepare static variables
         self.base_url = "https://api.openweathermap.org/data/2.5/forecast"
         self.units = "metric"
-        self.cnt = 24
+        self.cnt = 40
         # Fetch dynamic variables from db
         self.lat = get_setting("latitude")
         self.long = get_setting("longitude")
