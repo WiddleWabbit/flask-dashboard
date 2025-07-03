@@ -14,16 +14,20 @@ def config_dashboard():
     data = {}
     # Get all the reports
     data['reports'] = Report.query.all()
-    # Get the report dates
-    start_date = datetime.now(pytz.utc)
-    # Get the beginning of the day
-    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    end_date = start_date + timedelta(days=3)
-    weather_data = Weather.query.filter(Weather.timestamp >= start_date, Weather.timestamp <= end_date).order_by(Weather.timestamp).all()
+    
     # Get the current timezone
     local_tz = pytz.timezone(get_setting("timezone"))
     if not local_tz:
         flash('No timezone set, using UTC time.', 'warning')
+        start_date = datetime.now(pytz.utc)
+    else:
+        start_date = datetime.now(local_tz)
+    
+    # Get the beginning of the day
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_date = start_date + timedelta(days=3)
+    weather_data = Weather.query.filter(Weather.timestamp >= start_date, Weather.timestamp <= end_date).order_by(Weather.timestamp).all()
+    
     # Build the weather data to pass the report
     data['weather_data'] = []
     for record in weather_data:

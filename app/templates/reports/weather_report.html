@@ -66,13 +66,15 @@
                         position: 'left',
                         title: { display: true, text: 'Temperature (°C)' },
                         min: 0,
-                        max: 50
+                        max: 50,
+                        ticks: {maxTicksLimit: 6}
                     },
                     rainfall: {
                         type: 'linear',
                         position: 'right',
                         title: { display: true, text: 'Rainfall (mm)' },
-                        min: 0
+                        min: 0,
+                        ticks: {maxTicksLimit: 6}
                     },
                     percentage: {
                         type: 'linear',

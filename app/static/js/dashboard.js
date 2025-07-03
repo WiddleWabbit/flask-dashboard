@@ -47,3 +47,19 @@ function applyPredefinedRange() {
     updateReports();
     
 }
+
+// Add listeners to all report checkboxes, so that they toggle on click
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('#toggle-reports input[type="checkbox"]');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const reportId = `report-${this.value}`;
+            const reportDiv = document.getElementById(reportId);
+            
+            if (reportDiv) {
+                reportDiv.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+    });
+});

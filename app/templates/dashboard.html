@@ -11,9 +11,12 @@
         <div class="align-items-center gap-3 justify-content-between d-sm-flex mb-4">
             <div class="">
                 <h2>Dashboard</h2>
-                <p class="text-secondary mb-3"><small>Customiseable reporting dashboard.</small></p>
+                <p class="text-secondary mt-3 mb-0"><small>Customiseable reporting dashboard.</small></p>
+                <a class="small text-body-secondary mb-3" data-bs-toggle="offcanvas" href="#offcanvasWithBothOptions" role="button" aria-controls="offcanvasWithBothOptions">
+                    Add/Remove Reports
+                </a>
             </div>
-            <div class="d-flex gap-3 align-items-center mt-2">
+            <div class="d-flex gap-3 align-items-center mt-sm-5">
                 <label class="w-100" for="rangeSelect">Quick Filter:</label>
                 <select id="rangeSelect" class="form-select" style="max-width:250px;" onchange="applyPredefinedRange()">
                     <option value="5days">5 Days</option>
@@ -27,7 +30,7 @@
             </div>
         </div>
         <!-- Start and End Date Filtering -->   
-        <div class="pb-2 border-bottom border-top">
+        <div class="pb-2 border-bottom border-top mb-3">
             <div class="d-flex gap-3 w-100 mt-2">
                 <div class="">
                     <label for="start">Start Date:</label>
@@ -39,6 +42,28 @@
                 </div>
                 <button onclick="updateReports()" class="btn">Apply</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Reports Offcanvas Panel -->
+    <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvasWithBothOptions" aria-labelledby="offcanvasWithBothOptionsLabel">
+        <div class="offcanvas-header">
+            <h3 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Reports</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <p class="text-secondary mb-3"><small>Select reports to be active.</small></p>
+
+            <ul id="toggle-reports" class="list-group list-group-flush">
+                {% for report in data.reports | sort(attribute='position') %}
+
+                    <li class="list-group-item">
+                        <input class="form-check-input me-1" type="checkbox" value="{{ report.id }}" id="input-{{ report.id }}" {% if report.active %}checked{% endif %}>
+                        <label class="form-check-label stretched-link" for="input-{{ report.id }}">{{ report.name }}</label>
+                    </li>
+
+                {% endfor %}
+            </ul>
         </div>
     </div>
 
