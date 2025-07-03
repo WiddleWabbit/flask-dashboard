@@ -16,6 +16,8 @@ def config_dashboard():
     data['reports'] = Report.query.all()
     # Get the report dates
     start_date = datetime.now(pytz.utc)
+    # Get the beginning of the day
+    start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
     end_date = start_date + timedelta(days=3)
     weather_data = Weather.query.filter(Weather.timestamp >= start_date, Weather.timestamp <= end_date).order_by(Weather.timestamp).all()
     # Get the current timezone
@@ -62,8 +64,6 @@ def api_weather_report():
     except ValueError:
         return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
 
-    print(start_date)
-
     # Query the database
     query = Weather.query
     if start_date:
@@ -71,8 +71,6 @@ def api_weather_report():
     if end_date:
         query = query.filter(Weather.timestamp <= end_date)
     data = query.all()
-
-    print(data)
 
     local_tz = pytz.timezone(get_setting("timezone"))
     if not local_tz:
@@ -94,8 +92,6 @@ def api_weather_report():
             'clouds': record.clouds,
             'rainfall': record.rainfall,
         })
-
-    print(weather_data)
     
     # Format data for Chart.js
     return jsonify(weather_data)

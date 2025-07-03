@@ -1,19 +1,19 @@
+<!-- Weather Report HTML -->
 <div class="report" id="report-{{ report.id }}" style="width:100%; height:500px;">
-
     <h4 class="text-center pb-2">Weather Report</h3>
     <canvas id="chart-{{ report.id }}"></canvas>
-
 </div>
 
+<!-- Weather Report JS -->
 <script>
 
-  let chart;
-
+    // Declare the chart so it can be accessed by functions
+    let weatherChart;
+    // Build the chart when the page loads
     document.addEventListener('DOMContentLoaded', function() {
         const weatherData = {{ weather_data | tojson }};
         const ctx = document.getElementById('chart-{{ report.id }}').getContext('2d');
-        
-        chart = new Chart(ctx, {
+        weatherChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: weatherData.map(d => d.time),
@@ -88,69 +88,41 @@
         });
     });
 
-    // Fetch and filter data from Flask API
-    function fetchAndFilterData() {
-      const startDate = document.getElementById('startdate').value;
-      const endDate = document.getElementById('enddate').value;
+    // Function to fetch based on dates, from a Flask API endpoint
+    function fetchWeatherData() {
+    
+        // Get the dates from the document
+        const startDate = document.getElementById('startdate').value;
+        const endDate = document.getElementById('enddate').value;
       
-      // Build the URL to fetch data from with the options
-      let url = '/api/weather_report';
-      if (startDate || endDate) {
-        url += '?';
-        if (startDate) url += `start=${startDate}&`;
-        if (endDate) url += `end=${endDate}`;
-      }
+        // Build the URL to fetch data from with the options
+        let url = '/api/weather_report';
+        if (startDate || endDate) {
+            url += '?';
+            if (startDate) url += `start=${startDate}&`;
+            if (endDate) url += `end=${endDate}`;
+        }
 
-      // Fetch the data and update the datasets
-      fetch(url)
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          // Update all the data sets with the new data
-          chart.data.labels = data.map(d => d.time);
-          chart.data.datasets[0].data = data.map(d => d.temp);
-          chart.data.datasets[1].data = data.map(d => d.humidity);
-          chart.data.datasets[2].data = data.map(d => d.clouds);
-          chart.data.datasets[3].data = data.map(d => d.rainfall);
-          chart.update();
-        })
-        .catch(error => console.error('Error fetching data:', error));
+        // Fetch the data and update the datasets
+        fetch(url)
+            .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+            })
+            .then(data => {
+            // Update all the data sets with the new data
+            weatherChart.data.labels = data.map(d => d.time);
+            weatherChart.data.datasets[0].data = data.map(d => d.temp);
+            weatherChart.data.datasets[1].data = data.map(d => d.humidity);
+            weatherChart.data.datasets[2].data = data.map(d => d.clouds);
+            weatherChart.data.datasets[3].data = data.map(d => d.rainfall);
+            weatherChart.update();
+            })
+            .catch(error => console.error('Error fetching data:', error));
     }
 
-    // Apply predefined date ranges
-    function applyPredefinedRange() {
-
-      const range = document.getElementById('rangeSelect').value;
-      let startDate, endDate = dayjs();
-
-      if (range === '3days') {
-          startDate = dayjs();
-          endDate = dayjs().add(3, 'day');
-      } else if (range === 'thisweek') {
-          startDate = dayjs().startOf('week');
-          endDate = dayjs().endOf('week');
-      } else if (range === 'prev7days') {
-          startDate = dayjs().subtract(7, 'day');
-      } else if (range === 'prev30days') {
-          startDate = dayjs().subtract(30, 'day');
-      } else if (range === 'prev90days') {
-          startDate = dayjs().subtract(90, 'day');
-      } else {
-          // Fetch all data
-          document.getElementById('startdate').value = '';
-          document.getElementById('enddate').value = '';
-          fetchAndFilterData();
-          return;
-      }
-
-      // Format the dates before fetching them
-      document.getElementById('startdate').value = startDate.format('YYYY-MM-DD');
-      document.getElementById('enddate').value = endDate.format('YYYY-MM-DD');
-      fetchAndFilterData();
-
-    }
+    // Register this weather data update to be run when the dates are changed
+    registerReportDateCallback(fetchWeatherData);
 
 </script>
 
