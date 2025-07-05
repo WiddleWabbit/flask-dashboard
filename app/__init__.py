@@ -42,4 +42,7 @@ def create_app(config_file):
     from app.weather.routes import bp as weather_routes
     app.register_blueprint(weather_routes)   
 
+    from app.sensors.routes import bp as sensors_routes
+    app.register_blueprint(sensors_routes)   
+
     return app

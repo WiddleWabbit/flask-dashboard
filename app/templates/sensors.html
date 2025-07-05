@@ -1,0 +1,177 @@
+{% extends "page.html" %}
+
+{% block title %}Sensors{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column">
+
+    <!-- Heading-->
+    <div class="col-sm-12 col-xs-12 col-xl-6 col-lg-8 col-md-10 mb-4">
+        <h2>Sensors</h2>
+        <p class="text-secondary mb-0"><small>Configure sensors on this page.</small></p>
+    </div>
+
+    <div class="col-sm-12 col-xs-12 col-lg-8 col-md-10 mb-4">
+        <form action="/sensors?form=update_sensors" method="post">
+
+            {% for sensor in data.sensors %}
+                <div class="row sensor">
+                    <div class="d-none">
+                        <div class="input-group pb-2">
+                            <input class="form-control" type="hidden" name="id-{{ sensor.id }}" value="{{ sensor.id }}" required readonly/>
+                        </div>
+                    </div>
+                    <div class="col-md-5 mt-3">
+                        <div class="input-group pb-2">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
+                                    <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
+                                    <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1m0 5.586 7 7L13.586 9l-7-7H2z"/>
+                                </svg>
+                            </span>
+                            <input class="form-control" type="text" name="name-{{ sensor.id }}" placeholder="Name" value="{{ sensor.name }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-3">
+                        <div class="input-group pb-2">
+                            <!-- <label class="w-100" for="rangeSelect">Sensor Type:</label> -->
+                            <select name="type-{{ sensor.id }}" id="rangeSelect" class="form-select" style="max-width:350px;" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                                <option value="" disabled {% if not sensor.type %}selected="selected"{% endif %}>Sensor Type</option>
+                                <option value="waterdepth" {% if sensor.type == 'waterdepth' %}selected="selected"{% endif %}>Water Depth</option>
+                                <option value="temperature" {% if sensor.type == 'temperature' %}selected="selected"{% endif %}>Temperature</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-1">
+                        <div class="input-group pb-2">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-thermometer-sun" viewBox="0 0 16 16">
+                                    <path d="M5 12.5a1.5 1.5 0 1 1-2-1.415V2.5a.5.5 0 0 1 1 0v8.585A1.5 1.5 0 0 1 5 12.5"/>
+                                    <path d="M1 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM3.5 1A1.5 1.5 0 0 0 2 2.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0L5 10.486V2.5A1.5 1.5 0 0 0 3.5 1m5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5m4.243 1.757a.5.5 0 0 1 0 .707l-.707.708a.5.5 0 1 1-.708-.708l.708-.707a.5.5 0 0 1 .707 0M8 5.5a.5.5 0 0 1 .5-.5 3 3 0 1 1 0 6 .5.5 0 0 1 0-1 2 2 0 0 0 0-4 .5.5 0 0 1-.5-.5M12.5 8a.5.5 0 0 1 .5-.5h1a.5.5 0 1 1 0 1h-1a.5.5 0 0 1-.5-.5m-1.172 2.828a.5.5 0 0 1 .708 0l.707.708a.5.5 0 0 1-.707.707l-.708-.707a.5.5 0 0 1 0-.708M8.5 12a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5"/>
+                                </svg>
+                            </span>
+                            <input class="form-control" type="text" name="topic-{{ sensor.id }}" placeholder="MQTT Topic" value="{{ sensor.topic }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
+                        </div>
+                    </div>
+                    <div class="col-md-4 mt-1">
+                        <div class="input-group pb-3">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tools" viewBox="0 0 16 16">
+                                    <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z"/>
+                                </svg>
+                            </span>
+                            <input class="form-control" type="number" step="any" name="calibration-{{ sensor.id }}" placeholder="Calibration" value="{{ sensor.calibration }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            
+            <div class="button-div d-flex align-items-center gap-2">
+                <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
+                <button type="button" class="btn btn-outline-secondary add-sensor my-3 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Add sensor</button>
+                <button type="button" class="btn btn-outline-danger remove-sensor my-1 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Remove sensor</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete sensors - Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You are deleting sensors, this will delete <strong>all schedules associated with deleted sensors</strong>. Are you sure you want to continue?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger">Confirm Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none">
+        <span id="num-sensors">{{ data.sensors|length }}</span>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addsensorBtn = document.querySelector('.add-sensor');
+        const removesensorBtn = document.querySelector('.remove-sensor');
+        const form = document.querySelector('form[action^="/sensors"]');
+
+        if (addsensorBtn) {
+            addsensorBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const row = form.querySelector('.row');
+                const clone = row.cloneNode(true);
+                clone.querySelectorAll('input, textarea').forEach(input => {
+                    input.value = '';
+                });
+                const submitBtn = form.querySelector('.button-div');
+                form.insertBefore(clone, submitBtn);
+
+                // Update all row input/textarea names with index
+                const rows = form.querySelectorAll('.row');
+                rows.forEach((rowEl, index) => {
+                    const sensorIndex = index + 1;
+                    rowEl.querySelectorAll('input, textarea').forEach(input => {
+                        // Remove any trailing digits from name, then append index
+                        input.name = input.name.replace(/-{1}\d*$/, '') + '-' + sensorIndex;
+                        if (/^id-\d+$/.test(input.name)) {
+                           input.value = sensorIndex;
+                        }
+                    });
+                });
+            });
+        }
+
+        if (removesensorBtn) {
+            removesensorBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const rows = form.querySelectorAll('.row');
+                if (rows.length > 1) {
+                    rows[rows.length - 1].remove();
+                }
+            });
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const numsensors = parseInt(document.getElementById('num-sensors').textContent, 10);
+        const modal = document.querySelector('.modal');
+        const confirmBtn = modal.querySelector('.btn-danger');
+        let pendingSubmit = false;
+
+        form.addEventListener('submit', function(e) {
+            const rows = form.querySelectorAll('.row');
+            if (rows.length < numsensors && !pendingSubmit) {
+                e.preventDefault();
+                // Show modal
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                // Set flag to allow submit after confirmation
+                pendingSubmit = true;
+            }
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            if (pendingSubmit) {
+                pendingSubmit = false;
+                // Hide modal and submit form
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                bsModal.hide();
+                form.submit();
+            }
+        });
+
+        modal.addEventListener('hidden.bs.modal', function() {
+            pendingSubmit = false;
+        });
+
+    });
+</script>
+{% endblock %}

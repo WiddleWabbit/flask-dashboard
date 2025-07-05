@@ -1,11 +1,9 @@
-# Import the required libraries
 from datetime import datetime, time
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
 from flask_login import current_user
 from sqlalchemy import func
-from .models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from ..func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime, get_setting
-#from .. import db
+from app.scheduling.models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+from app.func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime, get_setting
 import re
 from .func import *
 
