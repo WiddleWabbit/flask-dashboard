@@ -12,7 +12,7 @@
             <div class="">
                 <h2>Dashboard</h2>
                 <p class="text-secondary mt-3 mb-0"><small>Customiseable reporting dashboard.</small></p>
-                <a class="small text-body-secondary mb-3" data-bs-toggle="offcanvas" href="#offcanvasWithBothOptions" role="button" aria-controls="offcanvasWithBothOptions">
+                <a class="small text-body-secondary mb-3 {% if not current_user.is_authenticated %}d-none{% endif %}" data-bs-toggle="offcanvas" href="#offcanvasWithBothOptions" role="button" aria-controls="offcanvasWithBothOptions">
                     Add/Remove Reports
                 </a>
             </div>
@@ -73,9 +73,9 @@
     <!-- Load the report templates -->
     <div id="report-container">
         {% for report in data.reports | sort(attribute='position') %}
-            {% if report.active %}
+            <div class="report {% if not report.active %}d-none{% endif %}" id="report-{{ report.id }}" style="width:100%; height:500px;">
                 {% include report.template_file ignore missing %}
-            {% endif %}
+            </div>
         {% endfor %}
     </div>
 

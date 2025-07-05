@@ -1,7 +1,9 @@
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash, jsonify
+from flask_login import current_user
 from app.func import get_setting, sanitise
 from app.reports.models import Report
 from app.weather.models import Weather
+from app.models import db
 from datetime import datetime, timedelta
 import pytz
 
@@ -14,7 +16,7 @@ def config_dashboard():
     data = {}
     # Get all the reports
     data['reports'] = Report.query.all()
-    
+
     # Get the current timezone
     local_tz = pytz.timezone(get_setting("timezone"))
     if not local_tz:
@@ -53,6 +55,35 @@ def config_dashboard():
 def dashboard():
 
     return render_template('dashboard.html', data=config_dashboard())
+
+# API Route to toggle a report active or inactive
+@bp.route("/api/toggle_report")
+def api_toggle_report():
+
+    # Check they are logged in
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'User not authenticated.'}), 400
+
+    report_id = sanitise(request.args.get('report_id'))
+    state = sanitise(request.args.get('state'), int)
+
+    # Validate the fields
+    if not report_id:
+        return jsonify({'error': 'Invalid report ID.'}), 400
+    if not isinstance(state, int):
+        return jsonify({'error': 'State not Int'}), 400
+    if state not in [0, 1]:
+        return jsonify({'error': 'Not Boolean'}), 400
+    
+    # Find the report and update it's active state
+    report = Report.query.filter_by(id=report_id).first()
+    if report:
+        report.active = state
+        db.session.commit()
+        return jsonify({'success': f'Updated report {report_id} active to {state}'}), 200
+    else:
+        return jsonify({'error': 'Unable to find report ID.'}), 400
+
 
 # Weather API Update Route
 @bp.route("/api/weather_report")

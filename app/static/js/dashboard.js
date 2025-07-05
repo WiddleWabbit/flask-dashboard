@@ -54,12 +54,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
+
+            // Get Variables for API Call to disable or enable in database
+            const ID = this.value;
+            const active = this.checked ? 1 : 0
             const reportId = `report-${this.value}`;
             const reportDiv = document.getElementById(reportId);
-            
-            if (reportDiv) {
-                reportDiv.style.display = this.checked ? 'block' : 'none';
-            }
+
+            // Build the URL to fetch data from with the options
+            let url = `/api/toggle_report?report_id=${ID}&state=${active}`;            
+
+            // Fetch the data and update the datasets
+            fetch(url)
+                .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    // Disable or Re-enable the Div Accordingly
+                    if (reportDiv) {
+                        reportDiv.classList.toggle('d-none', !checkbox.checked);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+
         });
     });
 });
