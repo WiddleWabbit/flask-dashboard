@@ -139,6 +139,7 @@ flask --app "app:create_app('app.config.Config')" shell
 
 from app.models import db
 from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+from app.sensors.models import Sensors
 
 
 
@@ -195,3 +196,15 @@ from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule
                 //         }
                 //     }
                 // }
+
+
+
+
+{
+    "time": "2025-07-30 06:22:45",
+    "sensors": {
+        "0": 23.52211,
+        "1": 24.52221,
+        "2": 44.55323
+    }
+}

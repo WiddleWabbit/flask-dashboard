@@ -225,7 +225,7 @@ def update_schedule(id:int, sort_order:int, group:int, start:str, end:str, activ
     If a schedule with the given ID exists, it is updated.
     If it does not exist, a new schedule is created with the provided values.
 
-    :param id: The ID of the schedule. To create a new one, supply false.
+    :param id: The ID of the schedule. To create a new one, supply None.
     :param group: The int id of the group it is under.
     :param start: The start time in HH:MM format.
     :param end: The end time in HH:MM format.
@@ -304,37 +304,6 @@ def delete_schedule(id: int):
     except Exception as e:
         print(f"Unable to delete zone: {id}, error: {e}")
     return False
-
-def count_fields(fields):
-    """
-    Count the number of duplicate fields. Identified by a -1, -2 etc.
-    
-    :param fields: The fields to count as a dictionary.
-    :return: The count of the number of duplicate fields as an int. Returns false on error.
-    """
-    try:
-        # Validate fields are submitted and as a dictionary
-        if not fields:
-            return False
-
-        # Count the fields
-        numbers = set()
-        for key, value in fields:
-            if "-" in key:
-                suffix = key.rsplit("-", 1)[-1]
-                if suffix.isdigit():
-                    numbers.add(suffix)
-        num_fields = len(numbers)
-        print(numbers)
-
-        # Confirm the number of fields, or False if less than 1
-        if num_fields < 1:
-            return False
-        else:
-            return num_fields
-    
-    except Exception as e:
-        return False
     
 def add_minutes_to_time(time_str, add_minutes):
     """

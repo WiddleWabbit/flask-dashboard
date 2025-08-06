@@ -3,7 +3,7 @@
 # accesslog = "gunicorn_access.log"  # Gunicorn access logs
 errorlog = "error.log"   # Gunicorn error logs
 loglevel = "debug"                # Log level (debug, info, warning, etc.)
-capture_output = True             # Capture stdout/stderr to Gunicorn's error log
+capture_output = True           # Capture stdout/stderr to Gunicorn's error log
 
 def on_starting(server):
 

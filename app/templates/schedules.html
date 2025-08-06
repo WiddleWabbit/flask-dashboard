@@ -203,10 +203,8 @@
 </div>
 
 <template id="schedule-template">
-<!--<script type="text/template" id="schedule-template">-->
     {% set template_schedule = {'id': 1, 'start': '', 'duration': '', 'weather_dependent': '', 'status': 0, 'sort_order': 0, 'zones': data.zones, 'days': data.days_of_week, 'template': 1} %}
     {{ render_schedule(template_schedule, '1') }}
-<!--</script>-->
 </template>
 
 <script>
@@ -655,9 +653,6 @@
             }
         });
     }
-
-// ADD BUTTONS DON'T WORK WITH EMPTY GROUP
-// PREVENT FORM SUBMISSION WITH EMPTY GROUP?
 
 </script>
 

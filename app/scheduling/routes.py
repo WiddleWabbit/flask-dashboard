@@ -3,7 +3,7 @@ from flask import Blueprint, Flask, request, render_template, url_for, redirect,
 from flask_login import current_user
 from sqlalchemy import func
 from app.scheduling.models import db, Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from app.func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime, get_setting
+from app.func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, to_isotime, get_setting, count_fields
 import re
 from .func import *
 
@@ -38,7 +38,6 @@ def zones():
             if fields:
 
                 # Process the fields
-                #fields = request.form.items()
                 num_zones = count_fields(fields)
                 update_results = {}
                 delete_results = {}
@@ -150,7 +149,7 @@ def schedules():
                     flash('Serious error, please try again or contact your system administrator.', 'danger')
                     return render_template('schedules.html', data=config_schedules()), 422
 
-                # Create required dictionarys
+                # Create required dictionaries
                 update_results = {}
                 delete_results = {}
                 sanitised_fields = {}

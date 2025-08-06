@@ -2,6 +2,78 @@
 
 {% block title %}Sensors{% endblock %}
 
+<!-- Deletion button for individual ones -->
+
+{% macro render_sensor(sensor) %}
+    <div class="row sensor">
+        <div class="d-none">
+            <div class="input-group pb-2">
+                <input class="form-control" type="hidden" name="id-{{ sensor.id }}" value="{{ sensor.id }}" readonly/>
+            </div>
+            <div class="input-group pb-2">
+                <input class="form-control sort-order-field" type="hidden" name="sort-order-{{ sensor.id }}" value="{{ sensor.sort_order }}" readonly/>
+            </div>
+        </div>
+        <div class="col-md-12 mt-3">
+            <p>Sensor {{ sensor.sort_order }}</p>
+        </div>
+        <div class="col-md-5">
+            <div class="input-group pb-2">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
+                        <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
+                        <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1m0 5.586 7 7L13.586 9l-7-7H2z"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="text" name="identifier-{{ sensor.id }}" placeholder="Identifier" value="{{ sensor.identifier }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="input-group pb-2">
+                <select name="type-{{ sensor.id }}" class="form-select" style="max-width:350px;" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                    <option value="" disabled {% if not sensor.type %}selected="selected"{% endif %}>Sensor Type</option>
+                    <option value="waterdepth" {% if sensor.type == 'waterdepth' %}selected="selected"{% endif %}>Water Depth</option>
+                    <option value="temperature" {% if sensor.type == 'temperature' %}selected="selected"{% endif %}>Temperature</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-1">
+            {% if current_user.is_authenticated %}
+                <span class="schedule-handle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"/>
+                    </svg>
+                </span>
+                <span class="delete-this-schedule">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+                    </svg>
+                </span>
+            {% endif %}
+        </div>
+        <div class="col-md-6 mt-1">
+            <div class="input-group pb-2">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-feather" viewBox="0 0 16 16">
+                        <path d="M15.807.531c-.174-.177-.41-.289-.64-.363a3.8 3.8 0 0 0-.833-.15c-.62-.049-1.394 0-2.252.175C10.365.545 8.264 1.415 6.315 3.1S3.147 6.824 2.557 8.523c-.294.847-.44 1.634-.429 2.268.005.316.05.62.154.88q.025.061.056.122A68 68 0 0 0 .08 15.198a.53.53 0 0 0 .157.72.504.504 0 0 0 .705-.16 68 68 0 0 1 2.158-3.26c.285.141.616.195.958.182.513-.02 1.098-.188 1.723-.49 1.25-.605 2.744-1.787 4.303-3.642l1.518-1.55a.53.53 0 0 0 0-.739l-.729-.744 1.311.209a.5.5 0 0 0 .443-.15l.663-.684c.663-.68 1.292-1.325 1.763-1.892.314-.378.585-.752.754-1.107.163-.345.278-.773.112-1.188a.5.5 0 0 0-.112-.172M3.733 11.62C5.385 9.374 7.24 7.215 9.309 5.394l1.21 1.234-1.171 1.196-.027.03c-1.5 1.789-2.891 2.867-3.977 3.393-.544.263-.99.378-1.324.39a1.3 1.3 0 0 1-.287-.018Zm6.769-7.22c1.31-1.028 2.7-1.914 4.172-2.6a7 7 0 0 1-.4.523c-.442.533-1.028 1.134-1.681 1.804l-.51.524zm3.346-3.357C9.594 3.147 6.045 6.8 3.149 10.678c.007-.464.121-1.086.37-1.806.533-1.535 1.65-3.415 3.455-4.976 1.807-1.561 3.746-2.36 5.31-2.68a8 8 0 0 1 1.564-.173"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="text" name="name-{{ sensor.id }}" placeholder="Name" value="{{ sensor.name }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+            </div>
+        </div>
+        <div class="col-md-5 mt-1">
+            <div class="input-group pb-3">
+                <span class="input-group-text">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tools" viewBox="0 0 16 16">
+                        <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z"/>
+                    </svg>
+                </span>
+                <input class="form-control" type="number" step="any" name="calibration-{{ sensor.id }}" placeholder="Calibration" value="{{ sensor.calibration }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
 {% block content %}
 <div class="d-flex flex-column">
 
@@ -13,63 +85,24 @@
 
     <div class="col-sm-12 col-xs-12 col-lg-8 col-md-10 mb-4">
         <form action="/sensors?form=update_sensors" method="post">
+            <div class="sensors-group">
 
-            {% for sensor in data.sensors %}
-                <div class="row sensor">
-                    <div class="d-none">
-                        <div class="input-group pb-2">
-                            <input class="form-control" type="hidden" name="id-{{ sensor.id }}" value="{{ sensor.id }}" required readonly/>
-                        </div>
-                    </div>
-                    <div class="col-md-5 mt-3">
-                        <div class="input-group pb-2">
-                            <span class="input-group-text">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
-                                    <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
-                                    <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1m0 5.586 7 7L13.586 9l-7-7H2z"/>
-                                </svg>
-                            </span>
-                            <input class="form-control" type="text" name="name-{{ sensor.id }}" placeholder="Name" value="{{ sensor.name }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
-                        </div>
-                    </div>
-                    <div class="col-md-4 mt-3">
-                        <div class="input-group pb-2">
-                            <!-- <label class="w-100" for="rangeSelect">Sensor Type:</label> -->
-                            <select name="type-{{ sensor.id }}" id="rangeSelect" class="form-select" style="max-width:350px;" required {% if not current_user.is_authenticated %}disabled{% endif %}>
-                                <option value="" disabled {% if not sensor.type %}selected="selected"{% endif %}>Sensor Type</option>
-                                <option value="waterdepth" {% if sensor.type == 'waterdepth' %}selected="selected"{% endif %}>Water Depth</option>
-                                <option value="temperature" {% if sensor.type == 'temperature' %}selected="selected"{% endif %}>Temperature</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mt-1">
-                        <div class="input-group pb-2">
-                            <span class="input-group-text">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-thermometer-sun" viewBox="0 0 16 16">
-                                    <path d="M5 12.5a1.5 1.5 0 1 1-2-1.415V2.5a.5.5 0 0 1 1 0v8.585A1.5 1.5 0 0 1 5 12.5"/>
-                                    <path d="M1 2.5a2.5 2.5 0 0 1 5 0v7.55a3.5 3.5 0 1 1-5 0zM3.5 1A1.5 1.5 0 0 0 2 2.5v7.987l-.167.15a2.5 2.5 0 1 0 3.333 0L5 10.486V2.5A1.5 1.5 0 0 0 3.5 1m5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5m4.243 1.757a.5.5 0 0 1 0 .707l-.707.708a.5.5 0 1 1-.708-.708l.708-.707a.5.5 0 0 1 .707 0M8 5.5a.5.5 0 0 1 .5-.5 3 3 0 1 1 0 6 .5.5 0 0 1 0-1 2 2 0 0 0 0-4 .5.5 0 0 1-.5-.5M12.5 8a.5.5 0 0 1 .5-.5h1a.5.5 0 1 1 0 1h-1a.5.5 0 0 1-.5-.5m-1.172 2.828a.5.5 0 0 1 .708 0l.707.708a.5.5 0 0 1-.707.707l-.708-.707a.5.5 0 0 1 0-.708M8.5 12a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5"/>
-                                </svg>
-                            </span>
-                            <input class="form-control" type="text" name="topic-{{ sensor.id }}" placeholder="MQTT Topic" value="{{ sensor.topic }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
-                        </div>
-                    </div>
-                    <div class="col-md-4 mt-1">
-                        <div class="input-group pb-3">
-                            <span class="input-group-text">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tools" viewBox="0 0 16 16">
-                                    <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z"/>
-                                </svg>
-                            </span>
-                            <input class="form-control" type="number" step="any" name="calibration-{{ sensor.id }}" placeholder="Calibration" value="{{ sensor.calibration }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
-                        </div>
-                    </div>
+                {# Create a list to store all the id's of all sensors #}
+                {% set ids = [] %}
+
+                {% for sensor in data.sensors|sort(attribute='sort_order') %}
+
+                    {% set _ = ids.append(sensor.id) %}
+                    {{ render_sensor(sensor) }}
+                    
+                {% endfor %}
+                
+                <div class="button-div d-flex align-items-center gap-2">
+                    <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
+                    <button type="button" class="btn btn-outline-secondary add-sensor my-3 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Add sensor</button>
+                    <button type="button" class="btn btn-outline-danger remove-sensor my-1 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Remove sensor</button>
                 </div>
-            {% endfor %}
-            
-            <div class="button-div d-flex align-items-center gap-2">
-                <button class="my-3 btn btn-outline-secondary d-block {% if not current_user.is_authenticated %}d-none{% endif %}" type="submit">Submit</button>
-                <button type="button" class="btn btn-outline-secondary add-sensor my-3 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Add sensor</button>
-                <button type="button" class="btn btn-outline-danger remove-sensor my-1 d-block {% if not current_user.is_authenticated %}d-none{% endif %}">Remove sensor</button>
+
             </div>
         </form>
     </div>
@@ -82,7 +115,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>You are deleting sensors, this will delete <strong>all schedules associated with deleted sensors</strong>. Are you sure you want to continue?</p>
+                    <p>You are deleting sensors, are you sure you want to continue?</p>
+                    <ul class="modal-deletions-list">
+                    </ul>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -93,63 +128,132 @@
     </div>
 
     <div class="d-none">
-        <span id="num-sensors">{{ data.sensors|length }}</span>
+        <!-- <span id="num-sensors">{{ data.sensors|length }}</span> -->
+        <!-- <span id="all-ids">{{ ids|replace("[", "")|replace("]", "") }}</span> -->
+        <!-- <input type="text" name="max-id" class="d-none" value="{{ data.max_schedule_id }}"> -->
+        <input type="text" name="all-ids" class="d-none" value="{{ ids|replace("[", "")|replace("]", "") }}">
     </div>
 
 </div>
 
+<template id="sensor-template">
+    {% set template_sensor = {'id': '', 'type': '', 'topic': '', 'calibration': '', 'sort_order': 0} %}
+    {{ render_sensor(template_sensor) }}
+</template>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const addsensorBtn = document.querySelector('.add-sensor');
-        const removesensorBtn = document.querySelector('.remove-sensor');
+
+    const form = document.querySelector('form[action^="/sensors"]');
+    const numSensors = form.querySelectorAll('.row').length;
+
+    // Add a new sensor to the page
+    function addSensor() {
+        
+        const template = document.querySelector('#sensor-template').content;
+        const templateSensor = template.querySelector('.sensor');
+
+        //const row = form.querySelector('.row');
+        const clone = templateSensor.cloneNode(true);
+        clone.querySelectorAll('input, textarea').forEach(input => {
+            input.value = '';
+        });
+        const submitBtn = form.querySelector('.button-div');
+        sensorsGroup = form.querySelector('.sensors-group');
+        sensorsGroup.insertBefore(clone, submitBtn);
+
+        renameFormFields();
+        updateSortOrder();
+    };
+
+    // Update the sort order field of all the sensors
+    function updateSortOrder() {
+        const rows = form.querySelectorAll('.row');
+        rows.forEach((rowEl, index) => {
+            const sensorIndex = index + 1;
+            rowEl.querySelectorAll('.sort-order-field').forEach(input => {
+                input.value = sensorIndex;
+            });
+        });
+    }
+
+    function renameFormFields() {
+        // Update all row input/textarea names with index
+        const rows = form.querySelectorAll('.row');
+        rows.forEach((rowEl, index) => {
+            const sensorIndex = index + 1;
+            rowEl.querySelectorAll('input, textarea, select').forEach(input => {
+                    // Remove any trailing digits from name, then append index
+                input.name = input.name.replace(/-{1}\d*$/, '') + '-' + sensorIndex;
+            });
+        });
+    }
+
+    // Delete the last sensor on the page
+    function deleteSensor() {
+        const rows = form.querySelectorAll('.row');
+        if (rows.length > 1) {
+            rows[rows.length - 1].remove();
+        }
+    }
+
+    // Delete this sensor (sensor clicked on)
+    function deleteThisSensor() {
+        // Get the group this belongs to
+        const clickedElement = event.target;
+        // Get the last schedule and remove it
+        const sensor = clickedElement.closest('.row');
+        if (sensor) {
+            sensor.remove();
+        }
+    }
+
+    // The form has been reordered - callback
+    function formReordered() {
+        renameFormFields();
+        updateSortOrder();
+    }
+
+    // Store Sortable instances to allow cleanup
+    let sortableInstances = [];
+    // Function to set up all sortable elements
+    function setupSortables(options = {}) {
+        // Default options for Sortable
+        const defaultOptions = {
+            animation: 150,
+            ghostClass: 'sortable-ghost-class',
+            handle: '.schedule-handle'
+        };
+        // Clean up existing Sortable instances
+        sortableInstances.forEach(instance => instance.destroy());
+        sortableInstances = [];
+        // Select all elements with the 'sortable' class
+        const sortableElements = document.querySelectorAll('.sensors-group');
+        // Initialize Sortable on each element
+        sortableElements.forEach(element => {
+            const sortable = new Sortable(element, {
+            ...defaultOptions,
+            // Triggers after a move
+            onEnd: (evt) => {
+                formReordered();
+            }
+            });
+            sortableInstances.push(sortable);
+        });
+    }
+
+    // Function to take over control of the submit button if any schedules were deleted
+    function setupSubmitModal() {
+        // Setup the modal for deletion confirmation
         const form = document.querySelector('form[action^="/sensors"]');
-
-        if (addsensorBtn) {
-            addsensorBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const row = form.querySelector('.row');
-                const clone = row.cloneNode(true);
-                clone.querySelectorAll('input, textarea').forEach(input => {
-                    input.value = '';
-                });
-                const submitBtn = form.querySelector('.button-div');
-                form.insertBefore(clone, submitBtn);
-
-                // Update all row input/textarea names with index
-                const rows = form.querySelectorAll('.row');
-                rows.forEach((rowEl, index) => {
-                    const sensorIndex = index + 1;
-                    rowEl.querySelectorAll('input, textarea').forEach(input => {
-                        // Remove any trailing digits from name, then append index
-                        input.name = input.name.replace(/-{1}\d*$/, '') + '-' + sensorIndex;
-                        if (/^id-\d+$/.test(input.name)) {
-                           input.value = sensorIndex;
-                        }
-                    });
-                });
-            });
-        }
-
-        if (removesensorBtn) {
-            removesensorBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const rows = form.querySelectorAll('.row');
-                if (rows.length > 1) {
-                    rows[rows.length - 1].remove();
-                }
-            });
-        }
-
         const submitBtn = form.querySelector('button[type="submit"]');
-        const numsensors = parseInt(document.getElementById('num-sensors').textContent, 10);
         const modal = document.querySelector('.modal');
         const confirmBtn = modal.querySelector('.btn-danger');
         let pendingSubmit = false;
-
         form.addEventListener('submit', function(e) {
-            const rows = form.querySelectorAll('.row');
-            if (rows.length < numsensors && !pendingSubmit) {
-                e.preventDefault();
+            const sensors = form.querySelectorAll('.row');
+            if ((sensors.length < numSensors) && !pendingSubmit) {
+                e.preventDefault();        
+                updateModalIdList(modal);
                 // Show modal
                 const bsModal = new bootstrap.Modal(modal);
                 bsModal.show();
@@ -157,7 +261,7 @@
                 pendingSubmit = true;
             }
         });
-
+        // Confirm button clicked, submit form
         confirmBtn.addEventListener('click', function() {
             if (pendingSubmit) {
                 pendingSubmit = false;
@@ -167,11 +271,70 @@
                 form.submit();
             }
         });
-
+        // Modal box closed, reset.
         modal.addEventListener('hidden.bs.modal', function() {
             pendingSubmit = false;
         });
+    }
+
+    function updateModalIdList(modal) {
+        // Remove list elements and replace with ones that have been deleted
+        const list = modal.querySelector('.modal-deletions-list');
+        while (list.firstChild) {
+            list.removeChild(list.lastChild);
+        }
+        // Get the relevant info
+        const listField = document.querySelector('[name="all-ids"]').value;
+        const sensors = document.querySelectorAll('.sensor');
+        const validIds = listField
+            .split(',')
+            .map(id => id.trim())
+            .filter(id => id !== '');
+        // Check each id from the page's original content to what's on there now and append differences to modal
+        validIds.forEach(id => {
+            found = 0;
+            sensors.forEach(sensor => {
+                const sensorId = sensor.querySelector('[name*="id-"]').value;
+                console.log(sensorId);
+                console.log(id);
+                if (sensorId == id) {
+                    found = 1;
+                }
+            });
+            if (!found == 1) {
+                list.insertAdjacentHTML('beforeend', `<li>Sensor ID: ${id}</li>`);
+            }
+        });
+    }
+
+    // Document loaded actions
+    document.addEventListener('DOMContentLoaded', () => {
+
+        setupSortables();
+        setupSubmitModal();
+        updateSortOrder();
+
+        const addsensorBtn = document.querySelector('.add-sensor');
+        const removesensorBtn = document.querySelector('.remove-sensor');
+
+        if (addsensorBtn) {
+            addsensorBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                addSensor();
+            });
+        }
+
+        if (removesensorBtn) {
+            removesensorBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                deleteSensor();
+            });
+        }
 
     });
+
 </script>
+
+<script src="{{ url_for('static', filename='js/Sortable.min.js') }}"></script>
+
 {% endblock %}
