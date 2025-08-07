@@ -5,7 +5,7 @@
 <!-- Deletion button for individual ones -->
 
 {% macro render_sensor(sensor) %}
-<div class="row sensor">
+<div class="row sensor pb-3">
     <div class="d-none">
         <div class="input-group pb-2">
             <input class="form-control" type="hidden" name="id-{{ sensor.id }}" value="{{ sensor.id }}" readonly/>
@@ -33,44 +33,62 @@
             </span>
         {% endif %}
         </div>
-        <div class="col-md-5">
-            <div class="input-group pb-2">
-                <span class="input-group-text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
-                        <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
-                        <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1m0 5.586 7 7L13.586 9l-7-7H2z"/>
+        <div class="row ms-3" style="border-left: 1px solid #dee2e6;">
+            <div class="col-md-5">
+                <p class="text-secondary mb-1 d-inline"><small>Identifier:</small></p>
+                <a tabindex="0" role="button" data-bs-trigger="focus" class="d-inline text-secondary ms-2" style="cursor:pointer;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-content="The ID of this sensor, in the JSON MQTT messages. Used to identify readings for this sensor." >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
                     </svg>
-                </span>
-                <input class="form-control" type="text" name="identifier-{{ sensor.id }}" placeholder="Identifier" value="{{ sensor.identifier }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
+                </a>
+                <div class="input-group pb-2">
+                    <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tag" viewBox="0 0 16 16">
+                            <path d="M6 4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m-1 0a.5.5 0 1 0-1 0 .5.5 0 0 0 1 0"/>
+                            <path d="M2 1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 1 6.586V2a1 1 0 0 1 1-1m0 5.586 7 7L13.586 9l-7-7H2z"/>
+                        </svg>
+                    </span>
+                    <input class="form-control" type="text" name="identifier-{{ sensor.id }}" placeholder="Identifier" value="{{ sensor.identifier }}" required {% if not current_user.is_authenticated %}disabled{% endif %} />
+                </div>
             </div>
-        </div>
-        <div class="col-md-5">
-            <div class="input-group pb-2">
-                <select name="type-{{ sensor.id }}" class="form-select" style="max-width:350px;" required {% if not current_user.is_authenticated %}disabled{% endif %}>
-                    <option value="" disabled {% if not sensor.type %}selected="selected"{% endif %}>Sensor Type</option>
-                    <option value="waterdepth" {% if sensor.type == 'waterdepth' %}selected="selected"{% endif %}>Water Depth</option>
-                    <option value="temperature" {% if sensor.type == 'temperature' %}selected="selected"{% endif %}>Temperature</option>
-                </select>
+            <div class="col-md-5">
+                <p class="text-secondary mb-1 d-inline"><small>Sensor Type:</small></p>
+                <div class="input-group pb-2">
+                    <select name="type-{{ sensor.id }}" class="form-select" style="max-width:350px;" required {% if not current_user.is_authenticated %}disabled{% endif %}>
+                        <option value="" disabled {% if not sensor.type %}selected="selected"{% endif %}>Sensor Type</option>
+                        <option value="waterdepth" {% if sensor.type == 'waterdepth' %}selected="selected"{% endif %}>Water Depth</option>
+                        <option value="temperature" {% if sensor.type == 'temperature' %}selected="selected"{% endif %}>Temperature</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="col-md-6 mt-1">
-            <div class="input-group pb-2">
-                <span class="input-group-text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-feather" viewBox="0 0 16 16">
-                        <path d="M15.807.531c-.174-.177-.41-.289-.64-.363a3.8 3.8 0 0 0-.833-.15c-.62-.049-1.394 0-2.252.175C10.365.545 8.264 1.415 6.315 3.1S3.147 6.824 2.557 8.523c-.294.847-.44 1.634-.429 2.268.005.316.05.62.154.88q.025.061.056.122A68 68 0 0 0 .08 15.198a.53.53 0 0 0 .157.72.504.504 0 0 0 .705-.16 68 68 0 0 1 2.158-3.26c.285.141.616.195.958.182.513-.02 1.098-.188 1.723-.49 1.25-.605 2.744-1.787 4.303-3.642l1.518-1.55a.53.53 0 0 0 0-.739l-.729-.744 1.311.209a.5.5 0 0 0 .443-.15l.663-.684c.663-.68 1.292-1.325 1.763-1.892.314-.378.585-.752.754-1.107.163-.345.278-.773.112-1.188a.5.5 0 0 0-.112-.172M3.733 11.62C5.385 9.374 7.24 7.215 9.309 5.394l1.21 1.234-1.171 1.196-.027.03c-1.5 1.789-2.891 2.867-3.977 3.393-.544.263-.99.378-1.324.39a1.3 1.3 0 0 1-.287-.018Zm6.769-7.22c1.31-1.028 2.7-1.914 4.172-2.6a7 7 0 0 1-.4.523c-.442.533-1.028 1.134-1.681 1.804l-.51.524zm3.346-3.357C9.594 3.147 6.045 6.8 3.149 10.678c.007-.464.121-1.086.37-1.806.533-1.535 1.65-3.415 3.455-4.976 1.807-1.561 3.746-2.36 5.31-2.68a8 8 0 0 1 1.564-.173"/>
+            <div class="col-md-6">
+                <p class="text-secondary mb-1 d-inline"><small>Descriptive Name:</small></p>
+                <div class="input-group pb-2">
+                    <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-feather" viewBox="0 0 16 16">
+                            <path d="M15.807.531c-.174-.177-.41-.289-.64-.363a3.8 3.8 0 0 0-.833-.15c-.62-.049-1.394 0-2.252.175C10.365.545 8.264 1.415 6.315 3.1S3.147 6.824 2.557 8.523c-.294.847-.44 1.634-.429 2.268.005.316.05.62.154.88q.025.061.056.122A68 68 0 0 0 .08 15.198a.53.53 0 0 0 .157.72.504.504 0 0 0 .705-.16 68 68 0 0 1 2.158-3.26c.285.141.616.195.958.182.513-.02 1.098-.188 1.723-.49 1.25-.605 2.744-1.787 4.303-3.642l1.518-1.55a.53.53 0 0 0 0-.739l-.729-.744 1.311.209a.5.5 0 0 0 .443-.15l.663-.684c.663-.68 1.292-1.325 1.763-1.892.314-.378.585-.752.754-1.107.163-.345.278-.773.112-1.188a.5.5 0 0 0-.112-.172M3.733 11.62C5.385 9.374 7.24 7.215 9.309 5.394l1.21 1.234-1.171 1.196-.027.03c-1.5 1.789-2.891 2.867-3.977 3.393-.544.263-.99.378-1.324.39a1.3 1.3 0 0 1-.287-.018Zm6.769-7.22c1.31-1.028 2.7-1.914 4.172-2.6a7 7 0 0 1-.4.523c-.442.533-1.028 1.134-1.681 1.804l-.51.524zm3.346-3.357C9.594 3.147 6.045 6.8 3.149 10.678c.007-.464.121-1.086.37-1.806.533-1.535 1.65-3.415 3.455-4.976 1.807-1.561 3.746-2.36 5.31-2.68a8 8 0 0 1 1.564-.173"/>
+                        </svg>
+                    </span>
+                    <input class="form-control" type="text" name="name-{{ sensor.id }}" placeholder="Name" value="{{ sensor.name }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+                </div>
+            </div>
+            <div class="col-md-5">
+                <p class="text-secondary mb-1 d-inline"><small>Calibration Offset:</small></p>
+                <a tabindex="0" role="button" data-bs-trigger="focus" class="d-inline text-secondary ms-2" style="cursor:pointer;" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-html="true" data-bs-content="A offset applied to all readings of this sensor, for calibration. Defaults to 0." >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
                     </svg>
-                </span>
-                <input class="form-control" type="text" name="name-{{ sensor.id }}" placeholder="Name" value="{{ sensor.name }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
-            </div>
-        </div>
-        <div class="col-md-5 mt-1">
-            <div class="input-group pb-3">
-                <span class="input-group-text">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tools" viewBox="0 0 16 16">
-                        <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z"/>
-                    </svg>
-                </span>
-                <input class="form-control" type="number" step="any" name="calibration-{{ sensor.id }}" placeholder="Calibration" value="{{ sensor.calibration }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+                </a>
+                <div class="input-group pb-3">
+                    <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tools" viewBox="0 0 16 16">
+                            <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3q0-.405-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708M3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026z"/>
+                        </svg>
+                    </span>
+                    <input class="form-control" type="number" step="any" name="calibration-{{ sensor.id }}" placeholder="Calibration" value="{{ sensor.calibration }}" {% if not current_user.is_authenticated %}disabled{% endif %} />
+                </div>
             </div>
         </div>
     </div>
@@ -148,6 +166,12 @@
     const form = document.querySelector('form[action^="/sensors"]');
     const numSensors = form.querySelectorAll('.row').length;
 
+    // Initialises the popovers in the schedules form
+    function initialisePopovers() {
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
+    }
+
     // Add a new sensor to the page
     function addSensor() {
         
@@ -166,6 +190,7 @@
         renameFormFields();
         updateSortOrder();
         addListenersToSensorButtons();
+        initialisePopovers();
     };
 
     // Update the sort order field of all the sensors
@@ -193,7 +218,7 @@
 
     // Delete the last sensor on the page
     function deleteSensor() {
-        const rows = form.querySelectorAll('.row');
+        const rows = form.querySelectorAll('.sensor');
         if (rows.length > 1) {
             rows[rows.length - 1].remove();
         }
@@ -204,7 +229,7 @@
         // Get the group this belongs to
         const clickedElement = event.target;
         // Get the last Sensor and remove it
-        const sensor = clickedElement.closest('.row');
+        const sensor = clickedElement.closest('.sensor');
         if (sensor) {
             sensor.remove();
         }
@@ -334,6 +359,7 @@
         updateSortOrder();
         addListenersToSensorButtons();
         renameFormFields();
+        initialisePopovers();
 
         const addsensorBtn = document.querySelector('.add-sensor');
         const removesensorBtn = document.querySelector('.remove-sensor');
