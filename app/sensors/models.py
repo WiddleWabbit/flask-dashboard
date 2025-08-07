@@ -5,7 +5,6 @@ class Sensors(db.Model):
     __tablename__ = "sensors"
     __table_args__ = (
         db.Index('idx_depth_sensor_timestamp', 'identifier'),
-        {'sqlite_autoincrement': True}
     )
     id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)
