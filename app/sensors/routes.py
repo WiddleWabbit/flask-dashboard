@@ -92,10 +92,10 @@ def sensors():
                     if not isinstance(sort_order, int) or sort_order < 0:
                         print(f'Sort Order not valid {sort_order}')
                         update_results[f'sensor-{i}'] = False
-                        continue # FIX THIS ON SCHEDULES?
+                        continue
 
                     # Update the sensor
-                    update_results[f'Sensor {id} "{name}"'] = update_sensor(id, name, type, identifier, calibration, sort_order)
+                    update_results[f'Sensor "{name}"'] = update_sensor(id, name, type, identifier, calibration, sort_order)
 
                 # Check for unsubmitted sensors and delete
                 if all_sensors:
