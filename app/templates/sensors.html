@@ -39,12 +39,12 @@
         </div>
         <div class="col-md-1">
             {% if current_user.is_authenticated %}
-                <span class="schedule-handle">
+                <span class="Sensor-handle">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-move" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10M.146 8.354a.5.5 0 0 1 0-.708l2-2a.5.5 0 1 1 .708.708L1.707 7.5H5.5a.5.5 0 0 1 0 1H1.707l1.147 1.146a.5.5 0 0 1-.708.708zM10 8a.5.5 0 0 1 .5-.5h3.793l-1.147-1.146a.5.5 0 0 1 .708-.708l2 2a.5.5 0 0 1 0 .708l-2 2a.5.5 0 0 1-.708-.708L14.293 8.5H10.5A.5.5 0 0 1 10 8"/>
                     </svg>
                 </span>
-                <span class="delete-this-schedule">
+                <span class="delete-this-Sensor">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
                         <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
                     </svg>
@@ -163,6 +163,7 @@
 
         renameFormFields();
         updateSortOrder();
+        addListenersToSensorButtons();
     };
 
     // Update the sort order field of all the sensors
@@ -200,7 +201,7 @@
     function deleteThisSensor() {
         // Get the group this belongs to
         const clickedElement = event.target;
-        // Get the last schedule and remove it
+        // Get the last Sensor and remove it
         const sensor = clickedElement.closest('.row');
         if (sensor) {
             sensor.remove();
@@ -213,6 +214,22 @@
         updateSortOrder();
     }
 
+    // Function to add listeners to all the add/remove Sensor buttons
+    function addListenersToSensorButtons () {
+        const removeThisSensorButtons = document.querySelectorAll('.delete-this-Sensor');
+        removeThisSensorButtons.forEach(span => {
+            span.removeEventListener('click', handleDeleteThisSensor);
+            span.addEventListener('click', handleDeleteThisSensor);
+        });
+    }
+
+    // Using these makes it easy to remove and add them each time to prevent double ups on event listeners
+    const handleDeleteThisSensor = (event) => {
+        deleteThisSensor(event);
+        updateSortOrder();
+        formReordered();
+    }
+
     // Store Sortable instances to allow cleanup
     let sortableInstances = [];
     // Function to set up all sortable elements
@@ -221,7 +238,7 @@
         const defaultOptions = {
             animation: 150,
             ghostClass: 'sortable-ghost-class',
-            handle: '.schedule-handle'
+            handle: '.Sensor-handle'
         };
         // Clean up existing Sortable instances
         sortableInstances.forEach(instance => instance.destroy());
@@ -241,7 +258,7 @@
         });
     }
 
-    // Function to take over control of the submit button if any schedules were deleted
+    // Function to take over control of the submit button if any Sensors were deleted
     function setupSubmitModal() {
         // Setup the modal for deletion confirmation
         const form = document.querySelector('form[action^="/sensors"]');
@@ -313,6 +330,8 @@
         setupSortables();
         setupSubmitModal();
         updateSortOrder();
+        addListenersToSensorButtons();
+        renameFormFields();
 
         const addsensorBtn = document.querySelector('.add-sensor');
         const removesensorBtn = document.querySelector('.remove-sensor');

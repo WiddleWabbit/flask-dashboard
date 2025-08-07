@@ -10,10 +10,10 @@
 .accordion-collapse:last-child {
   padding-bottom: 30px;
 }
-.schedule-handle {
+.schedule-handle, .Sensor-handle {
     cursor:grab;
 }
-.delete-this-schedule {
+.delete-this-schedule, .delete-this-Sensor {
     cursor:pointer;
 }
 .report {

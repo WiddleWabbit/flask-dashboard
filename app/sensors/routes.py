@@ -72,27 +72,27 @@ def sensors():
                         if not isinstance(id, int) or id < 0: # REPLICATE IN SCHEDULES LOGIC?
                             print(f'ID submitted not valid {id}')
                             update_results[f'Sensor {id} "{name}"'] = False
-                            break
+                            continue
                     if not isinstance(name, str):
                         print(f'Name not valid {name}')
                         update_results[f'sensor-{i}'] = False
-                        break
+                        continue
                     if not type in {'waterdepth', 'temperature'}: # NEEDS TO BE REPLACED WITH MODEL SO NO DUPLICATION
                         print(f'Type not valid {type}')
                         update_results[f'sensor-{i}'] = False
-                        break
+                        continue
                     if identifier == None:
                         print(f'Identifier not valid {identifier}')
                         update_results[f'sensor-{i}'] = False
-                        break
+                        continue
                     if calibration is False or not isinstance(calibration, float):
                         print(f'Calibration not valid {calibration}')
                         update_results[f'sensor-{i}'] = False
-                        break
+                        continue
                     if not isinstance(sort_order, int) or sort_order < 0:
                         print(f'Sort Order not valid {sort_order}')
                         update_results[f'sensor-{i}'] = False
-                        break
+                        continue # FIX THIS ON SCHEDULES?
 
                     # Update the sensor
                     update_results[f'Sensor {id} "{name}"'] = update_sensor(id, name, type, identifier, calibration, sort_order)
@@ -101,12 +101,16 @@ def sensors():
                 if all_sensors:
                     for sensor in all_sensors:
                         found = 0
+                        print(f"Looking for sensor {sensor.id}")
                         for i in range(1, num_sensors + 1):
                             id = sanitise(request.form.get(f"id-{i}"), int)
+                            print(f"Checking sensor {id}")
                             if id == int(sensor.id):
+                                print(f"Found sensor {id}")
                                 found = 1
                                 break
                         if found == 0:
+                            print(f"Deleting sensor {sensor.id}")
                             delete_results[f'Sensor: {sensor.id}'] = delete_sensor(sensor.id)
 
                 # Flash the messages of the updates and deletes
