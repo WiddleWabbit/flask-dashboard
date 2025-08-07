@@ -101,16 +101,12 @@ def sensors():
                 if all_sensors:
                     for sensor in all_sensors:
                         found = 0
-                        print(f"Looking for sensor {sensor.id}")
                         for i in range(1, num_sensors + 1):
                             id = sanitise(request.form.get(f"id-{i}"), int)
-                            print(f"Checking sensor {id}")
                             if id == int(sensor.id):
-                                print(f"Found sensor {id}")
                                 found = 1
                                 break
                         if found == 0:
-                            print(f"Deleting sensor {sensor.id}")
                             delete_results[f'Sensor: {sensor.id}'] = delete_sensor(sensor.id)
 
                 # Flash the messages of the updates and deletes

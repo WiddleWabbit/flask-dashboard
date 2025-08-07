@@ -191,41 +191,41 @@ def schedules():
                         if not isinstance(sanitised_fields['id'], int) and not sanitised_fields['id'] < 0:
                             print(f'ID submitted not valid {sanitised_fields["id"]}')
                             update_results[f'schedule-{i}'] = False
-                            break
+                            continue
                     if not sanitised_fields['start'] or not datetime.strptime(sanitised_fields['start'], "%H:%M"):
                         print(f'Start not valid {sanitised_fields["start"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     if not sanitised_fields['duration'] or not isinstance(sanitised_fields['duration'], int):
                         print(f'duration not valid {sanitised_fields["duration"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     if not sanitised_fields['weather'] or sanitised_fields['weather'] > 3:
                         print(f'weather not valid {sanitised_fields["weather"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     if not sanitised_fields['group'] or not isinstance(int(sanitised_fields['group'].split('-')[1]), int):
                         print(f'group not valid {sanitised_fields["group"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     if not isinstance(sanitised_fields['sort_order'], int) and not sanitised_fields['sort_order'] < 0:
                         print(f'Sort Order submitted not valid {sanitised_fields["sort_order"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     if not sanitised_fields['active'] in {'on', False}:
                         print(f'active not valid {sanitised_fields["active"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     for key, val in sanitised_fields['days'].items():
                         if val not in {'on', False}:
                             print(f'day not valid {key}: {val}')
                             update_results[f'schedule-{i}'] = False
-                            break
+                            continue
                     for key, val in sanitised_fields['zones'].items():
                         if val not in {'on', False}:
                             print(f'zone not valid {key}: {val}')
                             update_results[f'schedule-{i}'] = False
-                            break
+                            continue
                     
                     # Reformat fields for schedule update
                     field_updates = {}
@@ -238,7 +238,7 @@ def schedules():
                     if not field_updates['group']:
                         print(f'Unable to fetch group {sanitised_fields["group"]}')
                         update_results[f'schedule-{i}'] = False
-                        break
+                        continue
                     field_updates['active'] = 1 if sanitised_fields['active'] == 'on' else 0
                     field_updates['days'] = []
                     for key, val in sanitised_fields['days'].items():
@@ -249,7 +249,7 @@ def schedules():
                             else:
                                 print(f'Unable to fetch day {key}')
                                 update_results[f'schedule-{i}'] = False
-                                break
+                                continue
                     field_updates['zones'] = []
                     for key, val in sanitised_fields['zones'].items():
                         if val == 'on':
@@ -259,7 +259,7 @@ def schedules():
                             else:
                                 print(f'Unable to fetch zone {key}')
                                 update_results[f'schedule-{i}'] = False
-                                break
+                                continue
 
                     # Create this schedules group if it doesn't exist
                     group_id = sanitised_fields['group'].split('-')[1]
