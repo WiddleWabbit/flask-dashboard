@@ -28,7 +28,7 @@ def get_sensor(id):
         return False
     return False
 
-def update_sensor(id,  name, type, identifier, calibration, sort_order):
+def update_sensor(id,  name, type, identifier, calibration, calibration_mode, sort_order):
     """
     Create or update a sensor in the database.
 
@@ -47,7 +47,7 @@ def update_sensor(id,  name, type, identifier, calibration, sort_order):
         if not isinstance(id, int) or id < 0:
             print('Invalid ID supplied')
             return False
-    if not isinstance(name, str) or not isinstance(type, str) or not isinstance(identifier, str) or not isinstance(calibration, float):
+    if not isinstance(name, str) or not isinstance(type, str) or not isinstance(identifier, str) or not isinstance(calibration, float)or not isinstance(calibration_mode, int):
         print('Instance Invalid')
         return False
     if sort_order < 0:
@@ -63,12 +63,13 @@ def update_sensor(id,  name, type, identifier, calibration, sort_order):
                 sensor.type = type
                 sensor.identifier = identifier
                 sensor.calibration = calibration
+                sensor.calibration_mode = calibration_mode
                 sensor.sort_order = sort_order
             else:
-                sensor = Sensors(id=id, name=name, type=type, identifier=identifier, calibration=calibration, sort_order=sort_order)
+                sensor = Sensors(id=id, name=name, type=type, identifier=identifier, calibration=calibration, calibration_mode=calibration_mode, sort_order=sort_order)
                 db.session.add(sensor)
         else:
-            sensor = Sensors(name=name, type=type, identifier=identifier, calibration=calibration, sort_order=sort_order)
+            sensor = Sensors(name=name, type=type, identifier=identifier, calibration=calibration, calibration_mode=calibration_mode, sort_order=sort_order)
             db.session.add(sensor)
         db.session.commit()
         return True

@@ -59,6 +59,7 @@ def sensors():
                     type = sanitise(request.form.get(f"type-{i}"))
                     identifier = sanitise(request.form.get(f"identifier-{i}"))
                     calibration = sanitise(request.form.get(f"calibration-{i}"), float)
+                    calibration_mode = sanitise(request.form.get(f"calibration-mode-{i}"), float)
                     sort_order = sanitise(request.form.get(f"sort-order-{i}"), int)
 
                     # If the non required fields are blank, set them to default values
@@ -77,7 +78,7 @@ def sensors():
                         print(f'Name not valid {name}')
                         update_results[f'sensor-{i}'] = False
                         continue
-                    if not type in {'waterdepth', 'temperature'}: # NEEDS TO BE REPLACED WITH MODEL SO NO DUPLICATION
+                    if not type in {'waterdepth', 'temperature'}:
                         print(f'Type not valid {type}')
                         update_results[f'sensor-{i}'] = False
                         continue
@@ -85,8 +86,20 @@ def sensors():
                         print(f'Identifier not valid {identifier}')
                         update_results[f'sensor-{i}'] = False
                         continue
+                    # Ensure Identifiers are unique
+                    existing_identifier = Sensors.query.filter_by(identifier=identifier).first()
+                    if existing_identifier:
+                        if existing_identifier.id != id:
+                            print(f'Cannot use duplicate identifier: {identifier}')
+                            flash('All identifiers must be unique.', 'warning')
+                            update_results[f'sensor-{i}'] = False
+                            continue
                     if calibration is False or not isinstance(calibration, float):
                         print(f'Calibration not valid {calibration}')
+                        update_results[f'sensor-{i}'] = False
+                        continue
+                    if not isinstance(calibration_mode, int) or calibration_mode > 1 or calibration_mode < 0:
+                        print(f'Calibration mode not valid {calibration_mode}')
                         update_results[f'sensor-{i}'] = False
                         continue
                     if not isinstance(sort_order, int) or sort_order < 0:
@@ -95,7 +108,7 @@ def sensors():
                         continue
 
                     # Update the sensor
-                    update_results[f'Sensor "{name}"'] = update_sensor(id, name, type, identifier, calibration, sort_order)
+                    update_results[f'Sensor "{name}"'] = update_sensor(id, name, type, identifier, calibration, calibration_mode, sort_order)
 
                 # Check for unsubmitted sensors and delete
                 if all_sensors:

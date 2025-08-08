@@ -1,6 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from app.models import db
 
+# Calibration Table, store calibration data.
+# When calibration disabled, average out and create offset.
+
 class Sensors(db.Model):
     __tablename__ = "sensors"
     __table_args__ = (
@@ -11,6 +14,7 @@ class Sensors(db.Model):
     identifier = db.Column(db.String, nullable=False, unique=True)
     calibration = db.Column(db.Float, nullable=False)
     type = db.Column(db.String, nullable=False)
+    calibration_mode = db.Column(db.Integer, nullable=False)
     sort_order = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
