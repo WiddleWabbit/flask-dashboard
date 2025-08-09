@@ -23,8 +23,9 @@ class Sensors(db.Model):
 class CalibrationModeData(db.Model):
     __tablename__ = "calibration_mode_data"
     id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
     sensor_id = db.Column(db.String, db.ForeignKey('sensors.id'), nullable=False)
-    reading = db.Column(db.Float, nullable=False)
+    value = db.Column(db.Float, nullable=False)
 
 class WaterDepth(db.Model):
     __tablename__ = "waterdepth"

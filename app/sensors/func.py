@@ -1,4 +1,4 @@
-from app.sensors.models import Sensors, db
+from app.sensors.models import Sensors, db, CalibrationModeData, WaterDepth, Temperature
 
 def get_all_sensors():
     """
@@ -97,22 +97,51 @@ def delete_sensor(id):
         print(f"Unable to delete sensor: {id}, error: {e}")
     return False
 
-def update_reading(sensor_identifier, reading):
+def update_reading(sensor_identifier, timestamp, reading):
     """
     Add a new sensor reading or update an existing reading.
 
     :param sensor_identifier: The MQTT identifier of the sensor as a string.
+    :param timestamp: The timestamp of the reading.
     :param reading: The sensors reading as a float.
     :return: True for success, fase for failure.
     """
     try:
+        # Find the sensor
         sensor = Sensors.query.filter_by(identifier=sensor_identifier).first()
-        # find the sensor
-        sensor_type = sensor.type
-        calibration_mode = sensor.calibration_mode
-        # Check type
-        # Check calibration mode
+        if not sensor:
+            print(f"Sensor with identifier {sensor_identifier} not found.")
+            return False
+
+        # Get the model to update
+        if sensor.type == "waterdepth":
+            model = WaterDepth
+        elif sensor.type == "temperature":
+            model = Temperature
+        # Override the model to update if in calibration mode
+        if sensor.calibration_mode:
+            model == CalibrationModeData
+        if not model:
+            print(f"Unknown sensor type or mode for sensor {sensor_identifier}.")
+            return False
+        
+        # Check if a reading with the same timestamp and sensor_id already exists
+        existing_reading = model.query.filter_by(sensor_id=sensor.id, timestamp=timestamp).first()
+
+        # Either update the existing reading at this timestamp for this sensor, or add a new one if it doesn't exist.
+        if existing_reading:
+            existing_reading.value = reading
+            db.session.commit()
+            print(f"Updated existing reading for sensor {sensor_identifier} at {timestamp}.")
+            return True
+        else:
+            new_reading = model(sensor_id=sensor.id, value=reading, timestamp=timestamp)
+            db.session.add(new_reading)
+            db.session.commit()
+            print(f"Added new reading for sensor {sensor_identifier} at {timestamp}.")
+            return True
 
     except Exception as e:
         print(f"Unable to create/update sensor reading for sensor: {sensor_identifier}, error: {e} ")
+        db.session.rollback()
     return False
