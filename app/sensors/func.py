@@ -96,3 +96,23 @@ def delete_sensor(id):
     except Exception as e:
         print(f"Unable to delete sensor: {id}, error: {e}")
     return False
+
+def update_reading(sensor_identifier, reading):
+    """
+    Add a new sensor reading or update an existing reading.
+
+    :param sensor_identifier: The MQTT identifier of the sensor as a string.
+    :param reading: The sensors reading as a float.
+    :return: True for success, fase for failure.
+    """
+    try:
+        sensor = Sensors.query.filter_by(identifier=sensor_identifier).first()
+        # find the sensor
+        sensor_type = sensor.type
+        calibration_mode = sensor.calibration_mode
+        # Check type
+        # Check calibration mode
+
+    except Exception as e:
+        print(f"Unable to create/update sensor reading for sensor: {sensor_identifier}, error: {e} ")
+    return False
