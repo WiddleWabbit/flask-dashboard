@@ -29,7 +29,7 @@ with app.app_context():
     firstrun(app)
 
     # Initialise the MQTT Handler
-    app.mqtt_handler = MQTTHandler()
+    app.mqtt_handler = MQTTHandler(app)
     app.logger = logging.getLogger(__name__)
 
     # Initialize and start the scheduler

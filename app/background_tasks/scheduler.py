@@ -1,4 +1,4 @@
-from app.background_tasks.func import update_mqtt_topics, mqtt_updates, get_forecast
+from app.background_tasks.func import update_mqtt_topics, mqtt_updates, get_forecast, process_mqtt
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime, timedelta
@@ -35,6 +35,14 @@ def init_scheduler(app):
             trigger=IntervalTrigger(hours=6, start_date=datetime.now() + timedelta(seconds=15)),
             id='get_forecast',
             name='Get Weather Forecast',
+            replace_existing=True,
+            args=[app]
+        )
+        scheduler.add_job(
+            func=process_mqtt,
+            trigger=IntervalTrigger(minutes=1, start_date=datetime.now() + timedelta(seconds=30)),
+            id='process_mqtt',
+            name='Process Incoming MQTT Messages',
             replace_existing=True,
             args=[app]
         )

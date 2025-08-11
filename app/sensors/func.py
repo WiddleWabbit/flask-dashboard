@@ -118,7 +118,10 @@ def update_reading(sensor_identifier, timestamp, reading):
             model = WaterDepth
         elif sensor.type == "temperature":
             model = Temperature
+        
         # Override the model to update if in calibration mode
+        print(f"Calibration Mode: {sensor.calibration_mode}")
+
         if sensor.calibration_mode:
             model == CalibrationModeData
         if not model:

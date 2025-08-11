@@ -190,7 +190,12 @@
         //const row = form.querySelector('.row');
         const clone = templateSensor.cloneNode(true);
         clone.querySelectorAll('input, textarea').forEach(input => {
-            input.value = '';
+            if (input.type === 'text' || input.type === 'textarea') {
+                input.value = '';
+            } else if (input.type === 'checkbox' || input.type === 'radio') {
+                input.checked = false;
+            }
+            //input.value = '';
         });
         const submitBtn = form.querySelector('.button-div');
         sensorsGroup = form.querySelector('.sensors-group');

@@ -11,7 +11,7 @@ def config_sensors():
     data = {}
     data['sensors'] = get_all_sensors()
     if not data['sensors']:
-        data['sensors'] = [{"id":1, "name":"", "identifier":"", "calibration":"", "type":"", "sort_order":""}]
+        data['sensors'] = [{"id":1, "name":"", "identifier":"", "calibration":"", "type":"", "sort_order":"", "calibration_mode": ""}]
     return data
 
 # Sensors Route
@@ -59,7 +59,7 @@ def sensors():
                     type = sanitise(request.form.get(f"type-{i}"))
                     identifier = sanitise(request.form.get(f"identifier-{i}"))
                     calibration = sanitise(request.form.get(f"calibration-{i}"), float)
-                    calibration_mode = sanitise(request.form.get(f"calibration-mode-{i}"), float)
+                    calibration_mode = sanitise(request.form.get(f"calibration-mode-{i}"), str)
                     sort_order = sanitise(request.form.get(f"sort-order-{i}"), int)
 
                     # If the non required fields are blank, set them to default values
@@ -67,6 +67,11 @@ def sensors():
                         calibration = 0.00
                     if not name:
                         name = ""
+                    # Set calibration mode
+                    if calibration_mode == "on":
+                        calibration_mode = 1
+                    else:
+                        calibration_mode = 0
 
                     # Validate form fields
                     if not id == None:

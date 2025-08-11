@@ -3,11 +3,12 @@ from app.func import get_setting
 from app.scheduling.func import get_all_zones
 from datetime import datetime, time
 from app.weather.weather_handler import WeatherService, Weather
+from app.sensors.func import update_reading
 import json
 import pytz
 
 # Function will be for recieving messages
-def print_message(message, logger):
+def print_message(message, app, logger):
     """
     Log the payload of an MQTT message for development and testing purposes.
 
@@ -15,7 +16,81 @@ def print_message(message, logger):
 
     :return: None
     """
+    print(f"{message}")
     logger.info(message.payload)
+
+def process_mqtt(app):
+    """
+    Process the incoming MQTT messages by running the relevant callbacks.
+    Pass through application context to give the callbacks the ability to access the database.
+
+    :param app: Flask application instance for context.
+
+    :return: None
+    """
+    with app.app_context():
+
+        # Only proceed if we have a MQTT handler
+        if app.mqtt_handler:
+
+            # Fetch the oldest message in the queue
+            message = app.mqtt_handler.get_received_message()
+            while message is not None:
+
+                topic = message[0]
+                payload = message[1]
+                print(f"Processing message to: {topic}, message is: {payload}")
+
+                # Message from Sensor Topic, send to sensor callback
+                if topic == get_setting("sensor_topic"):
+
+                    result = process_sensor_message(app, topic, payload)
+                    if result:
+                        app.logger.info("Successfully processed message")
+                    else:
+                        app.logger.error("Failed to process message")
+
+                # Fetch the next oldest message and restart loop with new message
+                message = app.mqtt_handler.get_received_message()
+
+def process_sensor_message(app, topic, message):
+    """
+    Process a message sent to the sensor topic. Messages are expected to be in a specific format matching:
+    {"time": "2025-07-30 06:22:45", "sensors": { "0": 23.52211, "1": 24.52221 } }
+
+    :param app: The flask application instance for database context.
+    :param topic: The topic the message was received on as a string.
+    :param message: The message received as a string.
+
+    :return: True for success or False for failure.
+    """
+    print(f"Received message to process: {message}")
+
+    # NEED TO ADD OFFSET SOMEWHERE ##########################
+    # ENSURE CALIBRATION MODE MAKES DATA GO TO CALIBRATIONMODEDATA
+    
+    try:
+
+        data = json.loads(message)
+        naive_timestamp = datetime.strptime(data["time"], "%Y-%m-%d %H:%M:%S")
+
+        awst_tz = pytz.timezone("Australia/Perth") # WORK OUT TIME ZONES, APP TIMEZONE???? ##################################
+        awst_timestamp = awst_tz.localize(naive_timestamp)
+        utc_timestamp = awst_timestamp.astimezone(pytz.UTC)
+
+        for sensor_id, sensor_value in data["sensors"].items():
+
+            result = update_reading(sensor_id, utc_timestamp, sensor_value)
+            if result:
+                app.logger.info(f"Successfully processed: {sensor_id}, value of {sensor_value}")
+            else:
+                app.logger.error(f"Failed to process: {sensor_id}, value of {sensor_value}")
+
+        return True
+
+    except Exception as e:
+        app.logger.error(f"Error processing sensor message: {e}")
+        return False
 
 # Function to check time range
 def is_time_in_range(start_str, end_str, now_time):
@@ -341,5 +416,17 @@ def get_forecast(app):
         except Exception as e:
             app.logger.error(f"Error fetching the weather forecast and saving it: {e}")
             return False
+
+def process_json(message, app):
+    """
+    Process json, read it and run the appropriate functions to handle the data received.
+
+    :param app: Flask application instance for context.
+    """
+    with app.app_context():
+        try:
+            data = json.loads(message)
+        except Exception as e:
+            app.logger.error(f"Error proccessing the JSON received: {e}")
 
 # New function and schedule to update the sunrise sunset times

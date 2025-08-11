@@ -139,7 +139,11 @@ flask --app "app:create_app('app.config.Config')" shell
 
 from app.models import db
 from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from app.sensors.models import Sensors
+from app.sensors.models import Sensors, CalibrationModeData, WaterDepth, Temperature
+
+c = CalibrationModeData.query.all()
+w = WaterDepth.query.all()
+t = Temperature.query.all()
 
 
 

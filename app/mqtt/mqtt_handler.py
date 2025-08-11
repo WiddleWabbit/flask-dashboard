@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 from threading import Lock
 from pathlib import Path
+from queue import Queue
 import logging
 import os
 
@@ -18,7 +19,7 @@ class MQTTHandler:
                 logging.getLogger(__name__).info("Reusing existing MQTTHandler instance")
         return cls._instance
 
-    def __init__(self, port=1883, client_id="flask_mqtt_client", broker='localhost', username=None, password=None):
+    def __init__(self, app, port=1883, client_id="flask_mqtt_client", broker='localhost', username=None, password=None):
         if not hasattr(self, 'initialized'):
             # Load environment variables from mqtt.env in the same directory
             env_path = Path(__file__).parent / "mqtt.env"
@@ -54,6 +55,10 @@ class MQTTHandler:
             self.logger = logging.getLogger(__name__)
             self.subscriptions = {}
             self.initialized = True
+
+            # Create a message queue to store incoming MQTT messages
+            self.message_queue= Queue()
+
             # Enable automatic reconnection with exponential backoff
             self.client.reconnect_delay_set(min_delay=1, max_delay=120)
             # Set authentication credentials if provided
@@ -99,12 +104,46 @@ class MQTTHandler:
             # Paho's automatic reconnection will handle retrying
 
     def on_message(self, client, userdata, msg):
-        callback = self.subscriptions.get(msg.topic)
-        if callback:
-            try:
-                callback(msg)
-            except Exception as e:
-                self.logger.error(f"Error processing message on {msg.topic}: {e}")
+        # callback = self.subscriptions.get(msg.topic)
+        # if callback:
+        #     try:
+        #         callback(msg, self.app, self.logger) 
+        #     except Exception as e: 
+        #         self.logger.error(f"Error processing message on {msg.topic}: {e}")
+
+        # Message Queue instead? Use Queueing?
+        payload = msg.payload.decode('utf-8')
+        self.message_queue.put((msg.topic, payload))
+        print(f"Queued message: Topic={msg.topic}, Payload={payload}")
+
+    def get_received_message(self):
+        """
+        Fetch the oldest message from the message queue of recieved MQTT messages.
+
+        :return: A list containing the topic and message in that order, or None if none exist.
+        """
+        if not self.message_queue.empty():
+            message = list(self.message_queue.get())
+            return message
+        else:
+            return None
+
+
+    # # Don't use callbacks?
+    # # Create a queue, have a scheduled task that reads the queue, and processes contained messages
+    # def process_queue(self, app):
+    #     # Process queue with provided app context
+    #     with app.app_context():
+    #         while not self.message_queue.empty():
+    #             topic, payload = self.message_queue.get()
+    #             callback = self.subscriptions.get(topic)
+    #             if callback:
+    #                 try:
+    #                     callback(payload, app, self.logger) 
+    #                 except Exception as e: 
+    #                     self.logger.error(f"Error processing message on {topic}: {e}")
+
+
 
     def subscribe(self, topic, callback=None):
         self.subscriptions[topic] = callback
