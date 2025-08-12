@@ -113,37 +113,34 @@ def update_reading(sensor_identifier, timestamp, reading):
             print(f"Sensor with identifier {sensor_identifier} not found.")
             return False
 
-        # Get the model to update
+        # Get the model to update, calibration mode overrides normal model.
         if sensor.type == "waterdepth":
             model = WaterDepth
         elif sensor.type == "temperature":
             model = Temperature
-        
-        # Override the model to update if in calibration mode
-        print(f"Calibration Mode: {sensor.calibration_mode}")
-
         if sensor.calibration_mode == 1:
             model = CalibrationModeData
-
         if not model:
             print(f"Unknown sensor type or mode for sensor {sensor_identifier}.")
             return False
         
-        print(f"Model is: {model}")
-        # NOT SENDING DATA TO CALIBRATION MODE? ######################################################################################
-        # had a double equals, double check it works now.
-        
+        # Set any offset configured.
+        if sensor.calibration_mode == 1:
+            calibration_offset = 0.0
+        else:
+            calibration_offset = sensor.calibration
+
         # Check if a reading with the same timestamp and sensor_id already exists
         existing_reading = model.query.filter_by(sensor_id=sensor.id, timestamp=timestamp).first()
 
         # Either update the existing reading at this timestamp for this sensor, or add a new one if it doesn't exist.
         if existing_reading:
-            existing_reading.value = reading
+            existing_reading.value = reading + calibration_offset
             db.session.commit()
             print(f"Updated existing reading for sensor {sensor_identifier} at {timestamp}.")
             return True
         else:
-            new_reading = model(sensor_id=sensor.id, value=reading, timestamp=timestamp)
+            new_reading = model(sensor_id=sensor.id, value=reading + calibration_offset, timestamp=timestamp)
             db.session.add(new_reading)
             db.session.commit()
             print(f"Added new reading for sensor {sensor_identifier} at {timestamp}.")
