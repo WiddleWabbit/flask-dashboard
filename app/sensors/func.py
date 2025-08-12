@@ -122,11 +122,16 @@ def update_reading(sensor_identifier, timestamp, reading):
         # Override the model to update if in calibration mode
         print(f"Calibration Mode: {sensor.calibration_mode}")
 
-        if sensor.calibration_mode:
-            model == CalibrationModeData
+        if sensor.calibration_mode == 1:
+            model = CalibrationModeData
+
         if not model:
             print(f"Unknown sensor type or mode for sensor {sensor_identifier}.")
             return False
+        
+        print(f"Model is: {model}")
+        # NOT SENDING DATA TO CALIBRATION MODE? ######################################################################################
+        # had a double equals, double check it works now.
         
         # Check if a reading with the same timestamp and sensor_id already exists
         existing_reading = model.query.filter_by(sensor_id=sensor.id, timestamp=timestamp).first()

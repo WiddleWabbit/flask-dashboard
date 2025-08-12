@@ -11,6 +11,9 @@ class MQTTHandler:
     _lock = Lock()
 
     def __new__(cls, *args, **kwargs):
+        """
+        Triggers on function creation. Set's up a lock to ensure only one instance can exist.
+        """
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(MQTTHandler, cls).__new__(cls)
@@ -19,16 +22,20 @@ class MQTTHandler:
                 logging.getLogger(__name__).info("Reusing existing MQTTHandler instance")
         return cls._instance
 
-    def __init__(self, app, port=1883, client_id="flask_mqtt_client", broker='localhost', username=None, password=None):
+    def __init__(self, port=1883, broker='localhost'):
+        """
+        Initialise the Handler class. Creates all required variables and applies defaults if not supplied.
+
+        :param port: Port to connect to the MQTT Broker on as an Int. Defaults to 1883. Overridden by environent variable MQTT_PORT in mqtt.env
+        :param broker: IP Address of the MQTT broker as a string. Defaults to localhost. Overridden by environment variable MQTT_BROKER in mqtt.env.
+        """
         if not hasattr(self, 'initialized'):
             # Load environment variables from mqtt.env in the same directory
             env_path = Path(__file__).parent / "mqtt.env"
             load_dotenv(dotenv_path=env_path)
             # Get username and password from environment if not provided on run
-            if username is None:
-                username = os.getenv("MQTT_USERNAME")
-            if password is None:
-                password = os.getenv("MQTT_PASSWORD")
+            username = os.getenv("MQTT_USERNAME")
+            password = os.getenv("MQTT_PASSWORD")
             # Check for a configured broker location, if not assume localhost, unless specified on run
             broker_url = os.getenv("MQTT_BROKER")
             if broker_url:
@@ -46,7 +53,7 @@ class MQTTHandler:
             if mqtt_client_id:
                 self.client_id = mqtt_client_id
             else:
-                self.client_id = client_id
+                self.client_id = "flask_mqtt_client"
             # Setup MQTT Client
             self.client = mqtt.Client(client_id=self.client_id)
             self.client.on_connect = self.on_connect
@@ -69,6 +76,9 @@ class MQTTHandler:
                 self.logger.warning("MQTTHandler not connecting: username and/or password not provided.")
 
     def connect(self):
+        """
+        Connect to the MQTT Broker and start the MQTT looping in the background.
+        """
         try:
             if not self.client.is_connected():
                 self.client.connect(self.broker, self.port, keepalive=60)
@@ -81,6 +91,9 @@ class MQTTHandler:
             self.logger.info("Will retry connection due to failure")
 
     def on_connect(self, client, userdata, flags, rc):
+        """
+        Hook for on connection to the MQTT Broker. Log result and resubscribe to all subscriptions.
+        """
         if rc == 0:
             self.logger.info("MQTT client connected successfully")
             # Restore subscriptions on successful connection
@@ -98,20 +111,18 @@ class MQTTHandler:
             self.logger.info("Will retry connection due to failure")
 
     def on_disconnect(self, client, userdata, rc):
+        """
+        Hook to run on disconnection from MQTT Broker.
+        """
         self.logger.warning(f"Disconnected from MQTT broker with code {rc}")
         if rc != 0:  # Unexpected disconnection
             self.logger.info("Attempting to reconnect to MQTT broker")
             # Paho's automatic reconnection will handle retrying
 
     def on_message(self, client, userdata, msg):
-        # callback = self.subscriptions.get(msg.topic)
-        # if callback:
-        #     try:
-        #         callback(msg, self.app, self.logger) 
-        #     except Exception as e: 
-        #         self.logger.error(f"Error processing message on {msg.topic}: {e}")
-
-        # Message Queue instead? Use Queueing?
+        """
+        Hook to run on recieving a message. Stores the message in a queue for retrieval and processing via a scheduled task.
+        """
         payload = msg.payload.decode('utf-8')
         self.message_queue.put((msg.topic, payload))
         print(f"Queued message: Topic={msg.topic}, Payload={payload}")
@@ -128,30 +139,19 @@ class MQTTHandler:
         else:
             return None
 
-
-    # # Don't use callbacks?
-    # # Create a queue, have a scheduled task that reads the queue, and processes contained messages
-    # def process_queue(self, app):
-    #     # Process queue with provided app context
-    #     with app.app_context():
-    #         while not self.message_queue.empty():
-    #             topic, payload = self.message_queue.get()
-    #             callback = self.subscriptions.get(topic)
-    #             if callback:
-    #                 try:
-    #                     callback(payload, app, self.logger) 
-    #                 except Exception as e: 
-    #                     self.logger.error(f"Error processing message on {topic}: {e}")
-
-
-
     def subscribe(self, topic, callback=None):
+        """
+        Method to subscribe to a MQTT Topic.
+        """
         self.subscriptions[topic] = callback
         if self.client.is_connected():
             self.client.subscribe(topic)
             self.logger.info(f"Subscribed to topic: {topic}")
 
     def publish(self, topic, message, qos=0):
+        """
+        Method to publish a message to a MQTT topic.
+        """
         try:
             self.client.publish(topic, message, qos)
             self.logger.info(f"Published to {topic}: {message}")
@@ -161,6 +161,9 @@ class MQTTHandler:
             return False
 
     def disconnect(self):
+        """
+        Method to disconnect from the MQTT Broker, and stop looping.
+        """
         try:
             if self.client.is_connected():
                 self.client.loop_stop()
