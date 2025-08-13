@@ -64,10 +64,7 @@ def process_sensor_message(app, topic, message):
 
     :return: True for success or False for failure.
     """
-    print(f"Received message to process: {message}")
-
-    # NEED TO ADD OFFSET SOMEWHERE ##########################
-    # ENSURE CALIBRATION MODE MAKES DATA GO TO CALIBRATIONMODEDATA
+    app.logger.info(f"Received message to process: {message}")
     
     try:
 

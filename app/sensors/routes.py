@@ -112,6 +112,13 @@ def sensors():
                         update_results[f'sensor-{i}'] = False
                         continue
 
+                    # Has this sensor been brought out of calibration mode, if so create the new calibration offset
+                    # #####################################################################################################################################
+                    if not calibration_mode:
+                        sensor = Sensors.query.filter_by(id=id).first()
+                        if sensor and sensor.calibration_mode == 1:
+                            calibration = calculate_calibration_value(identifier)
+
                     # Update the sensor
                     update_results[f'Sensor "{name}"'] = update_sensor(id, name, type, identifier, calibration, calibration_mode, sort_order)
 

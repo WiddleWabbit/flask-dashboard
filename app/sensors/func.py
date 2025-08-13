@@ -1,4 +1,5 @@
 from app.sensors.models import Sensors, db, CalibrationModeData, WaterDepth, Temperature
+from sqlalchemy import func
 
 def get_all_sensors():
     """
@@ -150,3 +151,31 @@ def update_reading(sensor_identifier, timestamp, reading):
         print(f"Unable to create/update sensor reading for sensor: {sensor_identifier}, error: {e} ")
         db.session.rollback()
     return False
+
+def calculate_calibration_value(identifier):
+    """
+    Calculate the new calibration offset, based on the average of all calibration mode data submitted for this sensor identifier, 
+    and the current calibration setting (as correct current value).
+
+    :param sensor_id: The sensor identifier to calculate the value for as a string
+
+    :return: The new offset value as a float.
+    """
+
+    # Get the sensors calibration setting (representing the current correct value)
+    sensor = Sensors.query.filter_by(identifier=identifier).first()
+    base_value = sensor.calibration
+
+    # Get the average for the sensor identifier
+    average = CalibrationModeData.query.filter_by(sensor_id=sensor.id).with_entities(func.avg(CalibrationModeData.value)).scalar()
+    # If none, then no data to average, set calibration to 0.0
+    if average == None:
+        average = 0.0
+    # Otherwise clear the data after fetching the average
+    else:
+        CalibrationModeData.query.filter_by(sensor_id=sensor.id).delete()
+        db.session.commit()
+
+    # Calculate the difference which will be the new offset and return it
+    offset = base_value - average
+    return offset

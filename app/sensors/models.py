@@ -26,6 +26,7 @@ class CalibrationModeData(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     sensor_id = db.Column(db.String, db.ForeignKey('sensors.id'), nullable=False)
     value = db.Column(db.Float, nullable=False)
+    sensor = db.relationship('Sensors', backref='calibration_mode_data', lazy='joined')
 
 class WaterDepth(db.Model):
     __tablename__ = "waterdepth"
@@ -37,6 +38,7 @@ class WaterDepth(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     sensor_id = db.Column(db.String, db.ForeignKey('sensors.identifier'), nullable=False)
     value = db.Column(db.Float, nullable=False)
+    sensor = db.relationship('Sensors', backref='waterdepth', lazy='joined')
 
     def __repr__(self):
         return f'<{self.timestamp}>'
@@ -51,6 +53,7 @@ class Temperature(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     sensor_id = db.Column(db.String, db.ForeignKey('sensors.identifier'), nullable=False)
     value = db.Column(db.Float, nullable=False)
+    sensor = db.relationship('Sensors', backref='temperature', lazy='joined')
 
     def __repr__(self):
         return f'<{self.timestamp}>'
