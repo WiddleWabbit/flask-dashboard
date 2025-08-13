@@ -113,7 +113,6 @@ def sensors():
                         continue
 
                     # Has this sensor been brought out of calibration mode, if so create the new calibration offset
-                    # #####################################################################################################################################
                     if not calibration_mode:
                         sensor = Sensors.query.filter_by(id=id).first()
                         if sensor and sensor.calibration_mode == 1:

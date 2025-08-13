@@ -98,6 +98,53 @@ def delete_sensor(id):
         print(f"Unable to delete sensor: {id}, error: {e}")
     return False
 
+def convert_waterdepth(value):
+    """
+    Function to convert the water depth sensor value to the value stored in the database.
+
+    :param value:The value returned by the water depth sensor.
+
+    :return: The converted value as a float.
+    """
+    # Step 1: Define the ranges
+    min_voltage = 0.48  # Minimum voltage in volts
+    max_voltage = 2.4   # Maximum voltage in volts
+    min_depth = 0       # Minimum depth in cm
+    max_depth = 200     # Maximum depth in cm
+
+    # Step 2: Calculate the slope
+    slope = (max_depth - min_depth) / (max_voltage - min_voltage)  # 200 / 1.92 = 104.1667
+
+    # Step 3: Apply linear interpolation
+    depth = slope * (value - min_voltage)
+
+    # Step 4: Clamp the output to the valid range [0, 200]
+    if depth < min_depth:
+        return float(min_depth)
+    elif depth > max_depth:
+        return float(max_depth)
+    return depth
+
+def convert_temperature(value):
+    """
+    Function to convert the temperature sensor value to the value stored in the database.
+
+    :param value:The value returned by the temperature sensor.
+
+    :return: The converted value as a float.
+    """
+    return value
+
+def no_conversion(value):
+    """
+    Function to perform no conversion and merely return the raw data. For use in calibration mode.
+
+    :param value:The value returned by the sensor being calibrated.
+
+    :return: The same value returned.
+    """
+    return value
+
 def update_reading(sensor_identifier, timestamp, reading):
     """
     Add a new sensor reading or update an existing reading.
@@ -114,13 +161,16 @@ def update_reading(sensor_identifier, timestamp, reading):
             print(f"Sensor with identifier {sensor_identifier} not found.")
             return False
 
-        # Get the model to update, calibration mode overrides normal model.
+        # Get the model to update and the function to convert the data, calibration mode overrides normal model.
         if sensor.type == "waterdepth":
             model = WaterDepth
+            conversion_function = convert_waterdepth
         elif sensor.type == "temperature":
             model = Temperature
+            conversion_function = convert_temperature
         if sensor.calibration_mode == 1:
             model = CalibrationModeData
+            conversion_function = no_conversion
         if not model:
             print(f"Unknown sensor type or mode for sensor {sensor_identifier}.")
             return False
@@ -136,12 +186,12 @@ def update_reading(sensor_identifier, timestamp, reading):
 
         # Either update the existing reading at this timestamp for this sensor, or add a new one if it doesn't exist.
         if existing_reading:
-            existing_reading.value = reading + calibration_offset
+            existing_reading.value = conversion_function(reading + calibration_offset)
             db.session.commit()
             print(f"Updated existing reading for sensor {sensor_identifier} at {timestamp}.")
             return True
         else:
-            new_reading = model(sensor_id=sensor.id, value=reading + calibration_offset, timestamp=timestamp)
+            new_reading = model(sensor_id=sensor.id, value=conversion_function(reading + calibration_offset), timestamp=timestamp)
             db.session.add(new_reading)
             db.session.commit()
             print(f"Added new reading for sensor {sensor_identifier} at {timestamp}.")
