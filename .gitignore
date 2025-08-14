@@ -4,7 +4,7 @@ __pycache__/
 **__pycache__/
 **.pytest_cache/
 app/__pycache__
-app/mqtt/mqtt.env
+app/background_tasks/mqtt.env
 app/weather/weather.env
 app.log
 background_tasks.log

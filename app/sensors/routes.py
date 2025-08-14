@@ -1,7 +1,7 @@
 from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash
 from flask_login import current_user
 from app.sensors.models import Sensors, WaterDepth, db
-from app.sensors.func import *
+from app.sensors.func import calculate_calibration_value, get_all_sensors, update_sensor, delete_sensor
 from app.func import sanitise, update_status_messages, flash_status_messages, delete_status_messages, count_fields
 
 bp = Blueprint('sensors_routes', __name__)

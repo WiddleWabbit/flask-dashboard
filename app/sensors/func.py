@@ -55,8 +55,6 @@ def update_sensor(id,  name, type, identifier, calibration, calibration_mode, so
         print('Invalid id or sort_order supplied')
         return False
     try:
-
-        # NOT UPDATING ????? NOTHING BUT REPORTS SUCCESS
         if id:
             sensor = Sensors.query.filter_by(id=id).first()
             if sensor:
@@ -106,19 +104,16 @@ def convert_waterdepth(value):
 
     :return: The converted value as a float.
     """
-    # Step 1: Define the ranges
-    min_voltage = 0.48  # Minimum voltage in volts
-    max_voltage = 2.4   # Maximum voltage in volts
-    min_depth = 0       # Minimum depth in cm
-    max_depth = 200     # Maximum depth in cm
-
-    # Step 2: Calculate the slope
-    slope = (max_depth - min_depth) / (max_voltage - min_voltage)  # 200 / 1.92 = 104.1667
-
-    # Step 3: Apply linear interpolation
+    # Define the ranges
+    min_voltage = 0.48
+    max_voltage = 2.4
+    min_depth = 0
+    max_depth = 200
+    # Calculate the slope
+    slope = (max_depth - min_depth) / (max_voltage - min_voltage)
+    # Apply linear interpolation
     depth = slope * (value - min_voltage)
-
-    # Step 4: Clamp the output to the valid range [0, 200]
+    # Step 4: Clamp the output to the valid range
     if depth < min_depth:
         return float(min_depth)
     elif depth > max_depth:

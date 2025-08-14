@@ -3,7 +3,7 @@
 from app import create_app
 from app.models import db
 from app.first_run import firstrun
-from app.mqtt.mqtt_handler import MQTTHandler
+from app.background_tasks.mqtt_handler import MQTTHandler
 from app.background_tasks.scheduler import init_scheduler, start_scheduler, shutdown_scheduler, update_mqtt_topics, get_forecast
 from run import app
 import atexit
