@@ -1,8 +1,21 @@
-# Setup Commands
+# Notes
+
+## Todo
+
+- Documentation of Modules / Application
+- Report for Sensors
+- Convert Reports so api page is responsible for loading initial data and call made on page load
+- SSL Termination / Setup
+- Sunrise Sunset API Integration
+  - Integration of this into scheduling
+- MQTT Encryption?
+
+
+## Setup Commands
+
 apt update && apt upgrade -y
 apt-get install python3-pip
 apt-get install git
-
 apt-get install sqlite3
 apt-get install python3-flask
 apt-get install python3-flask-sqlalchemy
@@ -10,23 +23,54 @@ apt-get install python3-flask-login
 apt-get install python3-apscheduler
 apt-get install python3-paho-mqtt
 apt-get install python3-dotenv
-
 apt-get install gunicorn
+apt-get install python3-pandas
 
+## Database
 
+Database is a SQlite database.
+- All timestamps are stored in UTC and converted on use.
+- None of the database models are timezone aware, so UTC is assumed when pulling them out, and they should always be converted to UTC before going in.
 
-gunicorn -c gunicorn.conf.py run:app
+## MQTT
 
+Sensor Data format
+```{"time": "2025-07-30 06:22:45", "sensors": { "0": 23.52211, "1": 24.52221 } }```
 
-# Structure will probably be, 
-# - Gunicorn running flask app with a couple of workers, first time run / setup in gunicorn.conf.py file.
-# - Python running the mqtt file, which runs the mqtt handler and schedules
-# - Nginx running SSL termination and front end
+## Structure
 
+Structure will probably be
+- Gunicorn running flask app with a couple of workers, first time run / setup in gunicorn.conf.py file.
+- Python running the mqtt file, which runs the mqtt handler and schedules
+- Nginx running SSL termination and front end
 
-https://api.openweathermap.org/data/2.5/forecast?lat=31.88&lon=116.05&units=metric&appid=
-https://home.openweathermap.org/api_keys
-https://openweathermap.org/forecast5
+### Run Commands
+
+gunicorn -c gunicorn.conf.py run:app\
+python3 background_tasks.py
+
+## Dev Commands
+
+Various helpful dev commands.
+
+### Run the Shell
+
+flask --app "app:create_app('app.config.Config')" shell
+
+from app.models import db
+from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
+from app.sensors.models import Sensors, CalibrationModeData, WaterDepth, Temperature
+
+c = CalibrationModeData.query.all()
+w = WaterDepth.query.all()
+t = Temperature.query.all()
+
+## Includes
+
+Libraries Used:
+PYTZ
+Pandas
+
 
 Includes Bootstrap Library
 Includes Popper Library
@@ -34,19 +78,21 @@ https://popper.js.org/docs/v2/
 Includes SortableJS Library
 https://github.com/SortableJS/Sortable/releases/tag/1.15.6
 
+## Other Notes
+
+https://api.openweathermap.org/data/2.5/forecast?lat=31.88&lon=116.05&units=metric&appid=
+https://home.openweathermap.org/api_keys
+https://openweathermap.org/forecast5
+
+
+
 
 
 # Uses the following table arguments:
-# 1) db.Index so the database keeps a separate ordered index of timestamps.
-# This will speed up querying based on timestamp massively when there is a lot of data.
-# Will also increase database size, by the size of a extra timestamp and id being stored.
-# 2) Autoincrement so that indexes are never reused
-#    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-#        {'sqlite_autoincrement': True}
-    # __table_args__ = (
-    #     db.Index('idx_weather_timestamp', 'timestamp'),
-    # )
-
+ 1) db.Index so the database keeps a separate ordered index of timestamps.
+ This will speed up querying based on timestamp massively when there is a lot of data.
+ Will also increase database size, by the size of a extra timestamp and id being stored.
+ 2) Autoincrement so that indexes are never reused
 
 
 mqtt.env in app/mqtt
@@ -57,11 +103,6 @@ Default broker_url is localhost
 default broker port is 1883
 Default client id is flask_mqtt_client
 If above three not provided then will either accept at runtime or use default if nothing provided at runtime.
-
-python3 run.py
-
-# Run Dev App
-flask --app app run
 
 # Flask Manual Data Entry
 flask shell
@@ -135,15 +176,7 @@ class Child(db.Model):
 
 
 
-flask --app "app:create_app('app.config.Config')" shell
 
-from app.models import db
-from app.scheduling.models import Groups, Schedules, Zones, DaysOfWeek, schedule_days, zone_schedules
-from app.sensors.models import Sensors, CalibrationModeData, WaterDepth, Temperature
-
-c = CalibrationModeData.query.all()
-w = WaterDepth.query.all()
-t = Temperature.query.all()
 
 
 

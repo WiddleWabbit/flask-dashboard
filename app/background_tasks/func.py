@@ -4,6 +4,7 @@ from app.scheduling.func import get_all_zones
 from datetime import datetime, time
 from app.weather.weather_handler import WeatherService, Weather
 from app.sensors.func import update_reading
+from app.func import get_setting
 import json
 import pytz
 
@@ -71,9 +72,9 @@ def process_sensor_message(app, topic, message):
         data = json.loads(message)
         naive_timestamp = datetime.strptime(data["time"], "%Y-%m-%d %H:%M:%S")
 
-        awst_tz = pytz.timezone("Australia/Perth") # WORK OUT TIME ZONES, APP TIMEZONE???? ##################################
-        awst_timestamp = awst_tz.localize(naive_timestamp)
-        utc_timestamp = awst_timestamp.astimezone(pytz.UTC)
+        local_tz = pytz.timezone(get_setting("timezone"))
+        local_timestamp = local_tz.localize(naive_timestamp)
+        utc_timestamp = local_timestamp.astimezone(pytz.UTC)
 
         for sensor_id, sensor_value in data["sensors"].items():
 

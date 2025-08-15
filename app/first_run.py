@@ -100,7 +100,8 @@ def firstrun(app):
 
         if not Report.query.first():
             reports = [
-                Report(name="Weather Report", template_file="reports/weather_report.html", js_file="js/reports/weather_report.js", active=1, position=1)
+                Report(name="Weather Report", template_file="reports/weather_report.html", active=1, position=1),
+                Report(name="Water Tanks Report", template_file="reports/water_tanks.html", active=1, position=2)
             ]
             db.session.bulk_save_objects(reports)
             db.session.commit()

@@ -108,7 +108,7 @@ def convert_waterdepth(value):
     min_voltage = 0.48
     max_voltage = 2.4
     min_depth = 0
-    max_depth = 200
+    max_depth = 196
     # Calculate the slope
     slope = (max_depth - min_depth) / (max_voltage - min_voltage)
     # Apply linear interpolation
