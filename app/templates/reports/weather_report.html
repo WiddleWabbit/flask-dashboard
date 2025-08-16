@@ -91,35 +91,41 @@
 
     // Function to fetch based on dates, from a Flask API endpoint
     function updateWeatherChart() {
-    
-        // Get the dates from the document
-        const startDate = document.getElementById('startdate').value;
-        const endDate = document.getElementById('enddate').value;
-      
-        // Build the URL to fetch data from with the options
-        let url = '/api/weather_report';
-        if (startDate || endDate) {
-            url += '?';
-            if (startDate) url += `start=${startDate}&`;
-            if (endDate) url += `end=${endDate}`;
-        }
 
-        // Fetch the data and update the datasets
-        fetch(url)
-            .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-            })
-            .then(data => {
-            // Update all the data sets with the new data
-            weatherChart.data.labels = data.labels;
-            weatherChart.data.datasets[0].data = data.datasets.temp;
-            weatherChart.data.datasets[1].data = data.datasets.humidity;
-            weatherChart.data.datasets[2].data = data.datasets.clouds;
-            weatherChart.data.datasets[3].data = data.datasets.rainfall;
-            weatherChart.update();
-            })
-            .catch(error => console.error('Error fetching data:', error));
+        // Only fetch data if this report is visible
+        report = document.getElementById('report-{{ report.id }}');
+        if (!report.classList.contains('d-none')) {
+    
+            // Get the dates from the document
+            const startDate = document.getElementById('startdate').value;
+            const endDate = document.getElementById('enddate').value;
+        
+            // Build the URL to fetch data from with the options
+            let url = '/api/weather_report';
+            if (startDate || endDate) {
+                url += '?';
+                if (startDate) url += `start=${startDate}&`;
+                if (endDate) url += `end=${endDate}`;
+            }
+
+            // Fetch the data and update the datasets
+            fetch(url)
+                .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+                })
+                .then(data => {
+                // Update all the data sets with the new data
+                weatherChart.data.labels = data.labels;
+                weatherChart.data.datasets[0].data = data.datasets.temp;
+                weatherChart.data.datasets[1].data = data.datasets.humidity;
+                weatherChart.data.datasets[2].data = data.datasets.clouds;
+                weatherChart.data.datasets[3].data = data.datasets.rainfall;
+                weatherChart.update();
+                })
+                .catch(error => console.error('Error fetching data:', error));
+
+        }
     }
 
     // Register this weather data update to be run when the dates are changed

@@ -1,14 +1,5 @@
-from flask import Blueprint, Flask, request, render_template, url_for, redirect, flash, jsonify
-from app.func import get_setting
 from app.weather.models import Weather
-from datetime import datetime, timedelta
-import pytz
 import pandas as pd
-
-#####################################################################################################################
-# Convert to using Pandas for transformation
-# Have this function called instead of locally in reports routes
-# Have data loaded on page load, rather than sent initially
 
 def get_weather_data(timezone, start, end):
     """

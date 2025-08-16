@@ -75,6 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (reportDiv) {
                         reportDiv.classList.toggle('d-none', !checkbox.checked);
                     }
+                    // Update reports so that the new report has the relevant data
+                    updateReports();
                 })
                 .catch(error => console.error('Error fetching data:', error));
 

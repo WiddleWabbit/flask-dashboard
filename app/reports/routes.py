@@ -73,9 +73,6 @@ def api_weather_report():
     except ValueError:
         return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
 
-    print(start_date)
-    print(end_date)
-
     local_tz = pytz.timezone(get_setting("timezone"))
     if not local_tz:
         flash('No timezone set, using UTC time.', 'warning')
