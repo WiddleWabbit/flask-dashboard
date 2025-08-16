@@ -11,87 +11,86 @@
     let weatherChart;
     // Build the chart when the page loads
     document.addEventListener('DOMContentLoaded', function() {
-        const weatherData = {{ weather_data | tojson }};
-        const ctx = document.getElementById('chart-{{ report.id }}').getContext('2d');
-        weatherChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: weatherData.map(d => d.time),
-                datasets: [
-                    {
-                        label: 'Avg Temp (°C)',
-                        data: weatherData.map(d => d.temp),
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: '#ffeded',
-                        pointRadius: 4,
-                        yAxisID: 'temp',
-                        fill: false
-                    },
-                    {
-                        label: 'Humidity (%)',
-                        data: weatherData.map(d => d.humidity),
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        yAxisID: 'percentage',
-                        fill: false,
-                        hidden: true
-                    },
-                    {
-                        label: 'Clouds (%)',
-                        data: weatherData.map(d => d.clouds),
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        yAxisID: 'percentage',
-                        fill: false,
-                        hidden: true
-                    },
-                    {
-                        label: 'Rainfall (mm)',
-                        data: weatherData.map(d => d.rainfall),
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: '#edf3ff',
-                        pointRadius: 4,
-                        yAxisID: 'rainfall',
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        title: { display: true, text: 'Date' }
-                    },
-                    temp: {
-                        type: 'linear',
-                        position: 'left',
-                        title: { display: true, text: 'Temperature (°C)' },
-                        min: 0,
-                        max: 50,
-                        ticks: {maxTicksLimit: 6}
-                    },
-                    rainfall: {
-                        type: 'linear',
-                        position: 'right',
-                        title: { display: true, text: 'Rainfall (mm)' },
-                        min: 0,
-                        ticks: {maxTicksLimit: 6}
-                    },
-                    percentage: {
-                        type: 'linear',
-                        position: 'right',
-                        title: { display: true, text: 'Percentage %' },
-                        min: 0,
-                        max: 100,
-                        grid: { drawOnChartArea: false }, // Avoid overlapping grid lines
-                        display: false
-                    },
+    const ctx = document.getElementById('chart-{{ report.id }}').getContext('2d');
+    weatherChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Avg Temp (°C)',
+                    data: [],
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: '#ffeded',
+                    pointRadius: 4,
+                    yAxisID: 'temp',
+                    fill: false
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: [],
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    yAxisID: 'percentage',
+                    fill: false,
+                    hidden: true
+                },
+                {
+                    label: 'Clouds (%)',
+                    data: [],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    yAxisID: 'percentage',
+                    fill: false,
+                    hidden: true
+                },
+                {
+                    label: 'Rainfall (mm)',
+                    data: [],
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: '#edf3ff',
+                    pointRadius: 4,
+                    yAxisID: 'rainfall',
+                    fill: true
                 }
-            },
-        });
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: 'Date' }
+                },
+                temp: {
+                    type: 'linear',
+                    position: 'left',
+                    title: { display: true, text: 'Temperature (°C)' },
+                    min: 0,
+                    max: 50,
+                    ticks: {maxTicksLimit: 6}
+                },
+                rainfall: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: 'Rainfall (mm)' },
+                    min: 0,
+                    ticks: {maxTicksLimit: 6}
+                },
+                percentage: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: 'Percentage %' },
+                    min: 0,
+                    max: 100,
+                    grid: { drawOnChartArea: false }, // Avoid overlapping grid lines
+                    display: false
+                },
+            }
+        },
+    });
     });
 
     // Function to fetch based on dates, from a Flask API endpoint
-    function fetchWeatherData() {
+    function updateWeatherChart() {
     
         // Get the dates from the document
         const startDate = document.getElementById('startdate').value;
@@ -113,19 +112,18 @@
             })
             .then(data => {
             // Update all the data sets with the new data
-            weatherChart.data.labels = data.map(d => d.time);
-            weatherChart.data.datasets[0].data = data.map(d => d.temp);
-            weatherChart.data.datasets[1].data = data.map(d => d.humidity);
-            weatherChart.data.datasets[2].data = data.map(d => d.clouds);
-            weatherChart.data.datasets[3].data = data.map(d => d.rainfall);
+            weatherChart.data.labels = data.labels;
+            weatherChart.data.datasets[0].data = data.datasets.temp;
+            weatherChart.data.datasets[1].data = data.datasets.humidity;
+            weatherChart.data.datasets[2].data = data.datasets.clouds;
+            weatherChart.data.datasets[3].data = data.datasets.rainfall;
             weatherChart.update();
             })
             .catch(error => console.error('Error fetching data:', error));
     }
 
     // Register this weather data update to be run when the dates are changed
-    registerReportDateCallback(fetchWeatherData);
+    registerReportDateCallback(updateWeatherChart);
+    document.addEventListener('DOMContentLoaded', updateWeatherChart);
 
 </script>
-
-

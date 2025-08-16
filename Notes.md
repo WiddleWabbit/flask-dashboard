@@ -70,7 +70,7 @@ t = Temperature.query.all()
 Libraries Used:
 PYTZ
 Pandas
-
+DayJS
 
 Includes Bootstrap Library
 Includes Popper Library
