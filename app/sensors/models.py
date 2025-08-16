@@ -7,7 +7,7 @@ from app.models import db
 class Sensors(db.Model):
     __tablename__ = "sensors"
     __table_args__ = (
-        db.Index('idx_identifier_sensor_timestamp', 'identifier'),
+        db.Index('idx_identifier_sensor', 'identifier'),
     )
     id = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=True)
     name = db.Column(db.String, nullable=False)

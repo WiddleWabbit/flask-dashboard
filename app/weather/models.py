@@ -14,6 +14,9 @@ import pytz
 
 class Weather(db.Model):
     __tablename__ = "weather"
+    __table_args__ = (
+        db.Index('idx_timestamp_weather', 'timestamp'),
+    )
 
     timestamp = db.Column(db.DateTime, primary_key=True, nullable=False)
     temp = db.Column(db.Float, nullable=False)
