@@ -1,5 +1,6 @@
 from app.sensors.models import Sensors, db, CalibrationModeData, WaterDepth, Temperature
 from sqlalchemy import func
+import pandas as pd
 
 def get_all_sensors():
     """
@@ -12,6 +13,19 @@ def get_all_sensors():
         return sensors if sensors else None
     except Exception as e:
         print(f"Unable to get all sensors from database: {e}")
+    return None
+
+def get_waterdepth_sensors():
+    """
+    Retrieve all waterdepth sensors from the database.
+
+    :return: A list of all sensor objects if any exist, otherwise None.
+    """
+    try:
+        sensors = Sensors.query.filter_by(type='waterdepth').all()
+        return sensors if sensors else None
+    except Exception as e:
+        print(f"Unable to get all waterdepth sensors from database: {e}")
     return None
 
 def get_sensor(id):
@@ -224,3 +238,83 @@ def calculate_calibration_value(identifier):
     # Calculate the difference which will be the new offset and return it
     offset = base_value - average
     return offset
+
+def get_watertank_data(timezone, start, end):
+    """
+    Retrieve all the required data from the database to populate the water tanks report.
+
+    :return: The data as a dict of lists and data.
+    """
+    try:
+
+
+        data = WaterDepth.query.with_entities(
+            WaterDepth.timestamp, 
+            WaterDepth.sensor_id, 
+            WaterDepth.value
+        )
+
+        if start and end:
+            data = data.filter(
+                WaterDepth.timestamp >= start,
+                WaterDepth.timestamp <= end
+            )
+
+        data = data.order_by(
+            WaterDepth.timestamp.desc()
+        ).all() # Query only executed here.
+
+        # Convert to a pandas dataframe so we can perform actions on the entire dataset at once and avoid for loops for large amounts of data
+        waterdepth_df = pd.DataFrame(data, columns=['timestamp', 'sensor_id', 'value'])
+        depth_sensors = get_waterdepth_sensors()
+
+        if not waterdepth_df.empty and depth_sensors:
+
+            if timezone:
+                # Database models are not saved timezone aware, all database models save in UTC time. Per this we assume it's in UTC.
+                # We are using Pandas Datetime methods here as these are vectorized and process all the data at the same time rather than iterating through it.
+                # If we used something like .apply() it would perform per row instead, just like a for loop.
+                # Functions in use are:
+                # .dt() Access the vectorized timezone functions of Pandas library
+                # .tz_localize('UTC') assigns a timezone to a timezone naive timestamp making them aware.
+                # .tz_convert() converts an timezone aware timestamp to another timezone
+                waterdepth_df['time'] = waterdepth_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(timezone)
+
+            # Start to build the structured data with the times as labels
+            structured_data = {
+                'current_data': {},
+                'historical_data': {
+                    'labels': waterdepth_df['time'].tolist(),
+                    'names': {},
+                    'datasets': {}
+                }
+            }
+
+            # Pivot the DataFrame to create columns for each tank's depth
+            pivot_df = waterdepth_df.pivot(index='time', columns='sensor_id', values='value')
+            # Grab the last row of data (sorted during our SQL)
+            last_row = pivot_df.tail(1)
+            # Individual pieces of Data from a Dataframe or pivot are scalars, iloc[0] fetches this, fill NA replaces empty values
+            # and to dict turns it into a dictionary 
+            latest_data = last_row.iloc[0].fillna(0).to_dict()
+
+            for sensor in depth_sensors:
+
+                # Ensure we don't end up with missing sensors, every sensor should display.
+                if sensor.identifier not in pivot_df.columns:
+                    pivot_df[sensor.identifier] = None
+
+                # Store the most recent value
+                structured_data['current_data'][sensor.identifier] = latest_data[str(sensor.identifier)]
+            
+                # Store the sensor names so we can show names instead of ID's
+                structured_data['historical_data']['names'][sensor.identifier] = sensor.name
+
+                # Store all the sensors data in the relevant dataset, replace empty values with 0
+                structured_data['historical_data']['datasets'][sensor.identifier] = pivot_df[sensor.identifier].fillna(0).tolist()
+
+        return structured_data
+    
+    except Exception as e:
+        print(f"Unable to get water tank data from database: {e}")
+        return None

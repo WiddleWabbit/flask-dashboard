@@ -2,6 +2,7 @@ from flask import Blueprint, Flask, request, render_template, url_for, redirect,
 from flask_login import current_user
 from app.func import get_setting, sanitise
 from app.weather.func import get_weather_data
+from app.sensors.func import get_watertank_data
 from app.reports.models import Report
 from app.weather.models import Weather
 from app.sensors.models import WaterDepth, Temperature, Sensors
@@ -76,10 +77,7 @@ def api_weather_report():
     local_tz = pytz.timezone(get_setting("timezone"))
     if not local_tz:
         flash('No timezone set, using UTC time.', 'warning')
-        start_date = datetime.now(pytz.utc)
-    else:
-        start_date = datetime.now(local_tz)
-
+        local_tz = pytz.UTC
     
     weather_data = get_weather_data(local_tz, start_date, end_date)
     
@@ -90,3 +88,34 @@ def api_weather_report():
     
     # Format data for Chart.js
     return jsonify(weather_data)
+
+# Weather API Update Route
+@bp.route("/api/watertank_report")
+def api_watertank_report():
+
+    start_timer = time.perf_counter()
+
+    start_date = sanitise(request.args.get('start'))
+    end_date = sanitise(request.args.get('end'))
+    
+    # Convert string dates to datetime objects
+    try:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d') if start_date else None
+        end_date = datetime.strptime(end_date, '%Y-%m-%d') if end_date else None
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
+
+    local_tz = pytz.timezone(get_setting("timezone"))
+    if not local_tz:
+        flash('No timezone set, using UTC time.', 'warning')
+        local_tz = pytz.UTC
+
+    watertank_data = get_watertank_data(local_tz, start_date, end_date)
+    
+    end_timer = time.perf_counter()
+    execution_time = end_timer - start_timer
+    
+    print(f"Function took {execution_time:.4f} seconds to run")
+    
+    # Format data for Chart.js
+    return jsonify(watertank_data)

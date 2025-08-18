@@ -30,9 +30,7 @@ def get_weather_data(timezone, start, end):
         
         data = data.order_by(
             Weather.timestamp
-        ).all()
-        
-        # Use Pandas and Dataframe instead
+        ).all() # Query only executed here.
 
         # Convert to a pandas dataframe so we can perform actions on the entire dataset at once and avoid for loops for large amounts of data
         weather_df = pd.DataFrame(data, columns=['timestamp', 'temp', 'humidity', 'clouds', 'rainfall'])

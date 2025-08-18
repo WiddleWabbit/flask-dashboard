@@ -32,13 +32,14 @@ class WaterDepth(db.Model):
     __tablename__ = "waterdepth"
     __table_args__ = (
         db.Index('idx_depth_sensor_timestamp', 'sensor_id', 'timestamp'),
+        db.Index('idx_depth_timestamp', 'timestamp'),
         {'sqlite_autoincrement': True}
     )
     id = db.Column(db.Integer, primary_key=True, unique=True)
     timestamp = db.Column(db.DateTime, nullable=False)
     sensor_id = db.Column(db.String, db.ForeignKey('sensors.identifier'), nullable=False)
     value = db.Column(db.Float, nullable=False)
-    sensor = db.relationship('Sensors', backref='waterdepth', lazy='joined')
+    sensor = db.relationship('Sensors', backref='waterdepth', lazy='select')
 
     def __repr__(self):
         return f'<{self.timestamp}>'
@@ -47,13 +48,14 @@ class Temperature(db.Model):
     __tablename__ = "temperature"
     __table_args__ = (
         db.Index('idx_temp_sensor_timestamp', 'sensor_id', 'timestamp'),
+        db.Index('idx_temp_timestamp', 'timestamp'),
         {'sqlite_autoincrement': True}
     )
     id = db.Column(db.Integer, primary_key=True, unique=True)
     timestamp = db.Column(db.DateTime, nullable=False)
     sensor_id = db.Column(db.String, db.ForeignKey('sensors.identifier'), nullable=False)
     value = db.Column(db.Float, nullable=False)
-    sensor = db.relationship('Sensors', backref='temperature', lazy='joined')
+    sensor = db.relationship('Sensors', backref='temperature', lazy='select')
 
     def __repr__(self):
         return f'<{self.timestamp}>'
