@@ -1,7 +1,52 @@
 <!-- Water Tank Report HTML -->
 
-    <h4 class="text-center pb-2">Water Tanks</h3>
-    <canvas id="chart-{{ report.id }}"></canvas>
+    <h4 class="text-center pb-2">Water Tanks</h4>
+
+    <div class="d-flex gap-3">
+        <div class="card w-25 shadow-sm mt-4 mb-5"><div class="card-header" style="">
+            <p class="mb-0" style="font-size: 14px;">Water In Tanks:</p>
+        </div>
+        <div class="card-body text-center pt-4 pb-4">
+            <span class="h4">500 L</span>
+        </div>
+        </div>
+        <div class="card w-25 shadow-sm mt-4 mb-5">
+            <div class="card-header" style="">
+                <p class="mb-0" style="font-size: 14px;">Water In Tanks:</p>
+            </div>
+            <div class="card-body text-center pt-4 pb-4">
+                <span class="h4">500 L</span>
+            </div>
+        </div>
+        <div class="card w-25 shadow-sm mt-4 mb-5">
+            <div class="card-header" style="">
+                <p class="mb-0" style="font-size: 14px;">Water In Tanks:</p>
+            </div>
+            <div class="card-body text-center pt-4 pb-4">
+                <span class="h4">500 L</span>
+            </div>
+        </div>
+        <div class="card w-25 shadow-sm mt-4 mb-5">
+            <div class="card-header" style="">
+                <p class="mb-0" style="font-size: 14px;">Water Storage Available:</p>
+            </div>
+            <div class="card-body text-center pt-4 pb-4">
+                <span class="h4">6000 L</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for sensor in data.watertank_sensors %}
+            <div class="col-md-4">
+                <canvas id="chart-{{ report.id }}-{{ sensor.identifier }}"></canvas>
+            </div>
+        {% endfor %}
+        <div class="col-md-12 mt-5 mb-5">
+            <canvas style="height:400px;" id="chart-{{ report.id }}-timeseries"></canvas>
+        </div>
+    </div>
+
 
 <!-- Water Tank Report JS -->
 <script>
@@ -9,32 +54,205 @@
     const DATA_COUNT = 2;
     const NUMBER_CFG = {count: DATA_COUNT, min: 0, max: 1960};
 
-    const config = {
-        type: 'doughnut',
-        data: data,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
+    let waterTankCharts = {};
+    let ctx = {};
+    
+    // Build the chart when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Create a ChartJS Plugin, to add labels to the Doughnut Charts
+        const centerTextPlugin = {
+            id: 'centerText',
+            afterDraw: (chart) => {
+
+                if (!chart.options.plugins?.centerText?.enabled) {
+                    return;
+                }
+
+                const ctx = chart.ctx;
+                const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+                const value = chart.data.datasets[0].data[0] || 0; // Fallback to 0 if undefined
+                ctx.save();
+
+                // Background rectangle
+                const text1 = value + "cm Depth";
+                const text2 = "~" + Math.round(depthToLitres(value, 196, 2000)) + " Litres";
+                const textWidth = Math.max(ctx.measureText(text1).width, ctx.measureText(text2).width);
+                const textHeight = 14 * 2 + 20;
+                ctx.fillStyle = 'rgba(245, 245, 245, 0.5)';
+                ctx.fillRect(centerX - textWidth / 2 - 5, centerY + 25 - 14 - 5, textWidth + 10, textHeight + 10);
+
+                // Line 1 of text
+                ctx.font = 'italic 14px Arial';
+                ctx.fillStyle = 'black';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'black';
+                ctx.fillText(text1, centerX, centerY + -20);
+                // Line 2 of text
+                ctx.font = 'bold 16px Arial';
+                ctx.fillStyle = 'black';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'black';
+                ctx.fillText(text2, centerX, centerY + 0);
+
+                ctx.restore();
+            }
+        };
+        Chart.register(centerTextPlugin);
+
+        {% for sensor in data.watertank_sensors %}
+
+            ctx[{{ sensor.identifier }}] = document.getElementById('chart-{{ report.id }}-{{ sensor.identifier }}').getContext('2d');
+            waterTankCharts[{{ sensor.identifier }}] = new Chart(ctx[{{ sensor.identifier }}], {
+                type: 'doughnut',
+                data: {
+                    labels: ['Water Level', 'Empty'],
+                    datasets: [
+                        {
+                        data: [],
+                        backgroundColor: ["blue", "darkgrey"],
+                        }
+                    ]
                 },
-                title: {
-                    display: true,
-                    text: 'Chart.js Doughnut Chart'
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: "{{ sensor.name }}"
+                        },
+                        centerText: {
+                            enabled: true
+                        }
+                    }
+                },
+            });
+
+        {% endfor %}
+
+        // Main historical data line chart showing water tank levels
+        const ctx_time = document.getElementById('chart-{{ report.id }}-timeseries').getContext('2d');
+        watertanksTimeSeriesChart = new Chart(ctx_time, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {% for sensor in data.watertank_sensors %}
+                        {
+                            label: '{{ sensor.name }}',
+                            data: [],
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: '#ffeded',
+                            pointRadius: 4,
+                            yAxisID: 'waterlevel',
+                            fill: false
+                        }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Date' }
+                    },
+                    waterlevel: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Water Level (cm)' },
+                        min: 0,
+                        max: 200,
+                        ticks: {maxTicksLimit: 6}
+                    }
+                },
+                plugins: {
+                    centerText: {
+                        enabled: false
+                    }
                 }
             }
-        },
-    };
+        });
 
-    const data = {
-    labels: ['Blue', 'Red'],
-    datasets: [
-        {
-        label: 'Dataset 1',
-        data: Utils.numbers(NUMBER_CFG),
-        backgroundColor: Object.values(Utils.CHART_COLORS),
+    });
+
+    // MOVE TANK CAPACITY INTO SOMETHING ELSE????
+    // Tank Capacity for each Sensor?
+
+    function buildWaterTankLevelChart(name, sensor_identifier, append) {
+        // Build one doughnut chart 
+        // Append it to the relevant place
+        // Make it available to update via id/identifier.
+    }
+
+    // WOULD ASSUME THE TANKS HAVE LINEAR DEPTH / LITRES / NEEDS TESTING
+    function depthToLitres(depth, max_depth, max_litres) {
+        litres = (depth / max_depth) * max_litres;
+        return litres;
+    }
+
+    // Function to fetch based on dates, from a Flask API endpoint
+    function updateWaterTankData() {
+
+        // Only fetch data if this report is visible
+        report = document.getElementById('report-{{ report.id }}');
+        if (!report.classList.contains('d-none')) {
+    
+            // Get the dates from the document
+            const startDate = document.getElementById('startdate').value;
+            const endDate = document.getElementById('enddate').value;
+        
+            // Build the URL to fetch data from with the options
+            let url = '/api/watertank_report';
+            if (startDate || endDate) {
+                url += '?';
+                if (startDate) url += `start=${startDate}&`;
+                if (endDate) url += `end=${endDate}`;
+            }
+
+            // Fetch the data and update the datasets
+            fetch(url)
+                .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        {% for sensor in data.watertank_sensors %}
+                            // Update all the data sets with the new data
+                            if ({{ sensor.identifier }} in data.current_data) {
+                                waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [data.current_data[{{ sensor.identifier }}], 196 - data.current_data[{{ sensor.identifier }}]];
+                                waterTankCharts[{{ sensor.identifier }}].update();
+                            } else {
+                                waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [];
+                                waterTankCharts[{{ sensor.identifier }}].update();
+                            }
+
+                            watertanksTimeSeriesChart.data.labels = data.historical_data.labels;
+                            watertanksTimeSeriesChart.data.datasets[{{ sensor.identifier }}].data = data.historical_data.datasets[{{ sensor.identifier }}];
+                            watertanksTimeSeriesChart.update();
+
+                        {% endfor %}
+                    } else {
+                        {% for sensor in data.watertank_sensors %}
+                            waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [];
+                            waterTankCharts[{{ sensor.identifier }}].update();
+                        {% endfor %}
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+
         }
-    ]
-    };
+    }
+
+    // Register this weather data update to be run when the dates are changed
+    registerReportDateCallback(updateWaterTankData);
+    document.addEventListener('DOMContentLoaded', updateWaterTankData);
 
 </script>

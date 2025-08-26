@@ -261,7 +261,7 @@ def get_watertank_data(timezone, start, end):
             )
 
         data = data.order_by(
-            WaterDepth.timestamp.desc()
+            WaterDepth.timestamp.asc()
         ).all() # Query only executed here.
 
         # Convert to a pandas dataframe so we can perform actions on the entire dataset at once and avoid for loops for large amounts of data
@@ -280,18 +280,23 @@ def get_watertank_data(timezone, start, end):
                 # .tz_convert() converts an timezone aware timestamp to another timezone
                 waterdepth_df['time'] = waterdepth_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(timezone)
 
+            # Convert to strings, otherwise json_dumps automatically converts date time objects to UTC
+            waterdepth_df['time'] = waterdepth_df['time'].dt.strftime('%Y-%m-%d %H:%M:%S%z')
+
+            # Pivot the DataFrame to create columns for each tank's depth
+            pivot_df = waterdepth_df.pivot(index='time', columns='sensor_id', values='value')
+
             # Start to build the structured data with the times as labels
+            # Use the pivot as this ensures timestamps are deduped and unique, as long as there is only one reading per sensor per timestamp
             structured_data = {
                 'current_data': {},
                 'historical_data': {
-                    'labels': waterdepth_df['time'].tolist(),
+                    'labels': pivot_df.index.tolist(),
                     'names': {},
                     'datasets': {}
                 }
             }
 
-            # Pivot the DataFrame to create columns for each tank's depth
-            pivot_df = waterdepth_df.pivot(index='time', columns='sensor_id', values='value')
             # Grab the last row of data (sorted during our SQL)
             last_row = pivot_df.tail(1)
             # Individual pieces of Data from a Dataframe or pivot are scalars, iloc[0] fetches this, fill NA replaces empty values

@@ -2,7 +2,7 @@ from flask import Blueprint, Flask, request, render_template, url_for, redirect,
 from flask_login import current_user
 from app.func import get_setting, sanitise
 from app.weather.func import get_weather_data
-from app.sensors.func import get_watertank_data
+from app.sensors.func import get_watertank_data, get_waterdepth_sensors
 from app.reports.models import Report
 from app.weather.models import Weather
 from app.sensors.models import WaterDepth, Temperature, Sensors
@@ -20,6 +20,7 @@ def config_dashboard():
     data = {}
     # Get all the reports
     data['reports'] = Report.query.all()
+    data['watertank_sensors'] = get_waterdepth_sensors()
 
     return data
 
