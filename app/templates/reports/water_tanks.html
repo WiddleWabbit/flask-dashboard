@@ -43,7 +43,7 @@
             </div>
         {% endfor %}
         <div class="col-md-12 mt-5 mb-5">
-            <canvas style="height:400px;" id="chart-{{ report.id }}-timeseries"></canvas>
+            <canvas id="chart-{{ report.id }}-timeseries" class="line-chart"></canvas>
         </div>
     </div>
 
@@ -147,8 +147,8 @@
                         {
                             label: '{{ sensor.name }}',
                             data: [],
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            backgroundColor: '#ffeded',
+                            borderColor: '#004cff',
+                            backgroundColor: '#ededff',
                             pointRadius: 4,
                             yAxisID: 'waterlevel',
                             fill: false
@@ -169,12 +169,19 @@
                         title: { display: true, text: 'Water Level (cm)' },
                         min: 0,
                         max: 200,
-                        ticks: {maxTicksLimit: 6}
+                        ticks: {maxTicksLimit: 10}
                     }
                 },
                 plugins: {
                     centerText: {
                         enabled: false
+                    },
+                    title: {
+                        display: true,
+                        text: "Levels Over Time",
+                        font: {
+                            size: "18"
+                        } 
                     }
                 }
             }

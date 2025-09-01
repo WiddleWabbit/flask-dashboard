@@ -21,6 +21,9 @@
     padding:20px;
     border-radius:20px;
 }
+.line-chart {
+    min-height:500px;
+}
 
 @media screen and (max-width:767px) {
     #sidebar {

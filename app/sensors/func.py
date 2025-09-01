@@ -1,6 +1,7 @@
 from app.sensors.models import Sensors, db, CalibrationModeData, WaterDepth, Temperature
 from sqlalchemy import func
 import pandas as pd
+import numpy as np
 
 def get_all_sensors():
     """
@@ -281,13 +282,20 @@ def get_watertank_data(timezone, start, end):
                 waterdepth_df['time'] = waterdepth_df['timestamp'].dt.tz_localize('UTC').dt.tz_convert(timezone)
 
             # Convert to strings, otherwise json_dumps automatically converts date time objects to UTC
-            waterdepth_df['time'] = waterdepth_df['time'].dt.strftime('%Y-%m-%d %H:%M:%S%z')
+            waterdepth_df['time'] = waterdepth_df['time'].dt.strftime('%Y-%m-%d %H:%M')
 
             # Pivot the DataFrame to create columns for each tank's depth
-            pivot_df = waterdepth_df.pivot(index='time', columns='sensor_id', values='value')
+            # Use pivot_table instead of dataframe.pivot, so that we can specify an aggregation function in case there is more than one reading per time
+            pivot_df = pd.pivot_table(
+                waterdepth_df,
+                index='time',
+                columns='sensor_id',
+                values='value',
+                aggfunc='mean'
+            )
 
             # Start to build the structured data with the times as labels
-            # Use the pivot as this ensures timestamps are deduped and unique, as long as there is only one reading per sensor per timestamp
+            # Use the pivot as this ensures timestamps are deduped and unique
             structured_data = {
                 'current_data': {},
                 'historical_data': {
@@ -296,6 +304,10 @@ def get_watertank_data(timezone, start, end):
                     'datasets': {}
                 }
             }
+
+            ###################################### GET MOST RECENT READNIG FOR EACH SENSOR EVEN IF NOT MOST RECENT??
+            ###################################### ADD AGGREGATION
+            ###################################### FIX IF TIMESTAMP
 
             # Grab the last row of data (sorted during our SQL)
             last_row = pivot_df.tail(1)
@@ -316,7 +328,7 @@ def get_watertank_data(timezone, start, end):
                 structured_data['historical_data']['names'][sensor.identifier] = sensor.name
 
                 # Store all the sensors data in the relevant dataset, replace empty values with 0
-                structured_data['historical_data']['datasets'][sensor.identifier] = pivot_df[sensor.identifier].fillna(0).tolist()
+                structured_data['historical_data']['datasets'][sensor.identifier] = pivot_df[sensor.identifier].fillna(np.nan).replace([np.nan], [None]).tolist()
 
         return structured_data
     
