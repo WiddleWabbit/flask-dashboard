@@ -240,6 +240,26 @@ def calculate_calibration_value(identifier):
     offset = base_value - average
     return offset
 
+def get_last_non_empty(df):
+    """
+    Function to get the last non-empty value for each column
+
+    :param df: Dataframe to get the last non-empty value from
+
+    :return: Returns a dataframe containing the columns and their last values.
+    """
+    result = {}
+    for column in df.columns:
+        # Get the last non-NA value
+        last_valid = df[column].last_valid_index()
+        if last_valid is not None:
+            # If a non-NA value exists, use it
+            result[column] = df[column].loc[last_valid]
+        else:
+            # If all values are NA, return None or a default value
+            result[column] = None  # or np.nan, depending on your preference
+    return pd.Series(result)
+
 def get_watertank_data(timezone, start, end):
     """
     Retrieve all the required data from the database to populate the water tanks report.
@@ -309,11 +329,8 @@ def get_watertank_data(timezone, start, end):
             ###################################### ADD AGGREGATION
             ###################################### FIX IF TIMESTAMP
 
-            # Grab the last row of data (sorted during our SQL)
-            last_row = pivot_df.tail(1)
-            # Individual pieces of Data from a Dataframe or pivot are scalars, iloc[0] fetches this, fill NA replaces empty values
-            # and to dict turns it into a dictionary 
-            latest_data = last_row.iloc[0].fillna(0).to_dict()
+            # Grab the last piece of non-empty data for each column (sorted during our SQL)
+            latest_data = get_last_non_empty(pivot_df)
 
             for sensor in depth_sensors:
 
