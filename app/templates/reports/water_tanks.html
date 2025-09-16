@@ -7,7 +7,7 @@
             <p class="mb-0" style="font-size: 14px;">Water In Tanks:</p>
         </div>
         <div class="card-body text-center pt-4 pb-4">
-            <span class="h4">500 L</span>
+            <span id ="total-water-in-tanks" class="h4">500 L</span>
         </div>
         </div>
         <div class="card w-25 shadow-sm mt-4 mb-5">
@@ -31,7 +31,7 @@
                 <p class="mb-0" style="font-size: 14px;">Water Storage Available:</p>
             </div>
             <div class="card-body text-center pt-4 pb-4">
-                <span class="h4">6000 L</span>
+                <span id="maximum-water-in-tanks" class="h4">6000 L</span>
             </div>
         </div>
     </div>
@@ -192,12 +192,6 @@
     // MOVE TANK CAPACITY INTO SOMETHING ELSE????
     // Tank Capacity for each Sensor?
 
-    function buildWaterTankLevelChart(name, sensor_identifier, append) {
-        // Build one doughnut chart 
-        // Append it to the relevant place
-        // Make it available to update via id/identifier.
-    }
-
     // WOULD ASSUME THE TANKS HAVE LINEAR DEPTH / LITRES / NEEDS TESTING
     function depthToLitres(depth, max_depth, max_litres) {
         litres = (depth / max_depth) * max_litres;
@@ -223,6 +217,9 @@
                 if (endDate) url += `end=${endDate}`;
             }
 
+            let max_litres = 0;
+            let total_litres = 0;
+
             // Fetch the data and update the datasets
             fetch(url)
                 .then(response => {
@@ -234,8 +231,13 @@
                         {% for sensor in data.watertank_sensors %}
                             // Update all the data sets with the new data
                             if ({{ sensor.identifier }} in data.current_data) {
+
                                 waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [data.current_data[{{ sensor.identifier }}], 196 - data.current_data[{{ sensor.identifier }}]];
                                 waterTankCharts[{{ sensor.identifier }}].update();
+
+                                total_litres += data.current_data[{{ sensor.identifier }}];
+                                max_litres += 2000; // ##################################### NEEDS TO BE UPDATED TO A VARIABLE FROM DB OR SOMETHING
+
                             } else {
                                 waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [];
                                 waterTankCharts[{{ sensor.identifier }}].update();
@@ -244,6 +246,9 @@
                             watertanksTimeSeriesChart.data.labels = data.historical_data.labels;
                             watertanksTimeSeriesChart.data.datasets[{{ sensor.identifier }}].data = data.historical_data.datasets[{{ sensor.identifier }}];
                             watertanksTimeSeriesChart.update();
+
+                            document.getElementById('total-water-in-tanks').innerText = Math.round(depthToLitres(total_litres, 196, 2000),1) + " L";
+                            document.getElementById('maximum-water-in-tanks').innerText = max_litres + " L";
 
                         {% endfor %}
                     } else {

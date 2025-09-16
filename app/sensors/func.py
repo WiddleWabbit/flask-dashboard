@@ -44,7 +44,7 @@ def get_sensor(id):
         return False
     return False
 
-def update_sensor(id,  name, type, identifier, calibration, calibration_mode, sort_order):
+def update_sensor(id, name, type, identifier, calibration, calibration_mode, sort_order, settings=None):
     """
     Create or update a sensor in the database.
 
@@ -56,14 +56,16 @@ def update_sensor(id,  name, type, identifier, calibration, calibration_mode, so
     :param type: The type of sensor as a string.
     :param identifier: The identifier to ID of the sensor to read from the MQTT Messages.
     :param calibration: The calibration of the sensor as a float.
+    :param calibration_mode: The calibration mode as an int.
     :param sort_order: The order to display on the page as an int.
+    :param settings: Optional. A dict of key-value pairs for SensorSetting.
     :return: True for success, False for failure.
     """
     if not id == None:
         if not isinstance(id, int) or id < 0:
             print('Invalid ID supplied')
             return False
-    if not isinstance(name, str) or not isinstance(type, str) or not isinstance(identifier, str) or not isinstance(calibration, float)or not isinstance(calibration_mode, int):
+    if not isinstance(name, str) or not isinstance(type, str) or not isinstance(identifier, str) or not isinstance(calibration, float) or not isinstance(calibration_mode, int):
         print('Instance Invalid')
         return False
     if sort_order < 0:
@@ -85,10 +87,23 @@ def update_sensor(id,  name, type, identifier, calibration, calibration_mode, so
         else:
             sensor = Sensors(name=name, type=type, identifier=identifier, calibration=calibration, calibration_mode=calibration_mode, sort_order=sort_order)
             db.session.add(sensor)
+            db.session.flush()  # Applies changes, so we have a primary key, without committing
+
+        # Handle settings if provided
+        if settings and isinstance(settings, dict):
+            # Remove existing settings for this sensor
+            from app.sensors.models import SensorSetting
+            SensorSetting.query.filter_by(sensor_id=sensor.id).delete()
+            # Add new settings
+            for key, value in settings.items():
+                setting = SensorSetting(sensor_id=sensor.id, key=key, value=value)
+                db.session.add(setting)
+
         db.session.commit()
         return True
     except Exception as e:
         print(f"Unable to update sensor: {e}")
+        db.session.rollback()
         return False
     return False
 
@@ -267,7 +282,6 @@ def get_watertank_data(timezone, start, end):
     :return: The data as a dict of lists and data.
     """
     try:
-
 
         data = WaterDepth.query.with_entities(
             WaterDepth.timestamp, 

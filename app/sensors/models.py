@@ -16,6 +16,8 @@ class Sensors(db.Model):
     type = db.Column(db.String, nullable=False)
     calibration_mode = db.Column(db.Integer, nullable=False)
     sort_order = db.Column(db.Integer, nullable=False)
+    # Add cascade="all, delete" to automatically delete related SensorSetting records
+    settings = db.relationship('SensorSetting', backref='sensor', lazy='select', cascade="all, delete")
 
     def __repr__(self):
         return f'<{self.name}>'
@@ -59,3 +61,10 @@ class Temperature(db.Model):
 
     def __repr__(self):
         return f'<{self.timestamp}>'
+    
+class SensorSetting(db.Model):
+    __tablename__ = "sensor_settings"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    sensor_id = db.Column(db.Integer, db.ForeignKey('sensors.id'), nullable=False)
+    key = db.Column(db.String, nullable=False)
+    value = db.Column(db.String, nullable=False)

@@ -61,6 +61,7 @@ def sensors():
                     calibration = sanitise(request.form.get(f"calibration-{i}"), float)
                     calibration_mode = sanitise(request.form.get(f"calibration-mode-{i}"), str)
                     sort_order = sanitise(request.form.get(f"sort-order-{i}"), int)
+                    max_capacity = sanitise(request.form.get(f"capacity-{i}"), int)
 
                     # If the non required fields are blank, set them to default values
                     if not calibration:
@@ -87,6 +88,12 @@ def sensors():
                         print(f'Type not valid {type}')
                         update_results[f'sensor-{i}'] = False
                         continue
+                    if type == "waterdepth":
+                        if max_capacity is None or not isinstance(max_capacity, int) or max_capacity <= 0:
+                            print(f'Max capacity not valid {max_capacity} for sensor {name}')
+                            update_results[f'sensor-{i}'] = False
+                            flash(f'Max capacity must be a positive integer for water depth sensors.', 'warning')
+                            continue
                     if identifier == None:
                         print(f'Identifier not valid {identifier}')
                         update_results[f'sensor-{i}'] = False
@@ -112,6 +119,10 @@ def sensors():
                         update_results[f'sensor-{i}'] = False
                         continue
 
+                    settings = {}
+                    if type == "waterdepth":
+                        settings["max_capacity"] = max_capacity
+
                     # Has this sensor been brought out of calibration mode, if so create the new calibration offset
                     if not calibration_mode:
                         sensor = Sensors.query.filter_by(id=id).first()
@@ -119,7 +130,7 @@ def sensors():
                             calibration = calculate_calibration_value(identifier)
 
                     # Update the sensor
-                    update_results[f'Sensor "{name}"'] = update_sensor(id, name, type, identifier, calibration, calibration_mode, sort_order)
+                    update_results[f'Sensor "{name}"'] = update_sensor(id, name, type, identifier, calibration, calibration_mode, sort_order, settings)
 
                 # Check for unsubmitted sensors and delete
                 if all_sensors:
