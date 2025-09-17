@@ -6,7 +6,7 @@ from app.sensors.models import WaterDepth, Sensors  # Replace 'models' with your
 # Configuration
 num_entries = 300  # Number of entries to generate
 start_depth = 100.0  # Starting water depth
-start_time = datetime(2025, 8, 17, 0, 0)  # Starting timestamp (adjust as needed)
+start_time = datetime(2025, 9, 17, 0, 0)  # Starting timestamp (adjust as needed)
 sensor_id = Sensors.query.first().identifier  # Get the first sensor's identifier
 
 # Ensure a sensor exists

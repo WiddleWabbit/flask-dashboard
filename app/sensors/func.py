@@ -332,6 +332,7 @@ def get_watertank_data(timezone, start, end):
             # Use the pivot as this ensures timestamps are deduped and unique
             structured_data = {
                 'current_data': {},
+                'sensors': {},
                 'historical_data': {
                     'labels': pivot_df.index.tolist(),
                     'names': {},
@@ -355,6 +356,14 @@ def get_watertank_data(timezone, start, end):
                 # Store the most recent value
                 structured_data['current_data'][sensor.identifier] = latest_data[str(sensor.identifier)]
             
+                # Add hte sensor if it's not in the list
+                if sensor.identifier not in structured_data['sensors']:
+                    structured_data['sensors'][sensor.identifier] = {}
+                # Add sensor relevant data to the response.
+                structured_data['sensors'][sensor.identifier]['name'] = sensor.name
+                for setting in sensor.settings:
+                    structured_data['sensors'][sensor.identifier][setting.key] = setting.value
+
                 # Store the sensor names so we can show names instead of ID's
                 structured_data['historical_data']['names'][sensor.identifier] = sensor.name
 

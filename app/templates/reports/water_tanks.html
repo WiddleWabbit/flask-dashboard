@@ -56,6 +56,11 @@
 
     let waterTankCharts = {};
     let ctx = {};
+    const tankCapacities = {
+        {% for sensor in data.watertank_sensors %}
+            {{ sensor.identifier }}: {% for setting in sensor.settings %}{% if setting.key == 'max_capacity' %}{{ setting.value }}{% endif %}{% endfor %}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    };
     
     // Build the chart when the page loads
     document.addEventListener('DOMContentLoaded', function() {
@@ -73,11 +78,12 @@
                 const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
                 const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
                 const value = chart.data.datasets[0].data[0] || 0; // Fallback to 0 if undefined
+                const maxLitres = chart.options.plugins.centerText.maxLitres || 2000; // Fallback to 2000L if undefined
                 ctx.save();
 
                 // Background rectangle
                 const text1 = value + "cm Depth";
-                const text2 = "~" + Math.round(depthToLitres(value, 196, 2000)) + " Litres";
+                const text2 = "~" + Math.round(depthToLitres(value, 196, maxLitres)) + " Litres";
                 const textWidth = Math.max(ctx.measureText(text1).width, ctx.measureText(text2).width);
                 const textHeight = 14 * 2 + 20;
                 ctx.fillStyle = 'rgba(245, 245, 245, 0.5)';
@@ -189,9 +195,6 @@
 
     });
 
-    // MOVE TANK CAPACITY INTO SOMETHING ELSE????
-    // Tank Capacity for each Sensor?
-
     // WOULD ASSUME THE TANKS HAVE LINEAR DEPTH / LITRES / NEEDS TESTING
     function depthToLitres(depth, max_depth, max_litres) {
         litres = (depth / max_depth) * max_litres;
@@ -232,11 +235,24 @@
                             // Update all the data sets with the new data
                             if ({{ sensor.identifier }} in data.current_data) {
 
-                                waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [data.current_data[{{ sensor.identifier }}], 196 - data.current_data[{{ sensor.identifier }}]];
+                                maxLitres = parseInt(data.sensors[{{ sensor.identifier }}].max_capacity);
+
+                                // Update the pie charts
+                                waterTankCharts[{{ sensor.identifier }}].data.datasets[0].label = data.sensors[{{ sensor.identifier }}].name;
+                                waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [
+                                    data.current_data[{{ sensor.identifier }}],
+                                    196 - data.current_data[{{ sensor.identifier }}]
+                                ];
+                                waterTankCharts[{{ sensor.identifier }}].options.plugins.centerText = {
+                                    enabled: true,
+                                    maxLitres: maxLitres
+                                };
+                                // Update the chart
                                 waterTankCharts[{{ sensor.identifier }}].update();
 
+                                // Update other settings related to the specific sensor
                                 total_litres += data.current_data[{{ sensor.identifier }}];
-                                max_litres += 2000; // ##################################### NEEDS TO BE UPDATED TO A VARIABLE FROM DB OR SOMETHING
+                                max_litres += maxLitres;
 
                             } else {
                                 waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [];
@@ -247,10 +263,11 @@
                             watertanksTimeSeriesChart.data.datasets[{{ sensor.identifier }}].data = data.historical_data.datasets[{{ sensor.identifier }}];
                             watertanksTimeSeriesChart.update();
 
-                            document.getElementById('total-water-in-tanks').innerText = Math.round(depthToLitres(total_litres, 196, 2000),1) + " L";
-                            document.getElementById('maximum-water-in-tanks').innerText = max_litres + " L";
-
                         {% endfor %}
+
+                        document.getElementById('total-water-in-tanks').innerText = Math.round(depthToLitres(total_litres, 196, maxLitres),1) + " L";
+                        document.getElementById('maximum-water-in-tanks').innerText = max_litres + " L";
+
                     } else {
                         {% for sensor in data.watertank_sensors %}
                             waterTankCharts[{{ sensor.identifier }}].data.datasets[0].data = [];
