@@ -23,6 +23,7 @@
 }
 .line-chart {
     min-height:500px;
+    max-height:1000px;
 }
 
 @media screen and (max-width:767px) {

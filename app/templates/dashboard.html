@@ -73,7 +73,7 @@
     <!-- Load the report templates -->
     <div id="report-container">
         {% for report in data.reports | sort(attribute='position') %}
-            <div class="report {% if not report.active %}d-none{% endif %}" id="report-{{ report.id }}" style="width:100%; height:500px;">
+            <div class="mb-4 report {% if not report.active %}d-none{% endif %}" id="report-{{ report.id }}" style="width:100%; height:600px;">
                 {% include report.template_file ignore missing %}
             </div>
         {% endfor %}

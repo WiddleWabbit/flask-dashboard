@@ -39,7 +39,7 @@
     <div class="row">
         {% for sensor in data.watertank_sensors %}
             <div class="col-md-4">
-                <canvas id="chart-{{ report.id }}-{{ sensor.identifier }}"></canvas>
+                <canvas id="chart-{{ report.id }}-{{ sensor.identifier }}" class="doughnut-chart"></canvas>
             </div>
         {% endfor %}
         <div class="col-md-12 mt-5 mb-5">
